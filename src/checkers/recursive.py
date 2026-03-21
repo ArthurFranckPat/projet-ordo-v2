@@ -265,7 +265,26 @@ class RecursiveChecker(BaseChecker):
                 num_of_parent=of_ferme.num_of,  # ← Passer le num_of
             )
 
-        # 2. Pas d'OF FERME → Chercher OF SUGGÉRÉ
+        # 2. Pas d'OF FERME → Chercher OF PLANIFIÉ (WOP)
+        ofs_planifie = self.data_loader.get_ofs_by_article(
+            article=article,
+            statut=2,  # PLANIFIÉ
+            date_besoin=date_besoin,
+        )
+
+        if ofs_planifie:
+            # OF PLANIFIÉ → Vérifier sa faisabilité complète (composants pas alloués)
+            of_planifie = ofs_planifie[0]  # Le plus proche
+            return self._check_article_recursive(
+                article=article,
+                qte_besoin=qte_besoin,
+                date_besoin=date_besoin,
+                depth=depth,
+                of_parent_est_ferme=False,  # Composants PAS alloués
+                num_of_parent=of_planifie.num_of,
+            )
+
+        # 3. Pas d'OF PLANIFIÉ → Chercher OF SUGGÉRÉ
         ofs_suggere = self.data_loader.get_ofs_by_article(
             article=article,
             statut=3,  # SUGGÉRÉ

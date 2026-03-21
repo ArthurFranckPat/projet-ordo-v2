@@ -156,7 +156,7 @@ class CommandeOFMatcher:
     def _initialiser_of_conso(self, articles: set[str] = None):
         """Initialise le suivi des OF pour les articles donnés.
 
-        Inclut les OF affermis (statut 1) et suggérés (statut 3).
+        Inclut les OF affermis (statut 1), planifiés (statut 2) et suggérés (statut 3).
 
         Parameters
         ----------
@@ -164,8 +164,8 @@ class CommandeOFMatcher:
             Articles à initialiser. Si None, tous les articles NOR/MTO.
         """
         for of in self.data_loader.ofs:
-            # OF affermis (statut 1) ou suggérés (statut 3)
-            if of.statut_num not in (1, 3):
+            # OF affermis (statut 1), planifiés (statut 2) ou suggérés (statut 3)
+            if of.statut_num not in (1, 2, 3):
                 continue
 
             # Filtrer par articles si demandé
@@ -345,8 +345,13 @@ class CommandeOFMatcher:
             if ecart_days > self.date_tolerance_days:
                 continue
 
-            # Candidat trouvé avec priorité : affermis > suggéré
-            priorite = 0 if of.statut_num == 1 else 1  # 0 = affermi, 1 = suggéré
+            # Candidat trouvé avec priorité : affermis > planifié > suggéré
+            if of.statut_num == 1:
+                priorite = 0  # Affermi
+            elif of.statut_num == 2:
+                priorite = 1  # Planifié
+            else:
+                priorite = 2  # Suggéré
             candidates.append((of_conso, ecart_days, priorite))
 
         if not candidates:
@@ -428,7 +433,12 @@ class CommandeOFMatcher:
         of_conso.allouer(allocation.besoin_net, commande.num_commande)
 
         # Déterminer le type d'OF pour le message
-        of_type = "Affermé" if of.statut_num == 1 else "Suggéré"
+        if of.statut_num == 1:
+            of_type = "Affermé"
+        elif of.statut_num == 2:
+            of_type = "Planifié"
+        else:
+            of_type = "Suggéré"
 
         return MatchingResult(
             commande=commande,
