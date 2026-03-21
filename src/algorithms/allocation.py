@@ -131,6 +131,10 @@ class AllocationManager:
     def allocate_stock(self, ofs: list[OF]) -> dict[str, AllocationResult]:
         """Alloue le stock aux OF en gérant la concurrence.
 
+        IMPORTANT : N'applique l'allocation virtuelle qu'aux OF SUGGÉRÉS.
+        Les OF FERMES avec allocations ne participent pas à l'allocation virtuelle
+        (leurs composants sont déjà réservés).
+
         Parameters
         ----------
         ofs : list[OF]
@@ -147,11 +151,39 @@ class AllocationManager:
         # Créer l'état du stock
         stock_state = StockState(initial_stock)
 
-        # Trier les OF par priorité
-        sorted_ofs = self._sort_ofs_by_priority(ofs, stock_state)
+        # Séparer les OF en deux catégories :
+        # 1. OF FERMES avec allocations → Pas d'allocation virtuelle
+        # 2. OF SUGGÉRÉS (et FERMES sans allocations) → Allocation virtuelle
+
+        of_with_allocations = set()
+        for of in ofs:
+            if of.statut_num == 1:  # OF FERME
+                allocations = self.data_loader.get_allocations_of(of.num_of)
+                if allocations:
+                    of_with_allocations.add(of.num_of)
+
+        # Filtrer les OF pour l'allocation virtuelle
+        ofs_for_allocation = [of for of in ofs if of.num_of not in of_with_allocations]
+
+        # Trier les OF par priorité (uniquement ceux pour allocation)
+        sorted_ofs = self._sort_ofs_by_priority(ofs_for_allocation, stock_state)
 
         # Allouer le stock
         results = {}
+
+        # 1. Traiter les OF FERMES avec allocations (pas d'allocation virtuelle)
+        for of in ofs:
+            if of.num_of in of_with_allocations:
+                # Vérifier sans allocation virtuelle
+                result = self.checker.check_of(of)
+                results[of.num_of] = AllocationResult(
+                    of_num=of.num_of,
+                    status=AllocationStatus.FEASIBLE if result.feasible else AllocationStatus.NOT_FEASIBLE,
+                    feasibility_result=result,
+                    allocated_quantity={},  # Pas d'allocation virtuelle
+                )
+
+        # 2. Traiter les autres OF avec allocation virtuelle
         for of in sorted_ofs:
             result = self._allocate_of(of, stock_state)
             results[of.num_of] = result

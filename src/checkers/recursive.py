@@ -172,9 +172,9 @@ class RecursiveChecker(BaseChecker):
             return result
 
         # Récupérer les allocations de l'OF parent si fourni
-        # IMPORTANT : Si stock_state est fourni (allocation virtuelle), on ignore les allocations
+        # IMPORTANT : Les OF FERMES avec allocations ne participent pas à l'allocation virtuelle
         allocations_parent = {}
-        if num_of_parent and of_parent_est_ferme and not self.stock_state:
+        if num_of_parent and of_parent_est_ferme:
             allocations_parent = {
                 alloc.article: alloc.qte_allouee
                 for alloc in self.data_loader.get_allocations_of(num_of_parent)
