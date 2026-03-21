@@ -7,7 +7,7 @@ from pathlib import Path
 from rich.console import Console
 
 from .loaders import DataLoader
-from .checkers import ImmediateChecker, ProjectedChecker
+from .checkers import ImmediateChecker, ProjectedChecker, RecursiveChecker
 from .algorithms import AllocationManager
 from .utils import format_of_table, format_detailed_report, format_summary
 from .main_s1 import main_s1
@@ -37,6 +37,12 @@ def main():
         type=str,
         default=None,
         help="Numéro d'OF spécifique à vérifier (ex: F426-08419)",
+    )
+    parser.add_argument(
+        "--commande",
+        type=str,
+        default=None,
+        help="Numéro de commande client à vérifier (ex: AR2600885)",
     )
     parser.add_argument(
         "--detailed",
@@ -84,6 +90,61 @@ def main():
     # Mode S+1
     if args.s1:
         main_s1(args, loader)
+        return
+
+    # Mode vérification commande
+    if args.commande:
+        commandes = [c for c in loader.commandes_clients if c.num_commande == args.commande]
+        if not commandes:
+            console.print(f"[bold red]Erreur: Commande {args.commande} introuvable[/bold red]")
+            return
+
+        commande = commandes[0]
+        type_str = "MTS" if commande.is_mts() else "NOR/MTO"
+        console.print(f"🎯 Vérification de la commande {args.commande}")
+        console.print(f"   Client: {commande.nom_client}")
+        console.print(f"   Article: {commande.article} - {commande.description}")
+        console.print(f"   Qté restante: {commande.qte_restante}")
+        console.print(f"   Type: {type_str}")
+        if commande.is_mts() and commande.of_contremarque:
+            console.print(f"   OF lié: {commande.of_contremarque}")
+        console.print()
+
+        # Vérifier les allocations
+        allocations = loader.get_allocations_of(args.commande)
+        if allocations:
+            console.print(f"   📦 Allocations: {len(allocations)} composant(s)")
+            for alloc in allocations[:5]:
+                console.print(f"      - {alloc.article}: {alloc.qte_allouee}")
+            if len(allocations) > 5:
+                console.print(f"      ... et {len(allocations) - 5} autres")
+        else:
+            console.print(f"   📦 Aucune allocation connue")
+        console.print()
+
+        # Vérification récursive
+        console.print("[bold cyan]🔍 Vérification récursive avec allocations...[/bold cyan]")
+        checker = RecursiveChecker(loader)
+        result = checker.check_commande(commande)
+
+        console.print(f"   {result}")
+        if result.missing_components:
+            console.print()
+            console.print("[bold red]Composants manquants:[/bold red]")
+            for article, qte in result.missing_components.items():
+                console.print(f"   ❌ {article}: {qte} unités")
+        if result.alerts:
+            console.print()
+            console.print("[yellow]Alertes:[/yellow]")
+            for alert in result.alerts[:5]:
+                console.print(f"   ⚠️  {alert}")
+            if len(result.alerts) > 5:
+                console.print(f"   ... et {len(result.alerts) - 5} autres alertes")
+        console.print()
+        console.print(f"   📊 Composants vérifiés: {result.components_checked}")
+        console.print(f"   📊 Profondeur récursion: {result.depth}")
+        console.print()
+
         return
 
     # Sélectionner les OF à vérifier

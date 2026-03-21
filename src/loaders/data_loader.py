@@ -12,6 +12,7 @@ from ..models.nomenclature import Nomenclature
 from ..models.of import OF
 from ..models.reception import Reception
 from ..models.stock import Stock
+from ..models.allocation import OFAllocation
 
 
 class DataLoader:
@@ -33,6 +34,8 @@ class DataLoader:
         Liste des réceptions fournisseurs
     commandes_clients : list[CommandeClient]
         Liste des commandes clients
+    allocations : dict[str, list[OFAllocation]]
+        Allocations par document (OF ou commande), indexé par NUM_DOC
     """
 
     def __init__(self, data_dir: str):
@@ -52,6 +55,7 @@ class DataLoader:
         self._stocks: Optional[dict[str, Stock]] = None
         self._receptions: Optional[list[Reception]] = None
         self._commandes_clients: Optional[list[CommandeClient]] = None
+        self._allocations: Optional[dict[str, list[OFAllocation]]] = None
 
         # Index des réceptions par article
         self._receptions_by_article: Optional[dict[str, list[Reception]]] = None
@@ -77,6 +81,9 @@ class DataLoader:
 
         # Indexer les OF par numéro
         self._ofs_by_num = {of.num_of: of for of in self._ofs}
+
+        # Charger les allocations
+        self._allocations = self._load_allocations()
 
     # Méthodes de chargement individuel
 
@@ -232,6 +239,102 @@ class DataLoader:
         if self._ofs_by_num is None:
             self.load_all()
         return self._ofs_by_num.get(num_of)
+
+    def get_ofs_by_article(
+        self,
+        article: str,
+        statut: Optional[int] = None,
+        date_besoin: Optional["date"] = None,
+    ) -> list[OF]:
+        """Récupère les OFs pour un article donné.
+
+        Parameters
+        ----------
+        article : str
+            Code article
+        statut : int, optional
+            Filtre par statut (1 = Ferme, 3 = Suggéré)
+        date_besoin : date, optional
+            Si fourni, trie par proximité avec cette date
+
+        Returns
+        -------
+        list[OF]
+            Liste des OFs triés (si date_besoin fourni)
+        """
+        # Filtrer par article et quantité disponible
+        ofs = [
+            of for of in self.ofs
+            if of.article == article and of.qte_restante > 0
+        ]
+
+        # Filtrer par statut si demandé
+        if statut is not None:
+            ofs = [of for of in ofs if of.statut_num == statut]
+
+        # Trier par date si demandé
+        if date_besoin is not None:
+            ofs.sort(key=lambda of: abs((of.date_fin - date_besoin).days))
+
+        return ofs
+
+    def _load_allocations(self) -> dict[str, list[OFAllocation]]:
+        """Charge le fichier des allocations OF/composants.
+
+        Returns
+        -------
+        dict[str, list[OFAllocation]]
+            Dictionnaire des allocations indexé par NUM_DOC
+        """
+        import pandas as pd
+        from collections import defaultdict
+
+        filepath = self.csv_loader.dynamique_dir / "allocations.csv"
+
+        if not filepath.exists():
+            return {}
+
+        # Charger le fichier
+        try:
+            df = pd.read_csv(filepath, sep=";", encoding="utf-8")
+        except UnicodeDecodeError:
+            df = pd.read_csv(filepath, sep=";", encoding="latin-1")
+
+        # Grouper par NUM_DOC
+        allocations = defaultdict(list)
+        for _, row in df.iterrows():
+            allocation = OFAllocation.from_csv_row(row.to_dict())
+            allocations[allocation.num_doc].append(allocation)
+
+        return dict(allocations)
+
+    @property
+    def allocations(self) -> dict[str, list[OFAllocation]]:
+        """Retourne les allocations par document.
+
+        Returns
+        -------
+        dict[str, list[OFAllocation]]
+            Dictionnaire des allocations indexé par NUM_DOC
+        """
+        if self._allocations is None:
+            self.load_all()
+        return self._allocations
+
+    def get_allocations_of(self, num_doc: str) -> list[OFAllocation]:
+        """Retourne les allocations pour un document donné.
+
+        Parameters
+        ----------
+        num_doc : str
+            Numéro du document (OF ou commande)
+
+        Returns
+        -------
+        list[OFAllocation]
+            Liste des allocations pour ce document
+        """
+        return self.allocations.get(num_doc, [])
 
     def get_commandes_s1(self, date_reference, horizon_days: int = 7) -> list[CommandeClient]:
         """Retourne les commandes clients à expédier dans l'horizon donné.
