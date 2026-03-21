@@ -33,13 +33,17 @@ DELAI_REAPPRO   → Délai de réapprovisionnement (jours)
 NUM_OF              → Numéro d'OF (PK)
 ARTICLE             → Code article à fabriquer (FK → articles)
 DESCRIPTION         → Description
-STATUT_NUM_OF       → Status (1 = Ferme)
-STATUT_TEXTE_OF     → Status texte ("Ferme")
+STATUT_NUM_OF       → Status (1 = Ferme/Affermi, 3 = Suggéré)
+STATUT_TEXTE_OF     → Status texte ("Ferme", "Suggéré")
 DATE_FIN            → Date de fin prévue
 QTE_A_FABRIQUER     → Quantité à fabriquer
 QTE_FABRIQUEE       → Quantité fabriquée
 QTE_RESTANTE        → Quantité restante
 ```
+
+**Statuts OF :**
+- **1 = Ferme (Affermi/WOP)** : OF déjà lancé en production, prioritaire pour le matching
+- **3 = Suggéré (WOS)** : OF suggéré par le moteur CBN/MRP, utilisé si pas d'OF affermi disponible
 
 ### of_composants.csv - Nomenclatures OF
 ```
@@ -539,11 +543,6 @@ Résultat : OF A validé, OF B rejeté (ou différé), OF C rejeté
 - Solution : Alerte "Nomenclature non disponible"
 - Vérification manuelle requise pour ces cas
 
-⚠️ **Distinction OF affermés vs suggérés**
-- `STATUT_NUM_OF` existe (1, 3...)
-- Pas de mapping clair vers "affermi"/"suggéré"
-- Nécessite de connaître les valeurs possibles
-
 ### Conclusion
 
 **Les données sont SUFFISANTES pour implémenter la vérification de faisabilité :**
@@ -551,3 +550,110 @@ Résultat : OF A validé, OF B rejeté (ou différé), OF C rejeté
 - ✅ Gestion de la concurrence possible
 - ✅ 2 niveaux de vérification (immédiate/projetée)
 - ⚠️ 16% de cas limites gérés par alertes
+
+---
+
+## 🎯 Algorithme de Matching Commande→OF
+
+### Logique de matching pour NOR/MTO
+
+**Pour les commandes NOR/MTO (FLAG = 1) :**
+
+1. **Vérifier le stock disponible**
+   - Allouer le stock disponible pour l'article
+   - Si stock complet (besoin_net = 0) → Pas d'OF nécessaire
+   - Sinon → Besoin net à couvrir par OF
+
+2. **Vérifier le type d'article**
+   - **Article ACHAT** → Pas d'OF, besoin d'approvisionnement fournisseur
+   - **Article FABRICATION** → Chercher un OF (affermi prioritaire, puis suggéré)
+
+3. **Recherche d'OF avec priorité**
+   - **Priorité 1** : OF affermis (statut 1) - déjà lancés en production
+   - **Priorité 2** : OF suggérés (statut 3) - créés par CBN/MRP
+   - **Critères de tri** : Type d'OF → Date de besoin → Quantité disponible
+
+4. **Partage d'OF**
+   - Plusieurs commandes peuvent partager un OF si capacité suffisante
+   - Suivi de consommation via `OFConso`
+
+### Priorité de sélection des OF
+
+```
+Ordre de priorité :
+1. Type d'OF : Affermi (statut 1) > Suggéré (statut 3)
+2. Proximité de date : Écart croissant avec date d'expédition
+3. Quantité disponible : Décroissante (pour minimiser le nombre d'OF)
+```
+
+**Clé de tri** : `(priorite, ecart_days, -qte_restante)`
+
+### Résultats obtenus
+
+**Taux de service NOR/MTO (S+1) :**
+- Avant : 89.1% (115/129)
+- Après : 99.2% (128/129)
+- Gain : +13 commandes servies
+
+**Répartition NOR/MTO :**
+- 76.7% servies par stock complet
+- 12.4% servies par OF affermi
+- 10.1% servies par OF suggéré
+- 0.8% articles ACHAT (besoin approvisionnement)
+- 0.0% articles FABRICATION sans OF
+
+### Exemple de fonctionnement
+
+**Cas AR2600929 :**
+- Commande : Article EMM716HU, 2160 unités pour le 25/03/2026
+- OF disponible : F126-44769 (affermi, 2160 unités, 24/03/2026)
+- Résultat : OF affermi utilisé (prioritaire sur les suggérés)
+
+---
+
+## 📊 Implémentations réalisées
+
+### Matching commande→OF avec partage d'OF
+
+**Fichier** : `src/algorithms/matching.py`
+
+**Fonctionnalités :**
+1. Allocation de stock avant recherche d'OF (utilise QTE_RESTANTE)
+2. Distinction ACHAT vs FABRICATION
+3. Priorité OF affermi > OF suggéré
+4. Partage d'OF entre plusieurs commandes (via OFConso)
+5. Gestion de la consommation des OF
+
+**Classes clés :**
+- `OFConso` : Suivi de la consommation d'un OF
+- `StockAllocation` : Résultat de l'allocation de stock
+- `MatchingResult` : Résultat du matching commande→OF
+
+### Vérification de faisabilité des OF
+
+**Fichiers** : `src/checkers/`
+
+**Fonctionnalités :**
+1. Vérification immédiate (stock actuel)
+2. Vérification projetée (stock + réceptions fournisseurs)
+3. Vérification récursive des nomenclatures jusqu'aux composants ACHAT
+4. Gestion de la concurrence composants entre OF
+
+---
+
+## 🔧 Commandes utiles
+
+### Lancer le mode S+1
+```bash
+python -m src.main --data-dir data --s1 --horizon 7
+```
+
+### Lancer avec un OF spécifique
+```bash
+python -m src.main --data-dir data --of F426-08419
+```
+
+### Lancer en mode détaillé
+```bash
+python -m src.main --data-dir data --detailed
+```
