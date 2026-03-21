@@ -233,17 +233,28 @@ class AllocationManager:
         AllocationResult
             Résultat de l'allocation
         """
+        # Créer un checker avec stock_state
+        from ..checkers.recursive import RecursiveChecker
+
+        # Créer un checker temporaire avec le stock_state
+        checker = RecursiveChecker(
+            self.data_loader,
+            use_receptions=getattr(self.checker, 'use_receptions', False),
+            check_date=getattr(self.checker, 'check_date', None),
+            stock_state=stock_state  # ← Utiliser le stock virtuel
+        )
+
         # Vérifier la faisabilité avec le stock restant
-        # Note: pour l'instant on utilise une approche simplifiée
-        # TODO: implémenter une vérification avec stock_state
-        result = self.checker.check_of(of)
+        result = checker.check_of(of)
 
         if result.feasible:
-            # Calculer les allocations (simplifié - à améliorer)
+            # Calculer les allocations
             allocations = self._calculate_allocations(of, stock_state)
 
             if allocations:
+                # Allouer virtuellement
                 stock_state.allocate(of.num_of, allocations)
+
                 return AllocationResult(
                     of_num=of.num_of,
                     status=AllocationStatus.FEASIBLE,
@@ -251,7 +262,7 @@ class AllocationManager:
                     allocated_quantity=allocations,
                 )
             else:
-                # OF faisable mais pas d'allocations nécessaires
+                # OF faisable mais pas d'allocations nécessaires (pas de compo ACHAT)
                 return AllocationResult(
                     of_num=of.num_of,
                     status=AllocationStatus.FEASIBLE,
@@ -269,6 +280,8 @@ class AllocationManager:
     def _calculate_allocations(self, of: OF, stock_state: StockState) -> dict[str, int]:
         """Calcule les allocations pour un OF.
 
+        Parcourt la nomenclature de l'OF et calcule les besoins en composants ACHAT.
+
         Parameters
         ----------
         of : OF
@@ -279,9 +292,29 @@ class AllocationManager:
         Returns
         -------
         dict[str, int]
-            Allocations par article
+            Allocations par article (article → quantité allouée)
         """
-        # Pour l'instant, retourne un dictionnaire vide
-        # TODO: implémenter le calcul réel des allocations
-        # basé sur la nomenclature et le stock disponible
-        return {}
+        allocations = {}
+
+        # Récupérer la nomenclature
+        nomenclature = self.data_loader.get_nomenclature(of.article)
+
+        if not nomenclature:
+            return allocations
+
+        # Parcourir les composants
+        for composant in nomenclature.composants:
+            if composant.is_achete():
+                # Calculer le besoin pour ce composant
+                besoin = int(composant.qte_lien * of.qte_restante)
+
+                # Vérifier le stock disponible
+                stock_dispo = stock_state.get_available(composant.article_composant)
+
+                # Allouer la quantité nécessaire (limitée au stock dispo)
+                qte_allouee = min(besoin, stock_dispo)
+
+                if qte_allouee > 0:
+                    allocations[composant.article_composant] = qte_allouee
+
+        return allocations

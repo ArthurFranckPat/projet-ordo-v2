@@ -8,7 +8,7 @@ from rich.console import Console
 
 from .loaders import DataLoader
 from .checkers import ImmediateChecker, ProjectedChecker, RecursiveChecker
-from .algorithms import AllocationManager
+from .algorithms import AllocationManager, AllocationStatus
 from .utils import format_of_table, format_detailed_report, format_summary
 from .main_s1 import main_s1
 
@@ -53,6 +53,11 @@ def main():
         "--no-allocation",
         action="store_true",
         help="Désactive la gestion de la concurrence",
+    )
+    parser.add_argument(
+        "--no-virtual-allocation",
+        action="store_true",
+        help="Désactive l'allocation virtuelle (vérification indépendante des OF)",
     )
     parser.add_argument(
         "--s1",
@@ -188,13 +193,41 @@ def main():
     # Gestion de la concurrence
     allocation_results = None
     if not args.no_allocation:
-        console.print("[bold cyan]📦 Gestion de la concurrence...[/bold cyan]")
-        allocation_manager = AllocationManager(loader, projected_checker)
-        allocation_results = allocation_manager.allocate_stock(ofs)
+        if args.no_virtual_allocation:
+            # Approche 1 : Pas d'allocation virtuelle (vérification indépendante)
+            console.print("[bold cyan]📦 Vérification sans allocation virtuelle...[/bold cyan]")
 
-        alloc_feasible = sum(1 for r in allocation_results.values() if r.status.value == "feasible")
-        console.print(f"✅ Terminé: {alloc_feasible}/{len(ofs)} OF alloués")
-        console.print()
+            # Utiliser ProjectedChecker directement (pas de StockState)
+            allocation_results = {
+                of.num_of: AllocationResult(
+                    of_num=of.num_of,
+                    status=AllocationStatus.FEASIBLE if projected_results[of.num_of].feasible else AllocationStatus.NOT_FEASIBLE,
+                    feasibility_result=projected_results[of.num_of],
+                    allocated_quantity={},
+                )
+                for of in ofs
+            }
+
+            alloc_feasible = sum(1 for r in allocation_results.values() if r.status.value == "feasible")
+            console.print(f"✅ Terminé: {alloc_feasible}/{len(ofs)} OF vérifiés (indépendamment)")
+            console.print()
+        else:
+            # Approche 2 : Allocation virtuelle (défaut)
+            console.print("[bold cyan]📦 Gestion de la concurrence avec allocation virtuelle...[/bold cyan]")
+
+            # Créer un RecursiveChecker avec réceptions
+            recursive_checker = RecursiveChecker(
+                loader,
+                use_receptions=True,  # Utiliser les réceptions fournisseurs
+                check_date=date.today()  # Date du jour
+            )
+
+            allocation_manager = AllocationManager(loader, recursive_checker)
+            allocation_results = allocation_manager.allocate_stock(ofs)
+
+            alloc_feasible = sum(1 for r in allocation_results.values() if r.status.value == "feasible")
+            console.print(f"✅ Terminé: {alloc_feasible}/{len(ofs)} OF alloués")
+            console.print()
 
     # Afficher les résultats
     format_of_table(ofs, immediate_results, projected_results, allocation_results)

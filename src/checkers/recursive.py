@@ -23,9 +23,11 @@ class RecursiveChecker(BaseChecker):
         Si True, utilise les réceptions fournisseurs dans le calcul du stock
     check_date : Optional[date]
         Date de vérification (pour filtrer les réceptions)
+    stock_state : Optional[StockState]
+        État du stock virtuel pour allocation (None = stock réel)
     """
 
-    def __init__(self, data_loader, use_receptions: bool = False, check_date: Optional = None):
+    def __init__(self, data_loader, use_receptions: bool = False, check_date: Optional = None, stock_state: Optional["StockState"] = None):
         """Initialise le checker récursif.
 
         Parameters
@@ -36,10 +38,13 @@ class RecursiveChecker(BaseChecker):
             Si True, utilise les réceptions fournisseurs
         check_date : Optional[date]
             Date de vérification (None = aujourd'hui)
+        stock_state : Optional[StockState]
+            État du stock virtuel pour allocation (None = stock réel)
         """
         super().__init__(data_loader)
         self.use_receptions = use_receptions
         self.check_date = check_date
+        self.stock_state = stock_state
 
     def check_of(self, of: OF) -> FeasibilityResult:
         """Vérifie la faisabilité d'un OF avec récursion.
@@ -167,8 +172,9 @@ class RecursiveChecker(BaseChecker):
             return result
 
         # Récupérer les allocations de l'OF parent si fourni
+        # IMPORTANT : Si stock_state est fourni (allocation virtuelle), on ignore les allocations
         allocations_parent = {}
-        if num_of_parent and of_parent_est_ferme:
+        if num_of_parent and of_parent_est_ferme and not self.stock_state:
             allocations_parent = {
                 alloc.article: alloc.qte_allouee
                 for alloc in self.data_loader.get_allocations_of(num_of_parent)
@@ -292,6 +298,8 @@ class RecursiveChecker(BaseChecker):
     def _check_stock(self, article: str, qte_besoin: int, date_besoin) -> FeasibilityResult:
         """Vérifie si le stock est suffisant pour un article.
 
+        Utilise le stock virtuel si stock_state est fourni, sinon le stock réel.
+
         Parameters
         ----------
         article : str
@@ -308,25 +316,30 @@ class RecursiveChecker(BaseChecker):
         """
         result = FeasibilityResult()
 
-        # Récupérer le stock actuel
-        stock = self.data_loader.get_stock(article)
-        if stock is None:
-            # Article sans stock = considéré comme en rupture
-            result.feasible = False
-            result.add_missing(article, qte_besoin)
-            result.add_alert(f"Stock non disponible pour l'article {article}")
-            return result
+        # Récupérer le stock (virtuel ou réel)
+        if self.stock_state:
+            # Utiliser le stock virtuel (allocation activée)
+            stock_dispo = self.stock_state.get_available(article)
+        else:
+            # Utiliser le stock réel (comportement actuel)
+            stock = self.data_loader.get_stock(article)
+            if stock is None:
+                # Article sans stock = considéré comme en rupture
+                result.feasible = False
+                result.add_missing(article, qte_besoin)
+                result.add_alert(f"Stock non disponible pour l'article {article}")
+                return result
 
-        stock_dispo = stock.disponible()
+            stock_dispo = stock.disponible()
 
-        # Ajouter les réceptions si activé
-        if self.use_receptions:
-            receptions = self.data_loader.get_receptions(article)
-            for reception in receptions:
-                if self.check_date and reception.est_disponible_avant(self.check_date):
-                    stock_dispo += reception.quantite_restante
-                elif not self.check_date and reception.est_disponible_avant(date_besoin):
-                    stock_dispo += reception.quantite_restante
+            # Ajouter les réceptions si activé
+            if self.use_receptions:
+                receptions = self.data_loader.get_receptions(article)
+                for reception in receptions:
+                    if self.check_date and reception.est_disponible_avant(self.check_date):
+                        stock_dispo += reception.quantite_restante
+                    elif not self.check_date and reception.est_disponible_avant(date_besoin):
+                        stock_dispo += reception.quantite_restante
 
         # Vérifier si le stock est suffisant
         if stock_dispo < qte_besoin:
