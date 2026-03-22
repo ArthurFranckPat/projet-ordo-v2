@@ -337,7 +337,12 @@ class DataLoader:
         """
         return self.allocations.get(num_doc, [])
 
-    def get_commandes_s1(self, date_reference, horizon_days: int = 7) -> list[BesoinClient]:
+    def get_commandes_s1(
+        self,
+        date_reference,
+        horizon_days: int = 7,
+        include_previsions: bool = False
+    ) -> list[BesoinClient]:
         """Retourne les commandes clients à expédier dans l'horizon donné.
 
         Parameters
@@ -346,24 +351,42 @@ class DataLoader:
             Date de référence
         horizon_days : int
             Horizon en jours (défaut: 7 pour S+1)
+        include_previsions : bool
+            Si True, inclut les prévisions (défaut: False)
 
         Returns
         -------
         list[BesoinClient]
-            Commandes avec DATE_EXPEDITION_DEMANDEE dans l'horizon
-            (uniquement les commandes réelles, pas les prévisions)
+            Besoins avec DATE_EXPEDITION_DEMANDEE dans l'horizon
+            - Si include_previsions=False : uniquement les commandes réelles
+            - Si include_previsions=True : commandes + prévisions
+            - Triées avec priorité : commandes d'abord, prévisions ensuite
         """
         from datetime import timedelta
 
         date_fin = date_reference + timedelta(days=horizon_days)
 
-        commandes_s1 = []
-        for commande in self.commandes_clients:
-            # Filtrer uniquement les commandes réelles (pas les prévisions)
-            if not commande.est_commande():
-                continue
-            date_exp = commande.date_expedition_demandee
-            if date_reference <= date_exp <= date_fin and commande.qte_restante > 0:
-                commandes_s1.append(commande)
+        besoins_s1 = []
+        for besoin in self.commandes_clients:
+            # Filtrer par nature
+            if include_previsions:
+                # Inclure commandes ET prévisions
+                if not (besoin.est_commande() or besoin.est_prevision()):
+                    continue
+            else:
+                # Uniquement les commandes réelles (pas les prévisions)
+                if not besoin.est_commande():
+                    continue
 
-        return commandes_s1
+            date_exp = besoin.date_expedition_demandee
+            if date_reference <= date_exp <= date_fin and besoin.qte_restante > 0:
+                besoins_s1.append(besoin)
+
+        # Trier par priorité : commandes d'abord, puis prévisions
+        # Puis par date d'expédition
+        besoins_s1.sort(key=lambda b: (
+            0 if b.est_commande() else 1,  # Commandes = 0, Prévisions = 1
+            b.date_expedition_demandee
+        ))
+
+        return besoins_s1

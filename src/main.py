@@ -70,6 +70,11 @@ def main():
         default=7,
         help="Horizon en jours pour le mode S+1 (défaut: 7)",
     )
+    parser.add_argument(
+        "--with-previsions",
+        action="store_true",
+        help="Inclut les prévisions Export dans l'analyse (mode S+1)",
+    )
 
     args = parser.parse_args()
 
@@ -94,7 +99,7 @@ def main():
 
     # Mode S+1
     if args.s1:
-        main_s1(args, loader)
+        main_s1(args, loader, include_previsions=args.with_previsions)
         return
 
     # Mode vérification commande

@@ -1,6 +1,7 @@
 """Rapport S+1 - Validation de la faisabilité des OF pour commandes S+1."""
 
 from typing import List
+from rich.text import Text
 
 from rich.console import Console
 from rich.table import Table
@@ -16,6 +17,7 @@ console = Console()
 def format_rapport_s1(
     resultats_matching: List[MatchingResult],
     resultats_faisabilite: dict[str, FeasibilityResult],
+    include_previsions: bool = False,
 ):
     """Affiche le rapport S+1 complet.
 
@@ -25,15 +27,25 @@ def format_rapport_s1(
         Résultats du matching commande→OF
     resultats_faisabilite : dict[str, FeasibilityResult]
         Résultats de faisabilité indexés par numéro d'OF
+    include_previsions : bool
+        Indique si les prévisions sont incluses
     """
+    # Titre dynamique
+    titre = "📋 Validation de la faisabilité des OF - "
+    if include_previsions:
+        titre += "Besoins S+1 (Commandes + Prévisions)"
+    else:
+        titre += "Commandes S+1"
+
     # Tableau principal
-    table = Table(title="📋 Validation de la faisabilité des OF - Commandes S+1")
+    table = Table(title=titre)
 
     table.add_column("Commande", style="cyan", no_wrap=True)
     table.add_column("Client", style="magenta")
     table.add_column("Article", style="white")
     table.add_column("Qté Rst", justify="right", style="white")
     table.add_column("Date exp", style="white")
+    table.add_column("Nature", style="cyan", no_wrap=True)  # Nouvelle colonne
     table.add_column("Type", style="yellow")
     table.add_column("Stock dispo", justify="right", style="white")
     table.add_column("Alloué", justify="right", style="green")
@@ -57,6 +69,10 @@ def format_rapport_s1(
             stock_alloue = "-"
             besoin_net = "-"
 
+        # Nature : COMMANDE ou PREVISION
+        nature = "CMD" if commande.est_commande() else "PRÉV"
+        nature_style = "white" if commande.est_commande() else "dim cyan"
+
         # Récupérer le résultat de faisabilité
         if of:
             faisability = resultats_faisabilite.get(of.num_of)
@@ -77,6 +93,7 @@ def format_rapport_s1(
             commande.article[:15],
             str(commande.qte_restante),
             commande.date_expedition_demandee.strftime("%d/%m/%Y"),
+            Text.from_markup(f"[{nature_style}]{nature}[/{nature_style}]"),  # Nature avec style
             "MTS" if commande.is_mts() else "NOR/MTO",
             stock_dispo,
             stock_alloue,
@@ -92,7 +109,7 @@ def format_rapport_s1(
     _afficher_alertes(resultats_matching)
 
     # Résumé
-    _afficher_resume(resultats_matching, resultats_faisabilite)
+    _afficher_resume(resultats_matching, resultats_faisabilite, include_previews=include_previsions)
 
 
 def _format_missing(resultat: FeasibilityResult) -> str:
@@ -123,19 +140,39 @@ def _afficher_alertes(resultats: List[MatchingResult]):
 def _afficher_resume(
     resultats_matching: List[MatchingResult],
     resultats_faisabilite: dict[str, FeasibilityResult],
+    include_previews: bool = False,
 ):
-    """Affiche le résumé des résultats."""
+    """Affiche le résumé des résultats.
+
+    Parameters
+    ----------
+    resultats_matching : List[MatchingResult]
+        Résultats du matching
+    resultats_faisabilite : dict[str, FeasibilityResult]
+        Résultats de faisabilité
+    include_previews : bool
+        Indique si les prévisions sont incluses
+    """
     console.print("\n" + "=" * 80)
     console.print("📊 [bold]RÉSUME S+1[/bold]")
     console.print("=" * 80 + "\n")
 
     # Statistiques de matching
     total = len(resultats_matching)
+    commandes = sum(1 for r in resultats_matching if r.commande.est_commande())
+    previsions = sum(1 for r in resultats_matching if r.commande.est_prevision())
     mts = sum(1 for r in resultats_matching if r.commande.is_mts())
     nor_mto = sum(1 for r in resultats_matching if r.commande.is_nor_mto())
     of_trouves = sum(1 for r in resultats_matching if r.of is not None)
 
-    console.print(f"[bold]Commandes S+1:[/bold] {total}")
+    # Titre adapté
+    if include_previews:
+        console.print(f"[bold]Besoins S+1:[/bold] {total}")
+        console.print(f"   📦 Commandes : {commandes}")
+        console.print(f"   📊 Prévisions : {previsions}")
+    else:
+        console.print(f"[bold]Commandes S+1:[/bold] {total}")
+
     console.print(f"   🏭 MTS : {mts}")
     console.print(f"   📦 NOR/MTO : {nor_mto}")
     console.print(f"   ✅ OF trouvés : {of_trouves}/{total} ({of_trouves / total * 100:.1f}%)")
