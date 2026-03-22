@@ -97,15 +97,27 @@ class BesoinClient:
         BesoinClient
             Instance créée
         """
+        # Helper pour convertir n'importe quel type en string
+        def _to_str(value) -> str:
+            """Convertit une valeur en string, gérant les types pandas."""
+            if isinstance(value, str):
+                return value
+            if isinstance(value, (int, float)):
+                # Gérer NaN
+                if str(value) == "nan" or str(value) == "NaN":
+                    return ""
+                return str(value)
+            return ""
+
         # Parser TYPE_COMMANDE
-        type_str = row.get("TYPE_COMMANDE", "").strip().upper()
+        type_str = _to_str(row.get("TYPE_COMMANDE", "")).strip().upper()
         try:
             type_commande = TypeCommande(type_str)
         except ValueError:
             type_commande = TypeCommande.NOR  # Défaut si vide ou invalide
 
         # Parser NATURE_BESOIN
-        nature_str = row.get("NATURE_BESOIN", "COMMANDE").strip().upper()
+        nature_str = _to_str(row.get("NATURE_BESOIN", "COMMANDE")).strip().upper()
         try:
             nature_besoin = NatureBesoin(nature_str)
         except ValueError:
@@ -114,6 +126,7 @@ class BesoinClient:
         # Parser les dates
         def _parse_date(date_str: str) -> Optional[date]:
             """Parse une date au format français JJ/MM/AAAA."""
+            date_str = _to_str(date_str)
             if not date_str or not date_str.strip():
                 return None
             try:
@@ -124,6 +137,9 @@ class BesoinClient:
         # Parser les entiers
         def _parse_int(value) -> int:
             if isinstance(value, (int, float)):
+                # Gérer NaN
+                if str(value) == "nan" or str(value) == "NaN":
+                    return 0
                 return int(value)
             if isinstance(value, str):
                 cleaned = value.replace(",", "").replace(" ", "").strip()
@@ -133,12 +149,12 @@ class BesoinClient:
             return 0
 
         return cls(
-            nom_client=row.get("NOM_CLIENT", "").strip(),
+            nom_client=_to_str(row.get("NOM_CLIENT", "")).strip(),
             type_commande=type_commande,
-            num_commande=row.get("NUM_COMMANDE", "").strip(),
+            num_commande=_to_str(row.get("NUM_COMMANDE", "")).strip(),
             nature_besoin=nature_besoin,
-            article=row.get("ARTICLE", "").strip(),
-            of_contremarque=row.get("OF_CONTREMARQUE", "").strip(),
+            article=_to_str(row.get("ARTICLE", "")).strip(),
+            of_contremarque=_to_str(row.get("OF_CONTREMARQUE", "")).strip(),
             date_commande=_parse_date(row.get("DATE_COMMANDE", "")),
             date_expedition_demandee=_parse_date(row.get("DATE_EXPEDITION_DEMANDEE", "")) or date.today(),
             qte_commandee=_parse_int(row.get("QTE_COMMANDEE", 0)),
