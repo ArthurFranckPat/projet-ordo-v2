@@ -9,6 +9,7 @@ from .csv_loader import CSVLoader
 from ..models.article import Article
 from ..models.besoin_client import BesoinClient
 from ..models.commande_client import CommandeClient
+from ..models.gamme import Gamme
 from ..models.nomenclature import Nomenclature
 from ..models.of import OF
 from ..models.reception import Reception
@@ -27,6 +28,8 @@ class DataLoader:
         Catalogue des articles indexé par code
     nomenclatures : dict[str, Nomenclature]
         Nomenclatures indexées par article parent
+    gammes : dict[str, Gamme]
+        Gammes de production indexées par article
     ofs : list[OF]
         Liste des ordres de fabrication
     stocks : dict[str, Stock]
@@ -52,6 +55,7 @@ class DataLoader:
         # Cache pour les données chargées
         self._articles: Optional[dict[str, Article]] = None
         self._nomenclatures: Optional[dict[str, Nomenclature]] = None
+        self._gammes: Optional[dict[str, Gamme]] = None
         self._ofs: Optional[list[OF]] = None
         self._stocks: Optional[dict[str, Stock]] = None
         self._receptions: Optional[list[Reception]] = None
@@ -69,6 +73,7 @@ class DataLoader:
         (
             self._articles,
             self._nomenclatures,
+            self._gammes,
             self._ofs,
             self._stocks,
             self._receptions,
@@ -101,6 +106,13 @@ class DataLoader:
         if self._nomenclatures is None:
             self.load_all()
         return self._nomenclatures
+
+    @property
+    def gammes(self) -> dict[str, Gamme]:
+        """Retourne les gammes de production."""
+        if self._gammes is None:
+            self.load_all()
+        return self._gammes
 
     @property
     def ofs(self) -> list[OF]:
@@ -161,6 +173,21 @@ class DataLoader:
             Nomenclature ou None si introuvable
         """
         return self.nomenclatures.get(article)
+
+    def get_gamme(self, article: str) -> Optional[Gamme]:
+        """Retourne la gamme d'un article.
+
+        Parameters
+        ----------
+        article : str
+            Code de l'article
+
+        Returns
+        -------
+        Optional[Gamme]
+            Gamme ou None si introuvable
+        """
+        return self.gammes.get(article)
 
     def get_stock(self, article: str) -> Optional[Stock]:
         """Retourne le stock d'un article.

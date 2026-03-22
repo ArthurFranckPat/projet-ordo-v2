@@ -9,10 +9,12 @@ import pandas as pd
 from ..models.article import Article
 from ..models.besoin_client import BesoinClient
 from ..models.commande_client import CommandeClient
+from ..models.gamme import Gamme, GammeOperation
 from ..models.nomenclature import Nomenclature
 from ..models.of import OF
 from ..models.reception import Reception
 from ..models.stock import Stock
+from collections import defaultdict
 
 
 class CSVLoader:
@@ -126,15 +128,29 @@ class CSVLoader:
 
         return nomenclatures
 
-    def load_gammes(self) -> dict:
+    def load_gammes(self) -> dict[str, Gamme]:
         """Charge les gammes de production.
 
         Returns
         -------
-        dict
-            Dictionnaire des gammes
+        dict[str, Gamme]
+            Dictionnaire des gammes indexé par article
         """
-        return self._load_csv("gammes.csv", subdir="statique")
+        df = self._load_csv("gammes.csv", subdir="statique")
+
+        # Grouper par article
+        gammes_dict = defaultdict(list)
+        for _, row in df.iterrows():
+            op = GammeOperation.from_csv_row(row.to_dict())
+            gammes_dict[op.article].append(op)
+
+        # Convertir en objets Gamme
+        gammes = {
+            article: Gamme(article=article, operations=ops)
+            for article, ops in gammes_dict.items()
+        }
+
+        return gammes
 
     def load_of_entetes(self) -> list[OF]:
         """Charge les en-têtes d'ordres de fabrication.
@@ -291,6 +307,7 @@ class CSVLoader:
     ) -> tuple[
         dict[str, Article],
         dict[str, Nomenclature],
+        dict[str, Gamme],
         list[OF],
         dict[str, Stock],
         list[Reception],
@@ -301,7 +318,7 @@ class CSVLoader:
         Returns
         -------
         tuple
-            (articles, nomenclatures, ofs, stocks, receptions, commandes_clients)
+            (articles, nomenclatures, gammes, ofs, stocks, receptions, commandes_clients)
 
         Note
         ----
@@ -309,9 +326,10 @@ class CSVLoader:
         """
         articles = self.load_articles()
         nomenclatures = self.load_nomenclatures()
+        gammes = self.load_gammes()
         ofs = self.load_of_entetes()
         stocks = self.load_stock()
         receptions = self.load_receptions()
         commandes_clients = self.load_commandes_clients()
 
-        return articles, nomenclatures, ofs, stocks, receptions, commandes_clients
+        return articles, nomenclatures, gammes, ofs, stocks, receptions, commandes_clients

@@ -9,7 +9,9 @@ from rich.console import Console
 from .loaders import DataLoader
 from .checkers import ImmediateChecker, ProjectedChecker, RecursiveChecker
 from .algorithms import AllocationManager, AllocationStatus
+from .algorithms import calculate_weekly_charge_heatmap
 from .utils import format_of_table, format_detailed_report, format_summary
+from .utils import format_charge_heatmap, format_charge_summary
 from .main_s1 import main_s1
 
 console = Console()
@@ -75,6 +77,17 @@ def main():
         action="store_true",
         help="Inclut les prévisions Export dans l'analyse (mode S+1)",
     )
+    parser.add_argument(
+        "--charge-heatmap",
+        action="store_true",
+        help="Génère une heatmap de charge par poste de charge",
+    )
+    parser.add_argument(
+        "--num-weeks",
+        type=int,
+        default=4,
+        help="Nombre de semaines pour la heatmap (défaut: 4)",
+    )
 
     args = parser.parse_args()
 
@@ -91,11 +104,50 @@ def main():
 
     console.print(f"✅ {len(loader.articles)} articles chargés")
     console.print(f"✅ {len(loader.nomenclatures)} nomenclatures chargées")
+    console.print(f"✅ {len(loader.gammes)} gammes chargées")
     console.print(f"✅ {len(loader.ofs)} OF chargés")
     console.print(f"✅ {len(loader.stocks)} stocks chargés")
     console.print(f"✅ {len(loader.receptions)} réceptions chargées")
     console.print(f"✅ {len(loader.commandes_clients)} commandes clients chargées")
     console.print()
+
+    # Mode Heatmap de charge
+    if args.charge_heatmap:
+        from datetime import timedelta
+
+        console.print("[bold cyan]🔥 Calcul de la charge par poste de charge...[/bold cyan]")
+        console.print()
+
+        # Filtrer les besoins
+        date_ref = date.today()
+        besoins = loader.commandes_clients
+
+        # Filtrer par horizon
+        horizon_days = args.num_weeks * 7
+        besoins = [
+            b for b in besoins
+            if 0 < (b.date_expedition_demandee - date_ref).days <= horizon_days
+            and b.qte_restante > 0
+        ]
+
+        console.print(f"📋 [bold cyan]{len(besoins)}[/bold cyan] besoins analysés")
+        console.print(f"   Horizon: [bold white]{args.num_weeks}[/bold white] semaines")
+        console.print(f"   (Consommation des prévisions activée)")
+        console.print()
+
+        # Calculer la heatmap
+        heatmap = calculate_weekly_charge_heatmap(
+            besoins=besoins,
+            data_loader=loader,
+            num_weeks=args.num_weeks
+        )
+
+        # Afficher
+        week_labels = [f"S+{i}" for i in range(1, args.num_weeks + 1)]
+        format_charge_heatmap(heatmap, week_labels)
+        format_charge_summary(heatmap, len(besoins), args.num_weeks)
+
+        return
 
     # Mode S+1
     if args.s1:
