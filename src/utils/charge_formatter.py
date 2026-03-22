@@ -21,7 +21,7 @@ def format_charge_heatmap(
     heatmap : list[ChargeByPoste]
         Liste des postes avec leurs charges
     week_labels : list[str]
-        Liste des labels de semaines (ex: ["S+1", "S+2", "S+3", "S+4"])
+        Liste des labels de semaines (ex: ["BACKLOG", "EN_COURS", "S+1", "S+2", "S+3", "S+4"])
     show_totals : bool, optional
         Si True, affiche une colonne total (défaut: True)
     title : str, optional
@@ -29,22 +29,28 @@ def format_charge_heatmap(
 
     Examples
     --------
-    >>> format_charge_heatmap(heatmap, ["S+1", "S+2", "S+3", "S+4"])
-    ┏━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━━┓
-    ┃ Poste ┃ Libellé            ┃  S+1 ┃  S+2 ┃  S+3 ┃  S+4 ┃ Total ┃
-    ┡━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━╇━━━━━━╇━━━━━━╇━━━━━━━┩
-    │ PP_128│ ASSEMBLAGE KIT BOUCHE│ 120.5│  98.3│ 150.2│  80.1│ 449.1 │
-    └───────┴─────────────────────┴──────┴──────┴──────┴──────┴───────┘
+    >>> format_charge_heatmap(heatmap, ["BACKLOG", "EN_COURS", "S+1", "S+2", "S+3", "S+4"])
+    ┏━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━━┓
+    ┃ Poste ┃ Libellé            ┃BACKLOG�EN_COURS┃  S+1 ┃  S+2 ┃  S+3 ┃  S+4 ┃ Total ┃
+    ┡━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━╇━━━━━━╇━━━━━━╇━━━━━━╇━━━━━━╇━━━━━━━┩
+    │ PP_128│ ASSEMBLAGE KIT BOUCHE│  10.5 │   5.3 │ 120.5│  98.3│ 150.2│  80.1│ 384.9 │
+    └───────┴─────────────────────┴───────┴───────┴──────┴──────┴──────┴──────┴───────┘
     """
-    # Créer le tableau
-    table = Table(title=title, title_style="bold red")
+    # Créer le tableau avec expand=True pour utiliser toute la largeur
+    table = Table(title=title, title_style="bold red", expand=True)
 
     # Colonnes
-    table.add_column("Poste", style="cyan", no_wrap=True, width=10)
-    table.add_column("Libellé", style="magenta", width=30)
+    table.add_column("Poste", style="cyan", no_wrap=True, width=7)
+    table.add_column("Libellé", style="magenta", width=22)
 
     for week in week_labels:
-        table.add_column(week, justify="right", style="white", width=10)
+        # Styling spécifique pour BACKLOG et EN_COURS
+        if week == "BACKLOG":
+            table.add_column("BKLOG", justify="right", style="bold red", width=8)
+        elif week == "EN_COURS":
+            table.add_column("ENCOURS", justify="right", style="bold yellow", width=8)
+        else:
+            table.add_column(week, justify="right", style="white", width=8)
 
     if show_totals:
         table.add_column("Total", justify="right", style="bold green", width=10)

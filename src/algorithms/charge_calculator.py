@@ -241,6 +241,7 @@ def calculate_weekly_charge_heatmap(
        - Calculer la charge de l'article (avec récursion)
        - Ajouter au total du poste pour cette semaine
     3. Agréger par poste de charge
+    4. Ajouter le backlog et la semaine en cours
 
     Parameters
     ----------
@@ -256,28 +257,56 @@ def calculate_weekly_charge_heatmap(
     list[ChargeByPoste]
         Liste des postes avec leurs charges par semaine
         Triée par poste_charge
+        Inclut BACKLOG et EN_COURS en plus de S+1, S+2, etc.
 
     Examples
     --------
     >>> heatmap = calculate_weekly_charge_heatmap(besoins, loader, 4)
     >>> for poste in heatmap:
     ...     print(f"{poste.poste_charge}: {poste.charges}")
-    PP_128: {"S+1": 120.5, "S+2": 98.3, ...}
-    PP_091: {"S+1": 65.8, "S+2": 78.9, ...}
+    PP_128: {"BACKLOG": 50.2, "EN_COURS": 120.5, "S+1": 98.3, ...}
     """
-    # 1. Grouper les besoins par semaine
+    from datetime import timedelta
+
+    date_ref = date.today()
+
+    # Calculer les bornes pour la semaine en cours
+    weekday = date_ref.weekday()  # 0 = lundi, 6 = dimanche
+    lundi_semaine_en_cours = date_ref - timedelta(days=weekday)
+    dimanche_semaine_en_cours = lundi_semaine_en_cours + timedelta(days=6)
+    lundi_semaine_prochaine = lundi_semaine_en_cours + timedelta(days=7)
+
+    # 1. Grouper les besoins par semaine (S+1, S+2, etc.)
     weekly_besoins = group_by_week(besoins, num_weeks)
 
-    # 2. Calculer la charge pour chaque semaine
+    # 2. Créer les groupes supplémentaires : BACKLOG et EN_COURS
+    besoins_backlog = []
+    besoins_encours = []
+
+    for besoin in besoins:
+        date_exp = besoin.date_expedition_demandee
+        if date_exp < lundi_semaine_en_cours:
+            # BACKLOG : avant la semaine en cours
+            besoins_backlog.append(besoin)
+        elif date_exp <= dimanche_semaine_en_cours:
+            # EN_COURS : semaine en cours (lundi → dimanche actuelle)
+            besoins_encours.append(besoin)
+
+    # 3. Calculer la charge pour chaque période
     weekly_charges = defaultdict(lambda: defaultdict(float))
     # weekly_charges[poste][week_label] = hours
 
-    for week_label, besoins_in_week in weekly_besoins.items():
+    # Fonction helper pour traiter un groupe de besoins
+    def process_groupe(label_besoin, besoins_groupe):
+        """Calcule la charge pour un groupe de besoins."""
+        if not besoins_groupe:
+            return
+
         # Appliquer la consommation des prévisions
         from .forecast_consumption import consume_forecasts_by_article
         besoins_ajustes, _ = consume_forecasts_by_article(
-            besoins_in_week,
-            week_label
+            besoins_groupe,
+            label_besoin
         )
 
         for besoin in besoins_ajustes:
@@ -288,11 +317,18 @@ def calculate_weekly_charge_heatmap(
                 data_loader=data_loader
             )
 
-            # Ajouter aux totaux hebdomadaires
+            # Ajouter aux totaux
             for poste, hours in charge_by_poste.items():
-                weekly_charges[poste][week_label] += hours
+                weekly_charges[poste][label_besoin] += hours
 
-    # 3. Convertir en objets ChargeByPoste
+    # Traiter les périodes
+    process_groupe("BACKLOG", besoins_backlog)
+    process_groupe("EN_COURS", besoins_encours)
+
+    for week_label, besoins_in_week in weekly_besoins.items():
+        process_groupe(week_label, besoins_in_week)
+
+    # 4. Convertir en objets ChargeByPoste
     heatmap = []
     for poste, charges in weekly_charges.items():
         # Récupérer le libellé du poste

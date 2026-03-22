@@ -380,13 +380,14 @@ class DataLoader:
             Horizon en jours (défaut: 7 pour S+1)
         include_previsions : bool
             Si True, inclut les prévisions (défaut: False)
+            NOTE: Pour la France (FR), les prévisions sont toujours exclues
 
         Returns
         -------
         list[BesoinClient]
             Besoins avec DATE_EXPEDITION_DEMANDEE dans l'horizon
-            - Si include_previsions=False : uniquement les commandes réelles
-            - Si include_previsions=True : commandes + prévisions
+            - France (FR) : uniquement les commandes (jamais de prévisions)
+            - Export (≠FR) : commandes + prévisions si include_previsions=True
             - Triées avec priorité : commandes d'abord, prévisions ensuite
         """
         from datetime import timedelta
@@ -395,15 +396,30 @@ class DataLoader:
 
         besoins_s1 = []
         for besoin in self.commandes_clients:
-            # Filtrer par nature
-            if include_previsions:
-                # Inclure commandes ET prévisions
-                if not (besoin.est_commande() or besoin.est_prevision()):
-                    continue
-            else:
-                # Uniquement les commandes réelles (pas les prévisions)
+            # Règle métier : France = pas de prévisions, Export = prévisions possibles
+            # Si France, forcer l'exclusion des prévisions
+            if besoin.est_france():
+                # France : uniquement les commandes réelles
                 if not besoin.est_commande():
                     continue
+            elif besoin.est_export():
+                # Export : appliquer le paramètre include_previsions
+                if include_previsions:
+                    # Inclure commandes ET prévisions
+                    if not (besoin.est_commande() or besoin.est_prevision()):
+                        continue
+                else:
+                    # Uniquement les commandes réelles
+                    if not besoin.est_commande():
+                        continue
+            else:
+                # Fallback : si pas de pays valide, comportement standard
+                if include_previsions:
+                    if not (besoin.est_commande() or besoin.est_prevision()):
+                        continue
+                else:
+                    if not besoin.est_commande():
+                        continue
 
             date_exp = besoin.date_expedition_demandee
             if date_reference <= date_exp <= date_fin and besoin.qte_restante > 0:

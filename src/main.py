@@ -122,16 +122,20 @@ def main():
         date_ref = date.today()
         besoins = loader.commandes_clients
 
-        # Filtrer par horizon
-        horizon_days = args.num_weeks * 7
+        # Calculer les bornes
+        from datetime import timedelta
+        weekday = date_ref.weekday()
+        lundi_semaine_en_cours = date_ref - timedelta(days=weekday)
+        horizon_end = lundi_semaine_en_cours + timedelta(days=args.num_weeks * 7 + 6)  # Inclure toutes les semaines jusqu'à S+N
+
+        # Filtrer : inclure BACKLOG + EN_COURS + S+1 à S+N
         besoins = [
             b for b in besoins
-            if 0 < (b.date_expedition_demandee - date_ref).days <= horizon_days
-            and b.qte_restante > 0
+            if b.date_expedition_demandee <= horizon_end and b.qte_restante > 0
         ]
 
         console.print(f"📋 [bold cyan]{len(besoins)}[/bold cyan] besoins analysés")
-        console.print(f"   Horizon: [bold white]{args.num_weeks}[/bold white] semaines")
+        console.print(f"   Période: [bold white]BACKLOG[/bold white] + [bold white]EN_COURS[/bold white] + [bold white]{args.num_weeks}[/bold white] semaines")
         console.print(f"   (Consommation des prévisions activée)")
         console.print()
 
@@ -143,7 +147,7 @@ def main():
         )
 
         # Afficher
-        week_labels = [f"S+{i}" for i in range(1, args.num_weeks + 1)]
+        week_labels = ["BACKLOG", "EN_COURS"] + [f"S+{i}" for i in range(1, args.num_weeks + 1)]
         format_charge_heatmap(heatmap, week_labels)
         format_charge_summary(heatmap, len(besoins), args.num_weeks)
 

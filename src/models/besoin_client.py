@@ -33,6 +33,8 @@ class BesoinClient:
     ----------
     nom_client : str
         Nom du client (NOM_CLIENT)
+    code_pays : str
+        Code pays du client (PAYS_CLIENT: FR, DE, ES, IT, etc.)
     type_commande : TypeCommande
         Type de commande (TYPE_COMMANDE: MTS, NOR, MTO)
     num_commande : str
@@ -56,6 +58,7 @@ class BesoinClient:
     """
 
     nom_client: str
+    code_pays: str
     type_commande: TypeCommande
     num_commande: str
     nature_besoin: NatureBesoin
@@ -82,6 +85,14 @@ class BesoinClient:
     def est_prevision(self) -> bool:
         """Vérifie si c'est une prévision."""
         return self.nature_besoin == NatureBesoin.PREVISION
+
+    def est_france(self) -> bool:
+        """Vérifie si c'est un client France (marché domestique)."""
+        return self.code_pays == "FR"
+
+    def est_export(self) -> bool:
+        """Vérifie si c'est un client Export (hors France)."""
+        return self.code_pays != "FR"
 
     @classmethod
     def from_csv_row(cls, row: dict) -> "BesoinClient":
@@ -150,6 +161,7 @@ class BesoinClient:
 
         return cls(
             nom_client=_to_str(row.get("NOM_CLIENT", "")).strip(),
+            code_pays=_to_str(row.get("PAYS_CLIENT", "")).strip(),
             type_commande=type_commande,
             num_commande=_to_str(row.get("NUM_COMMANDE", "")).strip(),
             nature_besoin=nature_besoin,
