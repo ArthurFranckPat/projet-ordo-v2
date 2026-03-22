@@ -254,18 +254,22 @@ def test_decision_context_creation():
 
 def test_decision_context_with_all_fields():
     """Test DecisionContext avec tous les champs."""
-    from src.models.besoin_client import BesoinClient
+    from src.models.besoin_client import BesoinClient, NatureBesoin, TypeCommande
 
     of = OF(num_of="F123", article="TEST", qte_restante=100)
     commande = BesoinClient(
-        num_commande="C123",
-        ligne_commande=1,
-        code_client="ALDES",
         nom_client="ALDES",
+        code_pays="FR",
+        type_commande=TypeCommande.MTS,
+        num_commande="C123",
+        nature_besoin=NatureBesoin.COMMANDE,
         article="TEST",
-        description="Test",
+        of_contremarque="",
+        date_commande=date(2026, 3, 20),
+        date_expedition_demandee=date(2026, 3, 30),
         qte_commandee=100,
-        nature="COMMANDE"
+        qte_allouee=0,
+        qte_restante=100
     )
 
     context = DecisionContext(
@@ -279,7 +283,7 @@ def test_decision_context_with_all_fields():
         current_date=date(2026, 3, 22)
     )
 
-    assert context.commande.code_client == "ALDES"
+    assert context.commande.nom_client == "ALDES"
     assert context.competing_ofs == [of]
     assert context.current_date == date(2026, 3, 22)
 ```
@@ -776,7 +780,9 @@ def test_completion_criterion_100_percent():
     context = DecisionContext(
         of=of,
         feasibility_result=feasibility,
-        available_stock={"11019971": 147}
+        initial_stock={"11019971": 147},
+        allocated_stock={},
+        remaining_stock={"11019971": 147}
     )
 
     criterion = CompletionCriterion({
@@ -802,7 +808,9 @@ def test_completion_criterion_98_6_percent():
     context = DecisionContext(
         of=of,
         feasibility_result=feasibility,
-        available_stock={"11019971": 145}
+        initial_stock={"11019971": 145},
+        allocated_stock={},
+        remaining_stock={"11019971": 145}
     )
 
     criterion = CompletionCriterion({
@@ -828,7 +836,9 @@ def test_completion_criterion_below_minimum():
     context = DecisionContext(
         of=of,
         feasibility_result=feasibility,
-        available_stock={"COMP1": 50}
+        initial_stock={"COMP1": 50},
+        allocated_stock={},
+        remaining_stock={"COMP1": 50}
     )
 
     criterion = CompletionCriterion({
@@ -851,7 +861,9 @@ def test_completion_criterion_no_feasibility_result():
     context = DecisionContext(
         of=of,
         feasibility_result=None,
-        available_stock={}
+        initial_stock={},
+        allocated_stock={},
+        remaining_stock={}
     )
 
     criterion = CompletionCriterion({})
@@ -998,16 +1010,21 @@ from src.checkers.base import FeasibilityResult
 
 def test_client_criterion_priority_client():
     """Test le score pour un client prioritaire (ALDES)."""
+    from src.models.besoin_client import NatureBesoin, TypeCommande
+
     of = OF(num_of="F123", article="TEST", qte_restante=100)
     commande = BesoinClient(
-        num_commande="C123",
-        ligne_commande=1,
-        code_client="ALDES",
         nom_client="ALDES",
+        code_pays="FR",
+        type_commande=TypeCommande.MTS,
+        num_commande="C123",
+        nature_besoin=NatureBesoin.COMMANDE,
         article="TEST",
-        description="Test",
+        of_contremarque="",
+        date_expedition_demandee=date(2026, 3, 30),
         qte_commandee=100,
-        nature="COMMANDE"
+        qte_allouee=0,
+        qte_restante=100
     )
 
     context = DecisionContext(of=of, commande=commande)
@@ -1025,16 +1042,21 @@ def test_client_criterion_priority_client():
 
 def test_client_criterion_strategic_client():
     """Test le score pour un client stratégique."""
+    from src.models.besoin_client import NatureBesoin, TypeCommande
+
     of = OF(num_of="F123", article="TEST", qte_restante=100)
     commande = BesoinClient(
-        num_commande="C123",
-        ligne_commande=1,
-        code_client="AERECO",
         nom_client="AERECO",
+        code_pays="FR",
+        type_commande=TypeCommande.NOR,
+        num_commande="C123",
+        nature_besoin=NatureBesoin.COMMANDE,
         article="TEST",
-        description="Test",
+        of_contremarque="",
+        date_expedition_demandee=date(2026, 3, 30),
         qte_commandee=100,
-        nature="COMMANDE"
+        qte_allouee=0,
+        qte_restante=100
     )
 
     context = DecisionContext(of=of, commande=commande)
@@ -1051,16 +1073,21 @@ def test_client_criterion_strategic_client():
 
 def test_client_criterion_standard_client():
     """Test le score pour un client standard."""
+    from src.models.besoin_client import NatureBesoin, TypeCommande
+
     of = OF(num_of="F123", article="TEST", qte_restante=100)
     commande = BesoinClient(
-        num_commande="C123",
-        ligne_commande=1,
-        code_client="OTHER",
         nom_client="Other Client",
+        code_pays="DE",
+        type_commande=TypeCommande.NOR,
+        num_commande="C123",
+        nature_besoin=NatureBesoin.COMMANDE,
         article="TEST",
-        description="Test",
+        of_contremarque="",
+        date_expedition_demandee=date(2026, 3, 30),
         qte_commandee=100,
-        nature="COMMANDE"
+        qte_allouee=0,
+        qte_restante=100
     )
 
     context = DecisionContext(of=of, commande=commande)
@@ -1087,16 +1114,27 @@ def test_client_criterion_no_commande():
 
 def test_client_criterion_suggest_action_for_priority():
     """Test la suggestion d'action pour client prioritaire."""
-    of = OF(num_of="F123", article="TEST", qte_restante=100)
-    commande = BesoinClient(
-        num_commande="C123",
-        ligne_commande=1,
-        code_client="ALDES",
-        nom_client="ALDES",
+    from src.models.besoin_client import NatureBesoin, TypeCommande
+
+    of = OF(
+        num_of="F123",
         article="TEST",
-        description="Test",
+        qte_restante=100,
+        date_fin=date.today() + timedelta(days=5)
+    )
+
+    commande = BesoinClient(
+        nom_client="ALDES",
+        code_pays="FR",
+        type_commande=TypeCommande.MTS,
+        num_commande="C123",
+        nature_besoin=NatureBesoin.COMMANDE,
+        article="TEST",
+        of_contremarque="",
+        date_expedition_demandee=date(2026, 3, 30),
         qte_commandee=100,
-        nature="COMMANDE"
+        qte_allouee=0,
+        qte_restante=100
     )
 
     feasibility = FeasibilityResult(feasible=False)
@@ -1152,13 +1190,15 @@ class ClientCriterion(BaseCriterion):
         if not context.commande:
             return 0.5
 
-        client_code = context.commande.code_client
+        # Utiliser nom_client pour identifier le client
+        # (car BesoinClient n'a pas de champ code_client)
+        client_name = context.commande.nom_client
         priority_clients = self.config.get("priority_clients", [])
         strategic_clients = self.config.get("strategic_clients", [])
 
-        if client_code in priority_clients:
+        if client_name in priority_clients:
             return 1.0  # Client prioritaire (ALDES)
-        elif client_code in strategic_clients:
+        elif client_name in strategic_clients:
             return 0.8  # Client stratégique
         else:
             return 0.5  # Client standard
@@ -1538,7 +1578,9 @@ def test_smart_rule_accept_complete():
     context = DecisionContext(
         of=of,
         feasibility_result=feasibility,
-        initial_stock={"COMP1": 100}
+        initial_stock={"COMP1": 100},
+        allocated_stock={},
+        remaining_stock={"COMP1": 100}
     )
 
     rule = SmartDecisionRule("config/decisions.yaml")
@@ -1557,7 +1599,9 @@ def test_smart_rule_accept_partial_98_6_percent():
     context = DecisionContext(
         of=of,
         feasibility_result=feasibility,
-        initial_stock={"11019971": 145}
+        initial_stock={"11019971": 145},
+        allocated_stock={},
+        remaining_stock={"11019971": 145}
     )
 
     rule = SmartDecisionRule("config/decisions.yaml")
@@ -1570,6 +1614,8 @@ def test_smart_rule_accept_partial_98_6_percent():
 
 def test_smart_rule_priority_client():
     """Test la priorité client (ALDES)."""
+    from src.models.besoin_client import NatureBesoin, TypeCommande
+
     of = OF(
         num_of="F123",
         article="TEST",
@@ -1578,14 +1624,17 @@ def test_smart_rule_priority_client():
     )
 
     commande = BesoinClient(
-        num_commande="C123",
-        ligne_commande=1,
-        code_client="ALDES",
         nom_client="ALDES",
+        code_pays="FR",
+        type_commande=TypeCommande.MTS,
+        num_commande="C123",
+        nature_besoin=NatureBesoin.COMMANDE,
         article="TEST",
-        description="Test",
+        of_contremarque="",
+        date_expedition_demandee=date(2026, 3, 30),
         qte_commandee=100,
-        nature="COMMANDE"
+        qte_allouee=0,
+        qte_restante=100
     )
 
     feasibility = FeasibilityResult(feasible=False)
@@ -1615,7 +1664,9 @@ def test_smart_rule_metadata():
     context = DecisionContext(
         of=of,
         feasibility_result=feasibility,
-        initial_stock={"11019971": 145}
+        initial_stock={"11019971": 145},
+        allocated_stock={},
+        remaining_stock={"11019971": 145}
     )
 
     rule = SmartDecisionRule("config/decisions.yaml")
