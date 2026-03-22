@@ -121,13 +121,16 @@ Contexte disponible pour les critères :
 @dataclass
 class DecisionContext:
     of: OF
-    commande: Optional[CommandeClient]
+    commande: Optional[BesoinClient]  # Correction: BesoinClient, pas CommandeClient
     feasibility_result: Optional[FeasibilityResult]
-    available_stock: Dict[str, int]
-    allocated_stock: Dict[str, int]
+    initial_stock: Dict[str, int]      # Stock initial (avant toute allocation)
+    allocated_stock: Dict[str, int]    # Stock alloué aux OF précédents
+    remaining_stock: Dict[str, int]    # Stock restant = initial - allocated
     competing_ofs: List[OF]
     current_date: Optional[date]
 ```
+
+**Note** : `BesoinClient` est utilisé à la place de `CommandeClient` car c'est le modèle existant dans `src/models/besoin_client.py`. Il inclut à la fois les commandes fermes (nature="COMMANDE") et les prévisions (nature="PREVISION").
 
 ---
 
@@ -314,25 +317,226 @@ def load_config(config_path: str = "config/decisions.yaml") -> Dict[str, Any]:
 
 ---
 
-## 7. Intégration
+## 7. DecisionEngine
 
-### 7.1 AllocationManager
+### 7.1 Interface publique
+
+```python
+class DecisionEngine:
+    """Orchestrateur de l'évaluation des décisions métier."""
+
+    def __init__(
+        self,
+        config_path: str = "config/decisions.yaml",
+        persistence_enabled: bool = True
+    ):
+        """Initialise le moteur de décision.
+
+        Parameters
+        ----------
+        config_path : str
+            Chemin vers le fichier de configuration YAML
+        persistence_enabled : bool
+            Active la persistance des décisions en JSON
+        """
+        self.smart_rule = SmartDecisionRule(config_path)
+        self.persistence = DecisionPersistence(...) if persistence_enabled else None
+
+    def evaluate_pre_allocation(
+        self,
+        of: OF,
+        initial_stock: Dict[str, int],
+        competing_ofs: Optional[List[OF]] = None,
+        commande: Optional[BesoinClient] = None
+    ) -> DecisionResult:
+        """Évalue un OF avant allocation virtuelle.
+
+        Cette méthode est appelée AVANT que l'allocation virtuelle ne commence.
+        Elle peut retourner une action ACCEPT_PARTIAL qui modifie OF.qte_restante.
+
+        Parameters
+        ----------
+        of : OF
+            OF à évaluer
+        initial_stock : Dict[str, int]
+            Stock initial par article (stock disponible avant toute allocation)
+        competing_ofs : Optional[List[OF]]
+            Liste des OFs en concurrence (pour gestion de la priorité)
+        commande : Optional[BesoinClient]
+            Commande associée à l'OF (si disponible)
+
+        Returns
+        -------
+        DecisionResult
+            Décision avec action possiblement ACCEPT_PARTIAL
+
+        Notes
+        -----
+        - Si action == ACCEPT_PARTIAL, l'appelant doit modifier of.qte_restante
+        - La modification de qte_restante est TEMPORAIRE (durée de l'allocation uniquement)
+        - N'oubliez pas de restaurer la quantité originale après allocation
+        """
+        context = DecisionContext(
+            of=of,
+            commande=commande,
+            initial_stock=initial_stock,
+            allocated_stock={},  # Vide en pré-allocation
+            remaining_stock=initial_stock.copy(),
+            competing_ofs=competing_ofs or [],
+            current_date=date.today()
+        )
+
+        decision = self.smart_rule.evaluate(context)
+
+        # Persister si activé
+        if self.persistence:
+            self.persistence.save_decision(
+                of_num=of.num_of,
+                decision=decision,
+                allocation_phase="pre"
+            )
+
+        return decision
+
+    def evaluate_post_allocation(
+        self,
+        of: OF,
+        allocation_result: AllocationResult,
+        commande: Optional[BesoinClient] = None,
+        allocated_stock: Optional[Dict[str, int]] = None
+    ) -> DecisionResult:
+        """Évalue un OF après allocation virtuelle (si échec).
+
+        Cette méthode est appelée APRÈS l'allocation virtuelle, uniquement pour
+        les OFs qui sont NOT_FEASIBLE. Elle peut retourner DEFER ou REJECT.
+
+        Parameters
+        ----------
+        of : OF
+            OF à évaluer
+        allocation_result : AllocationResult
+            Résultat de l'allocation (doit être NOT_FEASIBLE)
+        commande : Optional[BesoinClient]
+            Commande associée à l'OF (si disponible)
+        allocated_stock : Optional[Dict[str, int]]
+            Stock alloué par article (si allocation partielle)
+
+        Returns
+        -------
+        DecisionResult
+            Décision avec action DEFER, REJECT ou éventuellement ACCEPT_AS_IS
+
+        Notes
+        -----
+        - Cette méthode NE MODIFIE PAS l'OF
+        - Elle est appelée uniquement pour les OFs NOT_FEASIBLE
+        - Les actions DEFER/REJECT modifient le AllocationResult, pas l'OF
+        """
+        context = DecisionContext(
+            of=of,
+            commande=commande,
+            feasibility_result=allocation_result.feasibility_result,
+            initial_stock={},  # Plus utilisé en post-allocation
+            allocated_stock=allocated_stock or {},
+            remaining_stock={},  # Plus utilisé en post-allocation
+            competing_ofs=[],
+            current_date=date.today()
+        )
+
+        decision = self.smart_rule.evaluate(context)
+
+        # Persister si activé
+        if self.persistence:
+            self.persistence.save_decision(
+                of_num=of.num_of,
+                decision=decision,
+                allocation_phase="post"
+            )
+
+        return decision
+```
+
+### 7.2 Flux de décision
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│              Flux de décision complet                        │
+└─────────────────────────────────────────────────────────────┘
+
+OF à évaluer
+    ↓
+DecisionEngine.evaluate_pre_allocation()
+    ├─ Construire DecisionContext avec initial_stock
+    ├─ SmartDecisionRule.evaluate()
+    └─ Retourne DecisionResult
+    ↓
+Si action == ACCEPT_PARTIAL
+    ├─ Modifier of.qte_restante (temporaire)
+    ├─ Sauvegarder quantité originale
+    └─ Poursuivre allocation
+    ↓
+AllocationManager.allocate_stock()
+    ├─ Allocation virtuelle avec quantité modifiée
+    └─ Génère AllocationResult
+    ↓
+Restaurer of.qte_restante
+    ↓
+Si AllocationResult.status == NOT_FEASIBLE
+    ├─ DecisionEngine.evaluate_post_allocation()
+    ├─ Construire DecisionContext avec feasibility_result
+    ├─ SmartDecisionRule.evaluate()
+    └─ Retourne DecisionResult (DEFER/REJECT)
+    ↓
+AllocationResult enrichi avec decision
+```
+
+---
+
+## 8. Intégration
+
+### 8.1 AllocationManager
 
 **Modifications à `src/algorithms/allocation.py`** :
 
 1. Ajouter paramètre `decision_engine` au `__init__`
-2. **Pré-allocation** :
+2. **Pré-allocation** (modifie temporairement les OFs) :
    - Évaluer tous les OF avec `DecisionEngine.evaluate_pre_allocation()`
-   - Sauvegarder les quantités originales
-   - Appliquer `ACCEPT_PARTIAL` (modifier `OF.qte_restante`)
-   - Lancer l'allocation virtuelle
-   - Restaurer les quantités originales
-3. **Post-allocation** :
+   - Sauvegarder les quantités originales dans `original_quantities: dict[str, int]`
+   - Si `ACCEPT_PARTIAL` :
+     - Modifier temporairement `OF.qte_restante` (en mémoire uniquement)
+     - La modification affecte uniquement l'objet OF en mémoire pour la durée de l'allocation
+     - L'OF sur disque n'est PAS modifié
+   - Lancer l'allocation virtuelle avec les quantités modifiées
+   - **Restaurer les quantités originales** après allocation
+   - **Important** : L'invariant `qte_restante ≤ qte_a_fabriquer` doit toujours être respecté
+3. **Post-allocation** (ne modifie pas les OFs) :
    - Pour les OF `NOT_FEASIBLE` sans décision pré-allocation
    - Évaluer avec `DecisionEngine.evaluate_post_allocation()`
-   - Appliquer `DEFER` ou `REJECT`
+   - Appliquer `DEFER` ou `REJECT` au `AllocationResult` (pas à l'OF)
 
-### 7.2 Enrichissement AllocationResult
+**Mécanisme de sauvegarde/restauration** :
+
+```python
+# Sauvegarde
+original_quantities[of.num_of] = of.qte_restante
+
+# Application temporaire
+if decision.action == DecisionAction.ACCEPT_PARTIAL:
+    of.qte_restante = decision.modified_quantity
+
+# Allocation (avec quantité modifiée)
+result = self._allocate_of(of, stock_state)
+
+# Restauration
+of.qte_restante = original_quantities[of.num_of]
+```
+
+**Cycle de vie des décisions** :
+- Un OF a **soit** une décision pré-allocation, **soit** une décision post-allocation, jamais les deux
+- Le champ `DecisionResult.phase` indique la phase : `"pre"` ou `"post"`
+- Si un OF reçoit une décision `ACCEPT_PARTIAL` en pré-allocation, il n'est pas réévalué en post-allocation
+
+### 8.2 Enrichissement AllocationResult
 
 ```python
 @dataclass
@@ -346,9 +550,9 @@ class AllocationResult:
 
 ---
 
-## 8. Persistance
+## 9. Persistance
 
-### 8.1 DecisionPersistence
+### 9.1 DecisionPersistence
 
 **Fichier** : `src/decisions/persistence.py`
 
@@ -376,9 +580,9 @@ class AllocationResult:
 
 ---
 
-## 9. Rapports
+## 10. Rapports
 
-### 9.1 DecisionReporter
+### 10.1 DecisionReporter
 
 **Fichier** : `src/decisions/reports.py`
 
@@ -386,7 +590,7 @@ class AllocationResult:
 - `generate_markdown_report()` : Rapport lisible
 - `generate_json_report()` : Rapport machine-readable
 
-### 9.2 Format Markdown
+### 10.2 Format Markdown
 
 ```markdown
 # Rapport de Décisions Métier
@@ -417,7 +621,7 @@ Généré le : 22/03/2026 10:30
 
 ---
 
-## 10. Tests
+## 11. Tests
 
 ### 10.1 Tests unitaires
 
@@ -468,7 +672,7 @@ def test_completion_criterion_98_6_percent():
 
 ---
 
-## 11. Implémentation
+## 12. Implémentation
 
 ### 11.1 Ordre d'implémentation
 
@@ -508,7 +712,7 @@ def test_completion_criterion_98_6_percent():
 
 ---
 
-## 12. Risques et Mitigations
+## 13. Risques et Mitigations
 
 ### 12.1 Risques
 
@@ -529,7 +733,7 @@ def test_completion_criterion_98_6_percent():
 
 ---
 
-## 13. Success Criteria
+## 14. Success Criteria
 
 Le système est considéré réussi si :
 
@@ -543,7 +747,7 @@ Le système est considéré réussi si :
 
 ---
 
-## 14. Évolutions futures
+## 15. Évolutions futures
 
 ### 14.1 Nouveaux critères
 
@@ -565,7 +769,7 @@ Le système est considéré réussi si :
 
 ---
 
-## 15. Références
+## 16. Références
 
 - Plan original : `.claude/plans/decision-metier.md`
 - Code existant : `src/algorithms/allocation.py`, `src/checkers/`
