@@ -384,9 +384,11 @@ class DataLoader:
 
         # Trier par priorité : commandes d'abord, puis prévisions
         # Puis par date d'expédition
+        # Puis par ancienneté de commande (date_commande la plus ancienne = priorité)
         besoins_s1.sort(key=lambda b: (
             0 if b.est_commande() else 1,  # Commandes = 0, Prévisions = 1
-            b.date_expedition_demandee
+            b.date_expedition_demandee,     # Date expedition (plus proche = prioritaire)
+            b.date_commande or date.max     # Ancienneté (plus ancien = prioritaire, None = moins prioritaire)
         ))
 
         return besoins_s1

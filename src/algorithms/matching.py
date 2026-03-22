@@ -1,12 +1,14 @@
 """Algorithme de matching commande→OF."""
 
 from dataclasses import dataclass, field
+from datetime import date
 from typing import Optional, Dict
 
 from ..models.besoin_client import BesoinClient
 from ..models.of import OF
 from ..models.stock import Stock
 from ..loaders.data_loader import DataLoader
+from .allocation import StockState
 
 
 @dataclass
@@ -181,13 +183,29 @@ class CommandeOFMatcher:
                     commandes_servees=[],
                 )
 
-    def match_commande(self, commande: BesoinClient) -> MatchingResult:
+    def _create_stock_state(self) -> StockState:
+        """Crée l'état du stock virtuel pour l'allocation.
+
+        Returns
+        -------
+        StockState
+            État du stock initialisé avec le stock disponible
+        """
+        initial_stock = {}
+        for article, stock_obj in self.data_loader.stocks.items():
+            initial_stock[article] = stock_obj.disponible()
+
+        return StockState(initial_stock)
+
+    def match_commande(self, commande: BesoinClient, stock_state: StockState = None) -> MatchingResult:
         """Match une commande avec un OF.
 
         Parameters
         ----------
         commande : BesoinClient
             Commande à matcher
+        stock_state : StockState, optional
+            État du stock virtuel pour gérer la concurrence
 
         Returns
         -------
@@ -197,7 +215,7 @@ class CommandeOFMatcher:
         if commande.is_mts():
             return self._match_mts(commande)
         elif commande.is_nor_mto():
-            return self._match_nor_mto(commande)
+            return self._match_nor_mto(commande, stock_state)
         else:
             return MatchingResult(
                 commande=commande,
@@ -260,15 +278,18 @@ class CommandeOFMatcher:
             alertes=[],
         )
 
-    def _allocate_stock(self, commande: BesoinClient) -> StockAllocation:
+    def _allocate_stock(self, commande: BesoinClient, stock_state: StockState = None) -> StockAllocation:
         """Alloue le stock disponible pour une commande.
 
         IMPORTANT : Utilise commande.qte_restante (quantité restante à servir)
+        Si stock_state est fourni, gère la concurrence avec allocation virtuelle.
 
         Parameters
         ----------
         commande : BesoinClient
             Commande à traiter
+        stock_state : StockState, optional
+            État du stock virtuel pour gérer la concurrence
 
         Returns
         -------
@@ -289,10 +310,19 @@ class CommandeOFMatcher:
                 besoin_net=commande.qte_restante,
             )
 
-        qte_dispo = stock.disponible()
+        # Utiliser le stock virtuel si fourni, sinon le stock physique
+        if stock_state is not None:
+            qte_dispo = stock_state.get_available(commande.article)
+        else:
+            qte_dispo = stock.disponible()
+
         # Allouer min(stock_dispo, qte_restante)
         qte_allouee = min(qte_dispo, commande.qte_restante)
         besoin_net = commande.qte_restante - qte_allouee
+
+        # Enregistrer l'allocation virtuelle si stock_state fourni
+        if stock_state is not None and qte_allouee > 0:
+            stock_state.allocate(commande.num_commande, {commande.article: qte_allouee})
 
         return StockAllocation(
             article=commande.article,
@@ -363,7 +393,7 @@ class CommandeOFMatcher:
         # Meilleur candidat
         return candidates[0][0].of
 
-    def _match_nor_mto(self, commande: BesoinClient) -> MatchingResult:
+    def _match_nor_mto(self, commande: BesoinClient, stock_state: StockState = None) -> MatchingResult:
         """Match une commande NOR/MTO avec allocation de stock + OF.
 
         IMPORTANT : Utilise QTE_RESTANTE (quantité réelle à servir)
@@ -372,14 +402,16 @@ class CommandeOFMatcher:
         ----------
         commande : BesoinClient
             Commande NOR/MTO à matcher
+        stock_state : StockState, optional
+            État du stock virtuel pour gérer la concurrence
 
         Returns
         -------
         MatchingResult
             Résultat du matching
         """
-        # 1. Allouer le stock disponible
-        allocation = self._allocate_stock(commande)
+        # 1. Allouer le stock disponible avec gestion de la concurrence
+        allocation = self._allocate_stock(commande, stock_state)
 
         # 2. Si stock complet, pas d'OF nécessaire
         if allocation.besoin_net == 0:
@@ -471,12 +503,19 @@ class CommandeOFMatcher:
         articles_nor_mto = {c.article for c in commandes if c.is_nor_mto()}
         self._initialiser_of_conso(articles=articles_nor_mto)
 
-        # Trier par date d'expédition (priorité aux plus urgentes)
-        commandes_triees = sorted(commandes, key=lambda c: c.date_expedition_demandee)
+        # Créer l'état du stock virtuel pour gérer la concurrence
+        stock_state = self._create_stock_state()
+
+        # Trier par priorité : commandes > prévisions > date d'expédition > ancienneté
+        commandes_triees = sorted(commandes, key=lambda c: (
+            0 if c.est_commande() else 1,   # Commandes = 0, Prévisions = 1
+            c.date_expedition_demandee,      # Date expedition (plus proche = prioritaire)
+            c.date_commande or date.max      # Ancienneté (plus ancien = prioritaire, None = moins prioritaire)
+        ))
 
         results = []
         for commande in commandes_triees:
-            result = self.match_commande(commande)
+            result = self.match_commande(commande, stock_state)
             results.append(result)
 
         return results
