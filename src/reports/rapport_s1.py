@@ -7,7 +7,7 @@ from rich.table import Table
 
 from ..algorithms.matching import MatchingResult
 from ..checkers.base import FeasibilityResult
-from ..models.commande_client import CommandeClient
+from ..models.besoin_client import BesoinClient
 
 
 console = Console()

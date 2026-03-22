@@ -12,11 +12,11 @@ class Stock:
     article : str
         Code article
     stock_physique : int
-        Stock physique disponible
+        Stock physique total
     stock_alloue : int
-        Stock alloué (réservé pour des commandes)
+        Stock alloué (réservé pour des commandes/OF)
     stock_bloque : int
-        Stock bloqué (non disponible)
+        Stock sous contrôle (en contrôle qualité) - DISPO SOUS RÉSERVE
     """
 
     article: str
@@ -25,8 +25,17 @@ class Stock:
     stock_bloque: int
 
     def disponible(self) -> int:
-        """Retourne le stock disponible (physique - alloué - bloqué)."""
-        return self.stock_physique - self.stock_alloue - self.stock_bloque
+        """Retourne le stock disponible (physique - alloué).
+
+        Note: Le stock bloqué (sous contrôle qualité) est CONSIDÉRÉ COMME DISPO
+        car c'est du stock disponible sous réserve de contrôle.
+        """
+        return self.stock_physique - self.stock_alloue
+
+    @property
+    def stock_sous_controle(self) -> int:
+        """Retourne le stock sous contrôle (en contrôle qualité)."""
+        return self.stock_bloque
 
     def _parse_int(value) -> int:
         """Convertit une valeur en int, en gérant les virgules de milliers."""

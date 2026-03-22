@@ -4,7 +4,7 @@ import pytest
 
 from src.loaders import DataLoader
 from src.algorithms.matching import CommandeOFMatcher, OFConso
-from src.models.commande_client import CommandeClient
+from src.models.besoin_client import BesoinClient
 
 
 @pytest.fixture

@@ -7,6 +7,7 @@ from typing import Optional
 import pandas as pd
 
 from ..models.article import Article
+from ..models.besoin_client import BesoinClient
 from ..models.commande_client import CommandeClient
 from ..models.nomenclature import Nomenclature
 from ..models.of import OF
@@ -186,22 +187,104 @@ class CSVLoader:
 
         return receptions
 
-    def load_commandes_clients(self) -> list[CommandeClient]:
+    def load_commandes_clients(self) -> list[BesoinClient]:
         """Charge les commandes clients.
+
+        Priority: besoins_clients.csv > commandes_clients.csv (legacy)
 
         Returns
         -------
-        list[CommandeClient]
-            Liste des commandes clients
+        list[BesoinClient]
+            Liste des besoins clients (toujours au nouveau format)
         """
-        df = self._load_csv("commandes_clients.csv", subdir="dynamique")
+        try:
+            # Essayer besoins_clients.csv d'abord
+            df = self._load_csv("besoins_clients.csv", subdir="dynamique")
+            return self._load_besoins_from_df(df)
+        except FileNotFoundError:
+            # Fallback sur commandes_clients.csv (legacy)
+            df = self._load_csv("commandes_clients.csv", subdir="dynamique")
+            # Convertir vers le nouveau format BesoinClient
+            return self._convert_commandes_legacy_to_besoins(df)
 
-        commandes = []
+    def _load_besoins_from_df(self, df) -> list[BesoinClient]:
+        """Charge les besoins depuis le DataFrame besoins_clients.csv.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            DataFrame contenant les données du CSV
+
+        Returns
+        -------
+        list[BesoinClient]
+            Liste des besoins clients
+        """
+        besoins = []
+
         for _, row in df.iterrows():
-            commande = CommandeClient.from_csv_row(row.to_dict())
-            commandes.append(commande)
+            try:
+                besoin = BesoinClient.from_csv_row(row.to_dict())
+                if besoin.article:  # Ignorer les lignes sans article
+                    besoins.append(besoin)
+            except Exception as e:
+                # Loguer l'erreur mais continuer
+                print(f"Warning: Erreur parsing ligne {_}: {e}")
+                continue
 
-        return commandes
+        return besoins
+
+    def _convert_commandes_legacy_to_besoins(self, df) -> list[BesoinClient]:
+        """Convertit les commandes legacy vers BesoinClient.
+
+        Pour compatibilité avec l'ancien format commandes_clients.csv.
+        Convertit FLAG_CONTREMARQUE (5/1) vers TYPE_COMMANDE (MTS/NOR).
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            DataFrame contenant les données du CSV legacy
+
+        Returns
+        -------
+        list[BesoinClient]
+            Liste des besoins clients convertis
+        """
+        besoins = []
+
+        for _, row in df.iterrows():
+            # Mapper FLAG_CONTREMARQUE vers TYPE_COMMANDE
+            flag = int(row.get("FLAG_CONTREMARQUE", 1))
+            if flag == 5:
+                type_cmd = "MTS"
+            else:
+                # FLAG 1 (NOR/MTO) ou autre → NOR par défaut
+                type_cmd = "NOR"
+
+            # Créer un dict au format BesoinClient
+            row_besoin = {
+                "NOM_CLIENT": row.get("NOM_CLIENT", ""),
+                "TYPE_COMMANDE": type_cmd,
+                "NUM_COMMANDE": row.get("NUM_COMMANDE", ""),
+                "NATURE_BESOIN": "COMMANDE",
+                "ARTICLE": row.get("ARTICLE", ""),
+                "OF_CONTREMARQUE": row.get("OF_CONTREMARQUE", ""),
+                "DATE_COMMANDE": "",  # Pas d'info dans l'ancien format
+                "DATE_EXPEDITION_DEMANDEE": row.get("DATE_EXPEDITION_DEMANDEE", ""),
+                "QTE_COMMANDEE": row.get("QTE_COMMANDEE", 0),
+                "QTE_ALLOUEE": row.get("QTE_ALLOUEE", 0),
+                "QTE_RESTANTE": row.get("QTE_RESTANTE", 0),
+            }
+
+            try:
+                besoin = BesoinClient.from_csv_row(row_besoin)
+                if besoin.article:
+                    besoins.append(besoin)
+            except Exception as e:
+                print(f"Warning: Erreur conversion legacy: {e}")
+                continue
+
+        return besoins
 
     def load_all(
         self,
@@ -211,7 +294,7 @@ class CSVLoader:
         list[OF],
         dict[str, Stock],
         list[Reception],
-        list[CommandeClient],
+        list[BesoinClient],
     ]:
         """Charge tous les fichiers CSV.
 
@@ -219,6 +302,10 @@ class CSVLoader:
         -------
         tuple
             (articles, nomenclatures, ofs, stocks, receptions, commandes_clients)
+
+        Note
+        ----
+        commandes_clients est maintenant de type list[BesoinClient] (pas CommandeClient).
         """
         articles = self.load_articles()
         nomenclatures = self.load_nomenclatures()

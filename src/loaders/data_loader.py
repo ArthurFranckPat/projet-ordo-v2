@@ -7,6 +7,7 @@ import pandas as pd
 
 from .csv_loader import CSVLoader
 from ..models.article import Article
+from ..models.besoin_client import BesoinClient
 from ..models.commande_client import CommandeClient
 from ..models.nomenclature import Nomenclature
 from ..models.of import OF
@@ -32,8 +33,8 @@ class DataLoader:
         Stocks indexés par article
     receptions : list[Reception]
         Liste des réceptions fournisseurs
-    commandes_clients : list[CommandeClient]
-        Liste des commandes clients
+    commandes_clients : list[BesoinClient]
+        Liste des commandes clients (au format BesoinClient)
     allocations : dict[str, list[OFAllocation]]
         Allocations par document (OF ou commande), indexé par NUM_DOC
     """
@@ -54,7 +55,7 @@ class DataLoader:
         self._ofs: Optional[list[OF]] = None
         self._stocks: Optional[dict[str, Stock]] = None
         self._receptions: Optional[list[Reception]] = None
-        self._commandes_clients: Optional[list[CommandeClient]] = None
+        self._commandes_clients: Optional[list[BesoinClient]] = None
         self._allocations: Optional[dict[str, list[OFAllocation]]] = None
 
         # Index des réceptions par article
@@ -123,8 +124,8 @@ class DataLoader:
         return self._receptions
 
     @property
-    def commandes_clients(self) -> list[CommandeClient]:
-        """Retourne les commandes clients."""
+    def commandes_clients(self) -> list[BesoinClient]:
+        """Retourne les commandes clients (au format BesoinClient)."""
         if self._commandes_clients is None:
             self.load_all()
         return self._commandes_clients
@@ -336,7 +337,7 @@ class DataLoader:
         """
         return self.allocations.get(num_doc, [])
 
-    def get_commandes_s1(self, date_reference, horizon_days: int = 7) -> list[CommandeClient]:
+    def get_commandes_s1(self, date_reference, horizon_days: int = 7) -> list[BesoinClient]:
         """Retourne les commandes clients à expédier dans l'horizon donné.
 
         Parameters
@@ -348,8 +349,9 @@ class DataLoader:
 
         Returns
         -------
-        list[CommandeClient]
+        list[BesoinClient]
             Commandes avec DATE_EXPEDITION_DEMANDEE dans l'horizon
+            (uniquement les commandes réelles, pas les prévisions)
         """
         from datetime import timedelta
 
@@ -357,6 +359,9 @@ class DataLoader:
 
         commandes_s1 = []
         for commande in self.commandes_clients:
+            # Filtrer uniquement les commandes réelles (pas les prévisions)
+            if not commande.est_commande():
+                continue
             date_exp = commande.date_expedition_demandee
             if date_reference <= date_exp <= date_fin and commande.qte_restante > 0:
                 commandes_s1.append(commande)

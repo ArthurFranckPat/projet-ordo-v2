@@ -5,7 +5,7 @@ from typing import Optional
 from .base import BaseChecker, FeasibilityResult
 from ..models.nomenclature import Nomenclature
 from ..models.of import OF
-from ..models.commande_client import CommandeClient
+from ..models.besoin_client import BesoinClient
 
 
 class RecursiveChecker(BaseChecker):
@@ -71,7 +71,7 @@ class RecursiveChecker(BaseChecker):
             num_of_parent=of.num_of,
         )
 
-    def check_commande(self, commande: CommandeClient) -> FeasibilityResult:
+    def check_commande(self, commande: BesoinClient) -> FeasibilityResult:
         """Vérifie la faisabilité d'une commande client avec récursion.
 
         Pour les commandes MTS avec OF lié, vérifie l'OF associé.
@@ -79,7 +79,7 @@ class RecursiveChecker(BaseChecker):
 
         Parameters
         ----------
-        commande : CommandeClient
+        commande : BesoinClient
             Commande client à vérifier
 
         Returns
@@ -355,9 +355,8 @@ class RecursiveChecker(BaseChecker):
             if self.use_receptions:
                 receptions = self.data_loader.get_receptions(article)
                 for reception in receptions:
-                    if self.check_date and reception.est_disponible_avant(self.check_date):
-                        stock_dispo += reception.quantite_restante
-                    elif not self.check_date and reception.est_disponible_avant(date_besoin):
+                    # Inclure les réceptions disponibles avant la date de besoin
+                    if reception.est_disponible_avant(date_besoin):
                         stock_dispo += reception.quantite_restante
 
         # Vérifier si le stock est suffisant

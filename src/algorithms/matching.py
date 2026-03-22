@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from typing import Optional, Dict
 
-from ..models.commande_client import CommandeClient
+from ..models.besoin_client import BesoinClient
 from ..models.of import OF
 from ..models.stock import Stock
 from ..loaders.data_loader import DataLoader
@@ -97,7 +97,7 @@ class MatchingResult:
 
     Attributes
     ----------
-    commande : CommandeClient
+    commande : BesoinClient
         Commande client
     of : Optional[OF]
         OF matché (None si aucun)
@@ -109,7 +109,7 @@ class MatchingResult:
         Allocation de stock (pour NOR/MTO)
     """
 
-    commande: CommandeClient
+    commande: BesoinClient
     of: Optional[OF]
     matching_method: str
     alertes: list[str] = field(default_factory=list)
@@ -181,12 +181,12 @@ class CommandeOFMatcher:
                     commandes_servees=[],
                 )
 
-    def match_commande(self, commande: CommandeClient) -> MatchingResult:
+    def match_commande(self, commande: BesoinClient) -> MatchingResult:
         """Match une commande avec un OF.
 
         Parameters
         ----------
-        commande : CommandeClient
+        commande : BesoinClient
             Commande à matcher
 
         Returns
@@ -203,15 +203,15 @@ class CommandeOFMatcher:
                 commande=commande,
                 of=None,
                 matching_method="Inconnu",
-                alertes=[f"Type de commande inconnu: FLAG={commande.flag_contremarque}"],
+                alertes=[f"Type de commande inconnu: TYPE={commande.type_commande.value}"],
             )
 
-    def _match_mts(self, commande: CommandeClient) -> MatchingResult:
+    def _match_mts(self, commande: BesoinClient) -> MatchingResult:
         """Match une commande MTS avec son OF lié.
 
         Parameters
         ----------
-        commande : CommandeClient
+        commande : BesoinClient
             Commande MTS à matcher
 
         Returns
@@ -260,14 +260,14 @@ class CommandeOFMatcher:
             alertes=[],
         )
 
-    def _allocate_stock(self, commande: CommandeClient) -> StockAllocation:
+    def _allocate_stock(self, commande: BesoinClient) -> StockAllocation:
         """Alloue le stock disponible pour une commande.
 
         IMPORTANT : Utilise commande.qte_restante (quantité restante à servir)
 
         Parameters
         ----------
-        commande : CommandeClient
+        commande : BesoinClient
             Commande à traiter
 
         Returns
@@ -306,7 +306,7 @@ class CommandeOFMatcher:
 
     def _find_of_for_besoin_net(
         self,
-        commande: CommandeClient,
+        commande: BesoinClient,
         besoin_net: int,
     ) -> Optional[OF]:
         """Trouve un OF pour un besoin net donné.
@@ -317,7 +317,7 @@ class CommandeOFMatcher:
 
         Parameters
         ----------
-        commande : CommandeClient
+        commande : BesoinClient
             Commande client
         besoin_net : int
             Besoin net à couvrir par OF
@@ -363,14 +363,14 @@ class CommandeOFMatcher:
         # Meilleur candidat
         return candidates[0][0].of
 
-    def _match_nor_mto(self, commande: CommandeClient) -> MatchingResult:
+    def _match_nor_mto(self, commande: BesoinClient) -> MatchingResult:
         """Match une commande NOR/MTO avec allocation de stock + OF.
 
         IMPORTANT : Utilise QTE_RESTANTE (quantité réelle à servir)
 
         Parameters
         ----------
-        commande : CommandeClient
+        commande : BesoinClient
             Commande NOR/MTO à matcher
 
         Returns
@@ -448,7 +448,7 @@ class CommandeOFMatcher:
             stock_allocation=allocation,
         )
 
-    def match_commandes(self, commandes: list[CommandeClient]) -> list[MatchingResult]:
+    def match_commandes(self, commandes: list[BesoinClient]) -> list[MatchingResult]:
         """Match plusieurs commandes avec des OF.
 
         Les commandes sont traitées par ordre de date d'expédition
@@ -456,7 +456,7 @@ class CommandeOFMatcher:
 
         Parameters
         ----------
-        commandes : list[CommandeClient]
+        commandes : list[BesoinClient]
             Liste des commandes à matcher
 
         Returns
