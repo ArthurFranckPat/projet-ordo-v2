@@ -1,6 +1,5 @@
 """Modèles de données pour la couche décision métier."""
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import Enum
