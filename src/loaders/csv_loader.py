@@ -8,7 +8,6 @@ import pandas as pd
 
 from ..models.article import Article
 from ..models.besoin_client import BesoinClient
-from ..models.commande_client import CommandeClient
 from ..models.gamme import Gamme, GammeOperation
 from ..models.nomenclature import Nomenclature
 from ..models.of import OF

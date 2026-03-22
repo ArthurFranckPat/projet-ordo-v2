@@ -12,6 +12,7 @@ class TestBesoinClient:
     def test_besoin_client_mts(self):
         """Test la création d'un BesoinClient MTS."""
         besoin = BesoinClient(
+            code_pays="FR",
             nom_client="ALDES",
             type_commande=TypeCommande.MTS,
             num_commande="AR2600799",
@@ -36,6 +37,7 @@ class TestBesoinClient:
         """Test la création d'un BesoinClient NOR."""
         besoin = BesoinClient(
             nom_client="AERECO",
+            code_pays="DE",
             type_commande=TypeCommande.NOR,
             num_commande="AR2601108",
             nature_besoin=NatureBesoin.COMMANDE,
@@ -58,6 +60,7 @@ class TestBesoinClient:
         """Test la création d'un BesoinClient MTO."""
         besoin = BesoinClient(
             nom_client="ALDES",
+            code_pays="FR",
             type_commande=TypeCommande.MTO,
             num_commande="AR2601234",
             nature_besoin=NatureBesoin.COMMANDE,
@@ -78,6 +81,7 @@ class TestBesoinClient:
         """Test la création d'un BesoinClient de type prévision."""
         besoin = BesoinClient(
             nom_client="EXPORT CLIENT",
+            code_pays="DE",
             type_commande=TypeCommande.NOR,
             num_commande="PREV-2026-03",
             nature_besoin=NatureBesoin.PREVISION,
@@ -218,6 +222,7 @@ class TestBesoinClient:
         """Test la représentation textuelle."""
         besoin = BesoinClient(
             nom_client="ALDES",
+            code_pays="FR",
             type_commande=TypeCommande.MTS,
             num_commande="AR2600799",
             nature_besoin=NatureBesoin.COMMANDE,
@@ -242,6 +247,7 @@ class TestBesoinClient:
         """Test la représentation sans OF lié."""
         besoin = BesoinClient(
             nom_client="AERECO",
+            code_pays="DE",
             type_commande=TypeCommande.NOR,
             num_commande="AR2601108",
             nature_besoin=NatureBesoin.COMMANDE,

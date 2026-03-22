@@ -1,8 +1,8 @@
 """Modèles de données pour le système d'ordonnancement."""
 
 from .article import Article
+from .besoin_client import BesoinClient
 from .charge import ChargeByPoste
-from .commande_client import CommandeClient
 from .gamme import Gamme, GammeOperation
 from .nomenclature import Nomenclature, NomenclatureEntry
 from .of import OF
@@ -11,8 +11,8 @@ from .reception import Reception
 
 __all__ = [
     "Article",
+    "BesoinClient",
     "ChargeByPoste",
-    "CommandeClient",
     "Gamme",
     "GammeOperation",
     "Nomenclature",
