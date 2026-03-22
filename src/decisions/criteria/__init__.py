@@ -2,5 +2,6 @@
 
 from .base import BaseCriterion
 from .completion import CompletionCriterion
+from .client import ClientCriterion
 
-__all__ = ["BaseCriterion", "CompletionCriterion"]
+__all__ = ["BaseCriterion", "CompletionCriterion", "ClientCriterion"]
