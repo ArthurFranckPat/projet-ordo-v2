@@ -46,6 +46,42 @@ class LLMBasedDecisionRule:
         self.prompt_builder = LLMPromptBuilder()
         self.response_parser = LLMResponseParser()
 
+    def _apply_prefilter(self, context) -> Optional["DecisionResult"]:
+        """Résout les cas triviaux sans appel LLM.
+
+        Returns None si le cas est ambigu et nécessite le LLM.
+        Returns DecisionResult directement pour les cas évidents :
+        - faisable → ACCEPT_AS_IS
+        - non_faisable sans bloqué ni réception → REJECT
+        """
+        faisabilite = context.situation_globale.faisabilite
+
+        if faisabilite == "faisable":
+            return DecisionResult(
+                action=DecisionAction.ACCEPT_AS_IS,
+                reason="Tous les composants disponibles, OF faisable immédiatement.",
+                metadata={"prefilter": True, "faisabilite": "faisable"}
+            )
+
+        if faisabilite == "non_faisable":
+            a_bloque = any(
+                c.type_probleme in ("bloqué", "bloqué_insuffisant")
+                for c in context.composants_critiques
+            )
+            a_reception = any(
+                getattr(c, 'receptions_imminentes', 0) > 0
+                for c in context.composants
+            )
+            if not a_bloque and not a_reception:
+                raison = context.situation_globale.raison_blocage or "Composants manquants sans perspective"
+                return DecisionResult(
+                    action=DecisionAction.REJECT,
+                    reason=f"OF non faisable : {raison}. Aucune perspective de déblocage à court terme.",
+                    metadata={"prefilter": True, "faisabilite": "non_faisable"}
+                )
+
+        return None
+
     def evaluate(
         self,
         of: OF,
@@ -78,9 +114,17 @@ class LLMBasedDecisionRule:
             # 1. Construire le contexte d'analyse
             logger.info(f"[{of.num_of}] Construction du contexte LLM...")
             self.context_builder.loader = loader
-            context = self.context_builder.build_context(of, commande)
+            context = self.context_builder.build_context(of, commande, current_date=current_date)
 
-            # 2. Construire le prompt
+            # 2. Pré-filtre : résoudre les cas triviaux sans appel LLM
+            prefilter_result = self._apply_prefilter(context)
+            if prefilter_result is not None:
+                logger.info(f"[{of.num_of}] Pré-filtre appliqué : {prefilter_result.action.value}")
+                if self.persistence:
+                    pass  # La persistance est gérée par DecisionEngine
+                return prefilter_result
+
+            # 3. Construire le prompt (cas ambigu → appel LLM)
             logger.debug(f"[{of.num_of}] Construction du prompt...")
             prompt_dict = context.to_dict()
             prompt = self.prompt_builder.build_decision_prompt(prompt_dict)
