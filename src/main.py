@@ -9,7 +9,7 @@ from rich.console import Console
 from .loaders import DataLoader
 from .checkers import ImmediateChecker, ProjectedChecker, RecursiveChecker
 from .algorithms import AllocationManager, AllocationStatus
-from .decisions import DecisionEngine
+from .agents import AgentEngine
 from .algorithms import calculate_weekly_charge_heatmap
 from .utils import format_of_table, format_detailed_report, format_summary
 from .utils import format_charge_heatmap, format_charge_summary
@@ -79,6 +79,11 @@ def main():
         help="Inclut les prévisions Export dans l'analyse (mode S+1)",
     )
     parser.add_argument(
+        "--schedule",
+        action="store_true",
+        help="Active le planificateur de charge (mode S+1 requis)",
+    )
+    parser.add_argument(
         "--charge-heatmap",
         action="store_true",
         help="Génère une heatmap de charge par poste de charge",
@@ -100,6 +105,11 @@ def main():
         type=str,
         default="mistral-large-latest",
         help="Modèle LLM à utiliser (défaut: mistral-large-latest)",
+    )
+    parser.add_argument(
+        "--organization",
+        action="store_true",
+        help="Analyse l'organisation de l'atelier sur 4 semaines",
     )
 
     args = parser.parse_args()
@@ -169,6 +179,23 @@ def main():
     # Mode S+1
     if args.s1:
         main_s1(args, loader, include_previsions=args.with_previsions)
+        return
+
+    # Mode organisation
+    if args.organization:
+        from src.agents.organization.organization_agent import OrganizationAgent
+        from src.agents.organization.formatter import format_organization_table
+        from src.algorithms import CommandeOFMatcher
+
+        agent = OrganizationAgent(loader)
+        matcher = CommandeOFMatcher(loader, date_tolerance_days=10)
+
+        results = agent.analyze_workshop_organization(
+            reference_date=date.today(),
+            matcher=matcher
+        )
+
+        format_organization_table(results)
         return
 
     # Mode vérification commande

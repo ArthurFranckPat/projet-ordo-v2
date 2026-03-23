@@ -6,7 +6,7 @@ from typing import Optional
 
 from ..models.of import OF
 from ..checkers.base import FeasibilityResult
-from ..decisions.models import DecisionResult, DecisionAction
+from ..agents.models import AgentDecision, AgentAction
 
 
 class AllocationStatus(Enum):
@@ -32,7 +32,7 @@ class AllocationResult:
         Résultat de la vérification de faisabilité
     allocated_quantity : dict[str, int]
         Quantité allouée par composant
-    decision : Optional[DecisionResult]
+    decision : Optional[AgentDecision]
         Décision métier prise par le DecisionEngine
     """
 
@@ -40,7 +40,7 @@ class AllocationResult:
     status: AllocationStatus
     feasibility_result: Optional[FeasibilityResult] = None
     allocated_quantity: dict[str, int] = None
-    decision: Optional[DecisionResult] = None
+    decision: Optional[AgentDecision] = None
 
     def __repr__(self) -> str:
         """Représentation textuelle du résultat."""
@@ -194,7 +194,7 @@ class AllocationManager:
                 original_quantities[of.num_of] = of.qte_restante
 
                 # Appliquer ACCEPT_PARTIAL
-                if decision.action == DecisionAction.ACCEPT_PARTIAL:
+                if decision.action == AgentAction.ACCEPT_PARTIAL:
                     of.qte_restante = decision.modified_quantity
 
         # Trier les OF par priorité (uniquement ceux pour allocation)
@@ -241,7 +241,7 @@ class AllocationManager:
                         )
 
                         # Appliquer DEFER/REJECT
-                        if post_decision.action == DecisionAction.DEFER:
+                        if post_decision.action == AgentAction.DEFER:
                             result.status = AllocationStatus.DEFERRED
                             result.decision = post_decision
                         else:

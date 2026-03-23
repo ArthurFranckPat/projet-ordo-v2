@@ -8,7 +8,7 @@ from rich.console import Console
 from .checkers import ProjectedChecker, RecursiveChecker
 from .algorithms import CommandeOFMatcher
 from .reports import format_rapport_s1
-from .decisions import DecisionEngine, DecisionContext
+from .agents import AgentEngine, AgentContext
 
 
 def main_s1(args, loader, include_previsions=False):
@@ -93,9 +93,9 @@ def main_s1(args, loader, include_previsions=False):
                 use_llm = False
 
         if use_llm:
-            from .decisions.llm.mistral_client import MistralLLMClient
+            from .agents.llm.mistral_client import MistralLLMClient
             llm_client = MistralLLMClient(model=llm_model)
-            decision_engine = DecisionEngine(
+            decision_engine = AgentEngine(
                 "config/decisions.yaml",
                 use_llm=True,
                 llm_client=llm_client,
@@ -103,7 +103,7 @@ def main_s1(args, loader, include_previsions=False):
             )
             console.print(f"[bold yellow]⚡ Mode LLM activé : {llm_model}[/bold yellow]")
         else:
-            decision_engine = DecisionEngine("config/decisions.yaml")
+            decision_engine = AgentEngine("config/decisions.yaml", loader=loader)
 
         # Évaluer tous les OF avec leur contexte de commande
         decisions_pre: Dict[str, any] = {}
@@ -131,11 +131,11 @@ def main_s1(args, loader, include_previsions=False):
             decisions_pre[of.num_of] = decision
 
         # Statistiques des décisions
-        from .decisions.models import DecisionAction
-        accept_as_is = sum(1 for d in decisions_pre.values() if d.action == DecisionAction.ACCEPT_AS_IS)
-        accept_partial = sum(1 for d in decisions_pre.values() if d.action == DecisionAction.ACCEPT_PARTIAL)
-        reject = sum(1 for d in decisions_pre.values() if d.action == DecisionAction.REJECT)
-        defer = sum(1 for d in decisions_pre.values() if d.action in [DecisionAction.DEFER, DecisionAction.DEFER_PARTIAL])
+        from .agents.models import AgentAction
+        accept_as_is = sum(1 for d in decisions_pre.values() if d.action == AgentAction.ACCEPT_AS_IS)
+        accept_partial = sum(1 for d in decisions_pre.values() if d.action == AgentAction.ACCEPT_PARTIAL)
+        reject = sum(1 for d in decisions_pre.values() if d.action == AgentAction.REJECT)
+        defer = sum(1 for d in decisions_pre.values() if d.action in [AgentAction.DEFER, AgentAction.DEFER_PARTIAL])
 
         console.print(f"✅ Évaluation terminée : {len(decisions_pre)} décisions")
         console.print(f"   ✓ Accepter tel quel : {accept_as_is}")
@@ -147,7 +147,7 @@ def main_s1(args, loader, include_previsions=False):
         # Appliquer les décisions ACCEPT_PARTIAL
         of_original_quantities: Dict[str, int] = {}
         for of_num, decision in decisions_pre.items():
-            if decision.action == DecisionAction.ACCEPT_PARTIAL and decision.modified_quantity:
+            if decision.action == AgentAction.ACCEPT_PARTIAL and decision.modified_quantity:
                 of = next((o for o in ofs_a_verifier if o.num_of == of_num), None)
                 if of:
                     # Sauvegarder la quantité originale
@@ -211,13 +211,13 @@ def main_s1(args, loader, include_previsions=False):
 
         # 7. Générer les rapports de décisions
         try:
-            from src.decisions.reports import DecisionReporter
+            from src.agents.reports import DecisionReporter
             import os
             from dataclasses import dataclass
 
             @dataclass
             class DecisionWrapper:
-                """Wrapper pour adapter DecisionResult au format attendu par DecisionReporter."""
+                """Wrapper pour adapter AgentDecision au format attendu par DecisionReporter."""
                 decision: any
 
             # Créer des wrappers pour les décisions
@@ -249,5 +249,37 @@ def main_s1(args, loader, include_previsions=False):
         console.print("[yellow]⚠️  Aucun OF à vérifier[/yellow]")
         console.print()
 
-    # 4. Afficher le rapport
+    # 5. Planification de charge (si --schedule activé)
+    if getattr(args, 'schedule', False) and ofs_a_verifier:
+        console.print("[bold cyan]📅 Planification de charge...[/bold cyan]")
+        ofs_faisables_s1 = [of for of in ofs_a_verifier if resultats_faisabilite[of.num_of].feasible]
+
+        if ofs_faisables_s1:
+            try:
+                schedule_result = decision_engine.plan_schedule(
+                    s1_feasible_ofs=ofs_faisables_s1,
+                    feasibility_results=resultats_faisabilite,
+                    reference_date=date_ref,
+                    matcher=matcher
+                )
+
+                console.print(schedule_result.explanation)
+                if schedule_result.s2_s3_candidates_selected:
+                    console.print(f"[bold green]✅ {len(schedule_result.s2_s3_candidates_selected)} OF(s) S+2/S+3 recommandés à affirmer[/bold green]")
+                    for candidate in schedule_result.s2_s3_candidates_selected[:10]:
+                        heures_totales = sum(candidate.hours_per_poste.values())
+                        console.print(f"   ➤ {candidate.of.num_of} ({candidate.of.article}) — {heures_totales:.1f}h")
+                    if len(schedule_result.s2_s3_candidates_selected) > 10:
+                        console.print(f"   ... et {len(schedule_result.s2_s3_candidates_selected) - 10} autres")
+                if schedule_result.llm_reasoning:
+                    console.print("\n[bold yellow]📝 Analyse LLM :[/bold yellow]")
+                    console.print(schedule_result.llm_reasoning[:500])
+                    if len(schedule_result.llm_reasoning) > 500:
+                        console.print("...")
+                console.print()
+            except Exception as e:
+                console.print(f"[bold red]❌ Erreur lors de la planification : {e}[/bold red]")
+                console.print()
+
+    # 6. Afficher le rapport
     format_rapport_s1(resultats_matching, resultats_faisabilite, include_previsions=include_previsions)
