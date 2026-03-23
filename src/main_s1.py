@@ -252,5 +252,37 @@ def main_s1(args, loader, include_previsions=False):
         console.print("[yellow]⚠️  Aucun OF à vérifier[/yellow]")
         console.print()
 
-    # 4. Afficher le rapport
+    # 5. Planification de charge (si --schedule activé)
+    if getattr(args, 'schedule', False) and ofs_a_verifier:
+        console.print("[bold cyan]📅 Planification de charge...[/bold cyan]")
+        ofs_faisables_s1 = [of for of in ofs_a_verifier if resultats_faisabilite[of.num_of].feasible]
+
+        if ofs_faisables_s1:
+            try:
+                schedule_result = decision_engine.plan_schedule(
+                    s1_feasible_ofs=ofs_faisables_s1,
+                    feasibility_results=resultats_faisabilite,
+                    reference_date=date_ref,
+                    matcher=matcher
+                )
+
+                console.print(schedule_result.explanation)
+                if schedule_result.s2_s3_candidates_selected:
+                    console.print(f"[bold green]✅ {len(schedule_result.s2_s3_candidates_selected)} OF(s) S+2/S+3 recommandés à affirmer[/bold green]")
+                    for candidate in schedule_result.s2_s3_candidates_selected[:10]:
+                        heures_totales = sum(candidate.hours_per_poste.values())
+                        console.print(f"   ➤ {candidate.of.num_of} ({candidate.of.article}) — {heures_totales:.1f}h")
+                    if len(schedule_result.s2_s3_candidates_selected) > 10:
+                        console.print(f"   ... et {len(schedule_result.s2_s3_candidates_selected) - 10} autres")
+                if schedule_result.llm_reasoning:
+                    console.print("\n[bold yellow]📝 Analyse LLM :[/bold yellow]")
+                    console.print(schedule_result.llm_reasoning[:500])
+                    if len(schedule_result.llm_reasoning) > 500:
+                        console.print("...")
+                console.print()
+            except Exception as e:
+                console.print(f"[bold red]❌ Erreur lors de la planification : {e}[/bold red]")
+                console.print()
+
+    # 6. Afficher le rapport
     format_rapport_s1(resultats_matching, resultats_faisabilite, include_previsions=include_previsions)

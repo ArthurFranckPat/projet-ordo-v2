@@ -1,7 +1,7 @@
 """Moteur de décision pour l'ordonnancement."""
 
 from datetime import date
-from typing import Dict, List, Optional, TYPE_CHECKING
+from typing import Dict, List, Optional, TYPE_CHECKING, Any
 
 from .smart_rule import SmartDecisionRule
 from .models import AgentDecision, AgentContext, AgentAction
@@ -190,3 +190,40 @@ class AgentEngine:
             )
 
         return decision
+
+    def plan_schedule(
+        self,
+        s1_feasible_ofs: List[OF],
+        feasibility_results: Dict[str, Any],
+        reference_date: date = None,
+        matcher=None
+    ):
+        """Lance l'agent planificateur de charge.
+
+        Parameters
+        ----------
+        s1_feasible_ofs : List[OF]
+            OFs S+1 faisables
+        feasibility_results : Dict[str, Any]
+            Résultats de faisabilité S+1
+        reference_date : date, optional
+        matcher : CommandeOFMatcher, optional
+
+        Returns
+        -------
+        SchedulingResult
+        """
+        from .scheduling.scheduling_agent import SchedulingAgent
+        from .scheduling.models import SchedulingConfig
+
+        agent = SchedulingAgent(
+            loader=self.loader,
+            config=SchedulingConfig(),
+            llm_client=self.llm_rule.llm_client if self.use_llm and self.llm_rule else None
+        )
+        return agent.plan_schedule(
+            s1_feasible_ofs=s1_feasible_ofs,
+            feasibility_results=feasibility_results,
+            reference_date=reference_date,
+            matcher=matcher
+        )

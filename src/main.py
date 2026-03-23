@@ -79,6 +79,11 @@ def main():
         help="Inclut les prévisions Export dans l'analyse (mode S+1)",
     )
     parser.add_argument(
+        "--schedule",
+        action="store_true",
+        help="Active le planificateur de charge (mode S+1 requis)",
+    )
+    parser.add_argument(
         "--charge-heatmap",
         action="store_true",
         help="Génère une heatmap de charge par poste de charge",
