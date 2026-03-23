@@ -4,17 +4,17 @@ from datetime import date
 from typing import Dict, List, Optional, TYPE_CHECKING
 
 from .smart_rule import SmartDecisionRule
-from .models import DecisionResult, DecisionContext, DecisionAction
+from .models import AgentDecision, AgentContext, AgentAction
 from .persistence import DecisionPersistence
 from ..models.of import OF
 from ..models.besoin_client import BesoinClient
 
 if TYPE_CHECKING:
     from ..loaders.data_loader import DataLoader
-    from .llm.llm_decision_rule import LLMBasedDecisionRule
+    from .llm.llm_decision_rule import LLMDecisionAgent
 
 
-class DecisionEngine:
+class AgentEngine:
     """Orchestrateur de l'évaluation des décisions métier.
 
     Peut fonctionner en mode classique (règles statiques) ou en mode LLM
@@ -55,9 +55,9 @@ class DecisionEngine:
                 raise ValueError("loader est requis en mode LLM")
 
             # Importer ici pour éviter les imports circulaires
-            from .llm.llm_decision_rule import LLMBasedDecisionRule
+            from .llm.llm_decision_rule import LLMDecisionAgent
 
-            self.llm_rule = LLMBasedDecisionRule(
+            self.llm_rule = LLMDecisionAgent(
                 llm_client=llm_client,
                 config_path=config_path
             )
@@ -81,7 +81,7 @@ class DecisionEngine:
         initial_stock: Dict[str, int],
         competing_ofs: Optional[List[OF]] = None,
         commande: Optional[BesoinClient] = None
-    ) -> DecisionResult:
+    ) -> AgentDecision:
         """Évalue un OF avant allocation virtuelle.
 
         Parameters
@@ -97,7 +97,7 @@ class DecisionEngine:
 
         Returns
         -------
-        DecisionResult
+        AgentDecision
             Décision avec action possiblement ACCEPT_PARTIAL
         """
         if self.use_llm:
@@ -110,8 +110,8 @@ class DecisionEngine:
                 current_date=date.today()
             )
         else:
-            # Mode classique : utilise DecisionContext
-            context = DecisionContext(
+            # Mode classique : utilise AgentContext
+            context = AgentContext(
                 of=of,
                 commande=commande,
                 initial_stock=initial_stock,
@@ -138,7 +138,7 @@ class DecisionEngine:
         allocation_result,
         commande: Optional[BesoinClient] = None,
         allocated_stock: Optional[Dict[str, int]] = None
-    ) -> DecisionResult:
+    ) -> AgentDecision:
         """Évalue un OF après allocation virtuelle (si échec).
 
         Parameters
@@ -154,7 +154,7 @@ class DecisionEngine:
 
         Returns
         -------
-        DecisionResult
+        AgentDecision
             Décision avec action DEFER, REJECT ou ACCEPT_AS_IS
         """
         if self.use_llm:
@@ -168,8 +168,8 @@ class DecisionEngine:
                 current_date=date.today()
             )
         else:
-            # Mode classique : utilise DecisionContext
-            context = DecisionContext(
+            # Mode classique : utilise AgentContext
+            context = AgentContext(
                 of=of,
                 commande=commande,
                 feasibility_result=allocation_result.feasibility_result,

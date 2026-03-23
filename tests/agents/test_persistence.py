@@ -6,7 +6,7 @@ import tempfile
 import os
 from datetime import datetime, date
 from src.agents.persistence import DecisionPersistence
-from src.agents.models import DecisionResult, DecisionAction
+from src.agents.models import AgentDecision, AgentAction
 from src.models.of import OF
 
 
@@ -34,8 +34,8 @@ def test_persistence_save_decision(temp_history_file):
         qte_fabriquee=0,
         qte_restante=100
     )
-    decision = DecisionResult(
-        action=DecisionAction.ACCEPT_PARTIAL,
+    decision = AgentDecision(
+        action=AgentAction.ACCEPT_PARTIAL,
         reason="Test reason",
         modified_quantity=95
     )
@@ -71,8 +71,8 @@ def test_persistence_rotation(temp_history_file):
         qte_fabriquee=0,
         qte_restante=100
     )
-    decision = DecisionResult(
-        action=DecisionAction.ACCEPT_AS_IS,
+    decision = AgentDecision(
+        action=AgentAction.ACCEPT_AS_IS,
         reason="Test"
     )
 

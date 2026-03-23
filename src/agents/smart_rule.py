@@ -4,7 +4,7 @@ from typing import Dict, Any, List, Optional, Tuple
 from datetime import date, datetime
 
 from .config import load_config
-from .models import DecisionContext, DecisionResult, DecisionAction
+from .models import AgentContext, AgentDecision, AgentAction
 from .criteria import BaseCriterion, CompletionCriterion, ClientCriterion, UrgencyCriterion
 
 
@@ -50,22 +50,22 @@ class SmartDecisionRule:
             UrgencyCriterion(urgency_config)
         ]
 
-    def evaluate(self, context: DecisionContext) -> DecisionResult:
+    def evaluate(self, context: AgentContext) -> AgentDecision:
         """Évalue un contexte de décision et retourne une action.
 
         Parameters
         ----------
-        context : DecisionContext
+        context : AgentContext
             Contexte de décision à évaluer
 
         Returns
         -------
-        DecisionResult
+        AgentDecision
             Résultat de la décision (action, reason, metadata)
         """
         # 1. Évaluer chaque critère
         criteria_scores: Dict[str, float] = {}
-        suggestions: List[Tuple[str, Optional[DecisionAction]]] = []
+        suggestions: List[Tuple[str, Optional[AgentAction]]] = []
 
         for criterion in self.criteria:
             if criterion.is_applicable(context):
@@ -84,7 +84,7 @@ class SmartDecisionRule:
 
         # 4. Calculer la quantité partielle si nécessaire
         modified_quantity = None
-        if action == DecisionAction.ACCEPT_PARTIAL:
+        if action == AgentAction.ACCEPT_PARTIAL:
             modified_quantity = self._calculate_partial_quantity(context)
 
         # 5. Générer la raison et les métadonnées
@@ -93,7 +93,7 @@ class SmartDecisionRule:
         )
 
         # 6. Créer et retourner le résultat
-        return DecisionResult(
+        return AgentDecision(
             action=action,
             reason=reason,
             modified_quantity=modified_quantity,
@@ -129,9 +129,9 @@ class SmartDecisionRule:
     def _decide_action(
         self,
         weighted_score: float,
-        suggestions: List[Tuple[str, Optional[DecisionAction]]],
-        context: DecisionContext
-    ) -> DecisionAction:
+        suggestions: List[Tuple[str, Optional[AgentAction]]],
+        context: AgentContext
+    ) -> AgentAction:
         """Détermine l'action basée sur le score pondéré et les suggestions.
 
         Priorité :
@@ -142,14 +142,14 @@ class SmartDecisionRule:
         ----------
         weighted_score : float
             Score pondéré total
-        suggestions : List[Tuple[str, Optional[DecisionAction]]]
+        suggestions : List[Tuple[str, Optional[AgentAction]]]
             Suggestions des critères (criterion_id, action)
-        context : DecisionContext
+        context : AgentContext
             Contexte de décision
 
         Returns
         -------
-        DecisionAction
+        AgentAction
             Action décidée
         """
         accept_threshold = self.thresholds.get("accept_threshold", 0.7)
@@ -158,40 +158,40 @@ class SmartDecisionRule:
         # 1. Priorité aux suggestions explicites des critères
         if suggestions:
             # Compter les suggestions par action
-            suggestion_counts: Dict[DecisionAction, int] = {}
+            suggestion_counts: Dict[AgentAction, int] = {}
             for criterion_id, action in suggestions:
                 if action is not None:
                     suggestion_counts[action] = suggestion_counts.get(action, 0) + 1
 
             # Si un critère suggère ACCEPT_AS_IS → priorité absolue
-            if DecisionAction.ACCEPT_AS_IS in suggestion_counts:
-                return DecisionAction.ACCEPT_AS_IS
+            if AgentAction.ACCEPT_AS_IS in suggestion_counts:
+                return AgentAction.ACCEPT_AS_IS
 
             # Si un critère suggère ACCEPT_PARTIAL → priorité haute
-            if DecisionAction.ACCEPT_PARTIAL in suggestion_counts:
-                return DecisionAction.ACCEPT_PARTIAL
+            if AgentAction.ACCEPT_PARTIAL in suggestion_counts:
+                return AgentAction.ACCEPT_PARTIAL
 
             # Si un critère suggère REJECT → priorité haute
-            if DecisionAction.REJECT in suggestion_counts:
-                return DecisionAction.REJECT
+            if AgentAction.REJECT in suggestion_counts:
+                return AgentAction.REJECT
 
         # 2. Basé sur le score pondéré
         if weighted_score >= accept_threshold:
-            return DecisionAction.ACCEPT_AS_IS
+            return AgentAction.ACCEPT_AS_IS
         elif weighted_score <= reject_threshold:
-            return DecisionAction.REJECT
+            return AgentAction.REJECT
         else:
             # Zone intermédiaire → ACCEPT_PARTIAL par défaut
-            return DecisionAction.ACCEPT_PARTIAL
+            return AgentAction.ACCEPT_PARTIAL
 
-    def _calculate_partial_quantity(self, context: DecisionContext) -> int:
+    def _calculate_partial_quantity(self, context: AgentContext) -> int:
         """Calcule la quantité pour une acceptation partielle.
 
         Utilise le taux de complétion cible (target_completion_rate).
 
         Parameters
         ----------
-        context : DecisionContext
+        context : AgentContext
             Contexte de décision
 
         Returns
@@ -212,25 +212,25 @@ class SmartDecisionRule:
 
     def _generate_reason(
         self,
-        action: DecisionAction,
+        action: AgentAction,
         weighted_score: float,
         criteria_scores: Dict[str, float],
-        suggestions: List[Tuple[str, Optional[DecisionAction]]],
-        context: DecisionContext
+        suggestions: List[Tuple[str, Optional[AgentAction]]],
+        context: AgentContext
     ) -> Tuple[str, Dict[str, Any]]:
         """Génère la raison et les métadonnées de la décision.
 
         Parameters
         ----------
-        action : DecisionAction
+        action : AgentAction
             Action décidée
         weighted_score : float
             Score pondéré total
         criteria_scores : Dict[str, float]
             Scores par critère
-        suggestions : List[Tuple[str, Optional[DecisionAction]]]
+        suggestions : List[Tuple[str, Optional[AgentAction]]]
             Suggestions des critères
-        context : DecisionContext
+        context : AgentContext
             Contexte de décision
 
         Returns
@@ -255,7 +255,7 @@ class SmartDecisionRule:
             reason_parts.append(f"Suggestions: {', '.join(suggestion_strs)}")
 
         # Ajouter des détails spécifiques à l'action
-        if action == DecisionAction.ACCEPT_AS_IS:
+        if action == AgentAction.ACCEPT_AS_IS:
             if context.feasibility_result and context.feasibility_result.feasible:
                 reason_parts.insert(0, "100% faisable")
             # Ajouter le client si prioritaire
@@ -263,7 +263,7 @@ class SmartDecisionRule:
                 priority_clients = self.config.get("client", {}).get("priority_clients", [])
                 if context.commande.nom_client in priority_clients:
                     reason_parts.insert(0, f"Client prioritaire {context.commande.nom_client}")
-        elif action == DecisionAction.ACCEPT_PARTIAL:
+        elif action == AgentAction.ACCEPT_PARTIAL:
             if context.feasibility_result and not context.feasibility_result.feasible:
                 missing = context.feasibility_result.missing_components
                 if missing:

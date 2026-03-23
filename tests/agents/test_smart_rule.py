@@ -3,7 +3,7 @@
 import pytest
 from datetime import date
 from src.agents.smart_rule import SmartDecisionRule
-from src.agents.models import DecisionContext, DecisionAction
+from src.agents.models import AgentContext, AgentAction
 from src.models.of import OF
 from src.models.besoin_client import BesoinClient, TypeCommande, NatureBesoin
 from src.checkers.base import FeasibilityResult
@@ -25,7 +25,7 @@ def test_smart_rule_accept_complete():
 
     feasibility = FeasibilityResult(feasible=True)
 
-    context = DecisionContext(
+    context = AgentContext(
         of=of,
         feasibility_result=feasibility,
         initial_stock={"11019971": 147},
@@ -37,7 +37,7 @@ def test_smart_rule_accept_complete():
     rule = SmartDecisionRule()
     result = rule.evaluate(context)
 
-    assert result.action == DecisionAction.ACCEPT_AS_IS
+    assert result.action == AgentAction.ACCEPT_AS_IS
     assert result.modified_quantity is None
     assert "100%" in result.reason.lower() or "faisable" in result.reason.lower()
     # Score pondéré ≥ 0.7 (threshold d'acceptation)
@@ -63,7 +63,7 @@ def test_smart_rule_accept_partial_98_6_percent():
     feasibility = FeasibilityResult(feasible=False)
     feasibility.add_missing("11019971", 2)  # Manque 2 unités
 
-    context = DecisionContext(
+    context = AgentContext(
         of=of,
         feasibility_result=feasibility,
         initial_stock={"11019971": 145},
@@ -74,7 +74,7 @@ def test_smart_rule_accept_partial_98_6_percent():
     rule = SmartDecisionRule()
     result = rule.evaluate(context)
 
-    assert result.action == DecisionAction.ACCEPT_PARTIAL
+    assert result.action == AgentAction.ACCEPT_PARTIAL
     assert result.modified_quantity == 140  # int(147 * 0.95)
     assert "98.6%" in result.reason or "145/147" in result.reason
     assert result.metadata["weighted_score"] >= 0.7  # Score élevé
@@ -113,7 +113,7 @@ def test_smart_rule_priority_client():
         qte_restante=100
     )
 
-    context = DecisionContext(
+    context = AgentContext(
         of=of,
         commande=commande,
         feasibility_result=feasibility,
@@ -126,7 +126,7 @@ def test_smart_rule_priority_client():
     result = rule.evaluate(context)
 
     # Client prioritaire + petit écart → ACCEPT_AS_IS
-    assert result.action == DecisionAction.ACCEPT_AS_IS
+    assert result.action == AgentAction.ACCEPT_AS_IS
     assert result.metadata["criteria_scores"]["client"] >= 0.8
     assert "ALDES" in result.reason or "prioritaire" in result.reason.lower()
 
@@ -163,7 +163,7 @@ def test_smart_rule_metadata():
         qte_restante=147
     )
 
-    context = DecisionContext(
+    context = AgentContext(
         of=of,
         commande=commande,
         feasibility_result=feasibility,

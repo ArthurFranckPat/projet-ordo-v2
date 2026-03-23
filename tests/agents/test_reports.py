@@ -6,7 +6,7 @@ import os
 from datetime import date
 from unittest.mock import Mock
 from src.agents.reports import DecisionReporter
-from src.agents.models import DecisionResult, DecisionAction
+from src.agents.models import AgentDecision, AgentAction
 from src.models.of import OF
 from src.checkers.base import FeasibilityResult
 
@@ -43,8 +43,8 @@ def sample_allocation_results():
     result1 = Mock()
     result1.of_num = "F123"
     result1.status = "FEASIBLE"
-    result1.decision = DecisionResult(
-        action=DecisionAction.ACCEPT_PARTIAL,
+    result1.decision = AgentDecision(
+        action=AgentAction.ACCEPT_PARTIAL,
         reason="Score 0.85 → Accepter 98.6% (145/147)",
         modified_quantity=145,
         metadata={"weighted_score": 0.85}
@@ -53,8 +53,8 @@ def sample_allocation_results():
     result2 = Mock()
     result2.of_num = "F456"
     result2.status = "NOT_FEASIBLE"
-    result2.decision = DecisionResult(
-        action=DecisionAction.REJECT,
+    result2.decision = AgentDecision(
+        action=AgentAction.REJECT,
         reason="Score 0.2 → Rejeter",
         metadata={"weighted_score": 0.2}
     )

@@ -10,7 +10,7 @@ from ..models.besoin_client import BesoinClient
 from ..checkers.base import FeasibilityResult
 
 
-class DecisionAction(Enum):
+class AgentAction(Enum):
     """Actions possibles après décision métier."""
 
     ACCEPT_AS_IS = "accept_as_is"
@@ -30,10 +30,10 @@ class DecisionAction(Enum):
 
 
 @dataclass
-class DecisionResult:
+class AgentDecision:
     """Résultat d'une décision métier."""
 
-    action: DecisionAction
+    action: AgentAction
     # Action décidée
 
     reason: str
@@ -53,7 +53,7 @@ class DecisionResult:
 
 
 @dataclass
-class DecisionContext:
+class AgentContext:
     """Contexte disponible pour les critères de décision."""
 
     of: OF

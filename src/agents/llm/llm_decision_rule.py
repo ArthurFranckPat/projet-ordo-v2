@@ -4,7 +4,7 @@ import logging
 from datetime import date
 from typing import Dict, Optional, List
 
-from ..models import DecisionResult, DecisionAction, DecisionContext
+from ..models import AgentDecision, AgentAction, AgentContext
 from ...models import OF, BesoinClient
 from ...loaders import DataLoader
 from .models import LLMAnalysisContext
@@ -17,7 +17,7 @@ from .llm_client import BaseLLMClient
 logger = logging.getLogger(__name__)
 
 
-class LLMBasedDecisionRule:
+class LLMDecisionAgent:
     """Règle de décision basée sur LLM.
 
     Orchestre l'analyse contextuelle et l'appel au LLM pour prendre
@@ -46,19 +46,19 @@ class LLMBasedDecisionRule:
         self.prompt_builder = LLMPromptBuilder()
         self.response_parser = LLMResponseParser()
 
-    def _apply_prefilter(self, context) -> Optional["DecisionResult"]:
+    def _apply_prefilter(self, context) -> Optional["AgentDecision"]:
         """Résout les cas triviaux sans appel LLM.
 
         Returns None si le cas est ambigu et nécessite le LLM.
-        Returns DecisionResult directement pour les cas évidents :
+        Returns AgentDecision directement pour les cas évidents :
         - faisable → ACCEPT_AS_IS
         - non_faisable sans bloqué ni réception → REJECT
         """
         faisabilite = context.situation_globale.faisabilite
 
         if faisabilite == "faisable":
-            return DecisionResult(
-                action=DecisionAction.ACCEPT_AS_IS,
+            return AgentDecision(
+                action=AgentAction.ACCEPT_AS_IS,
                 reason="Tous les composants disponibles, OF faisable immédiatement.",
                 metadata={"prefilter": True, "faisabilite": "faisable"}
             )
@@ -74,8 +74,8 @@ class LLMBasedDecisionRule:
             )
             if not a_bloque and not a_reception:
                 raison = context.situation_globale.raison_blocage or "Composants manquants sans perspective"
-                return DecisionResult(
-                    action=DecisionAction.REJECT,
+                return AgentDecision(
+                    action=AgentAction.REJECT,
                     reason=f"OF non faisable : {raison}. Aucune perspective de déblocage à court terme.",
                     metadata={"prefilter": True, "faisabilite": "non_faisable"}
                 )
@@ -89,7 +89,7 @@ class LLMBasedDecisionRule:
         loader: DataLoader,
         competing_ofs: Optional[List[OF]] = None,
         current_date: date = date.today()
-    ) -> DecisionResult:
+    ) -> AgentDecision:
         """Évalue un OF en utilisant le LLM.
 
         Parameters
@@ -107,7 +107,7 @@ class LLMBasedDecisionRule:
 
         Returns
         -------
-        DecisionResult
+        AgentDecision
             Décision prise par le LLM
         """
         try:
@@ -123,7 +123,7 @@ class LLMBasedDecisionRule:
             if prefilter_result is not None:
                 logger.info(f"[{of.num_of}] Pré-filtre appliqué : {prefilter_result.action.value}")
                 if self.persistence:
-                    pass  # La persistance est gérée par DecisionEngine
+                    pass  # La persistance est gérée par AgentEngine
                 return prefilter_result
 
             # 3. Construire le prompt (cas ambigu → appel LLM)
@@ -152,7 +152,7 @@ class LLMBasedDecisionRule:
                 # Fallback : décision conservative
                 return self._create_fallback_decision(context)
 
-            # 6. Créer le DecisionResult
+            # 6. Créer le AgentDecision
             return self._create_decision_result(parsed_decision, context)
 
         except Exception as e:
@@ -166,8 +166,8 @@ class LLMBasedDecisionRule:
         self,
         parsed_decision,
         context: LLMAnalysisContext
-    ) -> DecisionResult:
-        """Crée un DecisionResult à partir d'une décision parsée.
+    ) -> AgentDecision:
+        """Crée un AgentDecision à partir d'une décision parsée.
 
         Parameters
         ----------
@@ -178,21 +178,21 @@ class LLMBasedDecisionRule:
 
         Returns
         -------
-        DecisionResult
-            DecisionResult
+        AgentDecision
+            AgentDecision
         """
         from datetime import datetime
 
         # Mapper l'action
         action_map = {
-            "ACCEPT_AS_IS": DecisionAction.ACCEPT_AS_IS,
-            "ACCEPT_PARTIAL": DecisionAction.ACCEPT_PARTIAL,
-            "REJECT": DecisionAction.REJECT,
-            "DEFER": DecisionAction.DEFER,
-            "DEFER_PARTIAL": DecisionAction.DEFER_PARTIAL
+            "ACCEPT_AS_IS": AgentAction.ACCEPT_AS_IS,
+            "ACCEPT_PARTIAL": AgentAction.ACCEPT_PARTIAL,
+            "REJECT": AgentAction.REJECT,
+            "DEFER": AgentAction.DEFER,
+            "DEFER_PARTIAL": AgentAction.DEFER_PARTIAL
         }
 
-        action = action_map.get(parsed_decision.action, DecisionAction.REJECT)
+        action = action_map.get(parsed_decision.action, AgentAction.REJECT)
 
         # Convertir defer_date si présent
         defer_date = None
@@ -204,7 +204,7 @@ class LLMBasedDecisionRule:
                 logger.warning(f"Format de date invalide: {parsed_decision.defer_date}")
 
         # Créer le résultat
-        result = DecisionResult(
+        result = AgentDecision(
             action=action,
             reason=parsed_decision.reason,
             modified_quantity=parsed_decision.modified_quantity,
@@ -219,7 +219,7 @@ class LLMBasedDecisionRule:
 
         return result
 
-    def _create_fallback_decision(self, context: LLMAnalysisContext) -> DecisionResult:
+    def _create_fallback_decision(self, context: LLMAnalysisContext) -> AgentDecision:
         """Crée une décision de fallback basée sur l'analyse contextuelle.
 
         Parameters
@@ -229,15 +229,15 @@ class LLMBasedDecisionRule:
 
         Returns
         -------
-        DecisionResult
+        AgentDecision
             Décision de fallback
         """
         # Décision basée sur la situation globale
         faisabilite = context.situation_globale.faisabilite
 
         if faisabilite == "faisable":
-            return DecisionResult(
-                action=DecisionAction.ACCEPT_AS_IS,
+            return AgentDecision(
+                action=AgentAction.ACCEPT_AS_IS,
                 reason=f"OF faisable (analyse automatique)",
                 metadata={"fallback": True, "faisabilite": faisabilite}
             )
@@ -253,8 +253,8 @@ class LLMBasedDecisionRule:
             conditions = context.situation_globale.conditions_deblocage
             reason = f"OF faisable après déblocage: {', '.join(conditions[:2])}"
 
-            return DecisionResult(
-                action=DecisionAction.DEFER,
+            return AgentDecision(
+                action=AgentAction.DEFER,
                 reason=reason,
                 defer_date=defer_date,
                 metadata={
@@ -267,8 +267,8 @@ class LLMBasedDecisionRule:
 
         else:
             # Non faisable → REJECT
-            return DecisionResult(
-                action=DecisionAction.REJECT,
+            return AgentDecision(
+                action=AgentAction.REJECT,
                 reason=f"OF non faisable: {context.situation_globale.raison_blocage}",
                 metadata={
                     "fallback": True,
@@ -282,7 +282,7 @@ class LLMBasedDecisionRule:
         of: OF,
         commande: Optional[BesoinClient],
         error_message: str
-    ) -> DecisionResult:
+    ) -> AgentDecision:
         """Crée une décision de fallback en cas d'erreur.
 
         Parameters
@@ -296,13 +296,13 @@ class LLMBasedDecisionRule:
 
         Returns
         -------
-        DecisionResult
+        AgentDecision
             Décision de fallback (REJECT par sécurité)
         """
         logger.error(f"[{of.num_of}] Erreur LLM, utilisation de fallback REJECT: {error_message}")
 
-        return DecisionResult(
-            action=DecisionAction.REJECT,
+        return AgentDecision(
+            action=AgentAction.REJECT,
             reason=f"Erreur lors de l'évaluation automatique: {error_message}",
             metadata={
                 "fallback": True,

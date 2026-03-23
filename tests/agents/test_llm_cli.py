@@ -30,13 +30,13 @@ class TestLLMCLIFlags:
         assert "--llm-model" in result.stdout
 
     def test_decision_engine_accepte_use_llm_true_avec_loader(self):
-        """DecisionEngine doit pouvoir être créé avec use_llm=True, llm_client, et loader."""
+        """AgentEngine doit pouvoir être créé avec use_llm=True, llm_client, et loader."""
         import shutil
         import tempfile
         with patch.dict(os.environ, {"MISTRAL_API_KEY": "fake-key-for-test"}):
             with patch("src.agents.llm.mistral_client.Mistral"):
                 from src.agents.llm.mistral_client import MistralLLMClient
-                from src.agents.engine import DecisionEngine
+                from src.agents.engine import AgentEngine
 
                 with tempfile.TemporaryDirectory() as tmp_dir:
                     config_dir = os.path.join(tmp_dir, "config")
@@ -49,7 +49,7 @@ class TestLLMCLIFlags:
                     try:
                         os.chdir(tmp_dir)
                         llm_client = MistralLLMClient(model="mistral-large-latest")
-                        engine = DecisionEngine(
+                        engine = AgentEngine(
                             "config/decisions.yaml",
                             use_llm=True,
                             llm_client=llm_client,

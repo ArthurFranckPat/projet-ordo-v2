@@ -2,7 +2,7 @@
 
 import pytest
 from src.agents.criteria.base import BaseCriterion
-from src.agents.models import DecisionContext, DecisionAction
+from src.agents.models import AgentContext, AgentAction
 from src.models.of import OF
 
 
@@ -47,7 +47,7 @@ def test_concrete_criterion_implementation():
         qte_fabriquee=0,
         qte_restante=100
     )
-    context = DecisionContext(of=of)
+    context = AgentContext(of=of)
 
     criterion = DummyCriterion({})
     assert criterion.CRITERION_ID == "dummy"

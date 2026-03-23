@@ -3,7 +3,7 @@
 from typing import Optional
 
 from .base import BaseCriterion
-from ..models import DecisionContext, DecisionAction
+from ..models import AgentContext, AgentAction
 
 
 class CompletionCriterion(BaseCriterion):
@@ -16,7 +16,7 @@ class CompletionCriterion(BaseCriterion):
     CRITERION_NAME = "Completion Rate"
     DESCRIPTION = "Évalue le taux de complétion de l'OF"
 
-    def score(self, context: DecisionContext) -> float:
+    def score(self, context: AgentContext) -> float:
         # Si pas de résultat de faisabilité → score neutre
         if not context.feasibility_result:
             return 0.5
@@ -52,10 +52,10 @@ class CompletionCriterion(BaseCriterion):
             # Interpolation linéaire
             return (completion_rate - min_rate) / (target_rate - min_rate)
 
-    def suggest_action(self, context: DecisionContext, score: float) -> Optional[DecisionAction]:
+    def suggest_action(self, context: AgentContext, score: float) -> Optional[AgentAction]:
         # Si 100% faisable → accepter tel quel
         if context.feasibility_result and context.feasibility_result.feasible:
-            return DecisionAction.ACCEPT_AS_IS
+            return AgentAction.ACCEPT_AS_IS
 
         # Si score élevé mais pas faisable à 100% → proposer acceptation partielle
         if score >= 0.8 and context.feasibility_result and context.feasibility_result.missing_components:
@@ -65,10 +65,10 @@ class CompletionCriterion(BaseCriterion):
             # Vérifier l'écart absolu max
             max_gap = self.config.get("max_absolute_gap", 10)
             if total_missing <= max_gap:
-                return DecisionAction.ACCEPT_PARTIAL
+                return AgentAction.ACCEPT_PARTIAL
 
         # Si score parfait (1.0) mais pas de missing (cas théorique)
         if score >= 1.0:
-            return DecisionAction.ACCEPT_AS_IS
+            return AgentAction.ACCEPT_AS_IS
 
         return None

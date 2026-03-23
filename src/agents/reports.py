@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 from typing import Dict
 
-from .models import DecisionResult
+from .models import AgentDecision
 from ..algorithms.allocation import AllocationResult
 
 

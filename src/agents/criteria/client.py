@@ -3,7 +3,7 @@
 from typing import Optional
 
 from .base import BaseCriterion
-from ..models import DecisionContext, DecisionAction
+from ..models import AgentContext, AgentAction
 
 
 class ClientCriterion(BaseCriterion):
@@ -16,7 +16,7 @@ class ClientCriterion(BaseCriterion):
     CRITERION_NAME = "Client Priority"
     DESCRIPTION = "Priorise les clients stratégiques"
 
-    def score(self, context: DecisionContext) -> float:
+    def score(self, context: AgentContext) -> float:
         # Pas de commande → neutre
         if not context.commande:
             return 0.5
@@ -34,7 +34,7 @@ class ClientCriterion(BaseCriterion):
         else:
             return 0.5  # Client standard
 
-    def suggest_action(self, context: DecisionContext, score: float) -> Optional[DecisionAction]:
+    def suggest_action(self, context: AgentContext, score: float) -> Optional[AgentAction]:
         # Client prioritaire avec OF non faisable → forcer
         if score >= 1.0:
             if context.feasibility_result and not context.feasibility_result.feasible:
@@ -47,6 +47,6 @@ class ClientCriterion(BaseCriterion):
                 # Tolérer jusqu'à 5% pour clients prioritaires
                 max_gap_pct = self.config.get("priority_client_max_gap", 0.05)
                 if gap_pct <= max_gap_pct:
-                    return DecisionAction.ACCEPT_AS_IS
+                    return AgentAction.ACCEPT_AS_IS
 
         return None

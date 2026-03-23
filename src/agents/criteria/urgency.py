@@ -4,7 +4,7 @@ from typing import Optional
 from datetime import date
 
 from .base import BaseCriterion
-from ..models import DecisionContext, DecisionAction
+from ..models import AgentContext, AgentAction
 
 
 class UrgencyCriterion(BaseCriterion):
@@ -17,7 +17,7 @@ class UrgencyCriterion(BaseCriterion):
     CRITERION_NAME = "Urgency"
     DESCRIPTION = "Évalue l'urgence de l'OF"
 
-    def score(self, context: DecisionContext) -> float:
+    def score(self, context: AgentContext) -> float:
         """Calcule le score d'urgence basé sur les jours restants."""
         if not context.of.date_fin or not context.current_date:
             return 0.5
@@ -37,7 +37,7 @@ class UrgencyCriterion(BaseCriterion):
         else:
             return 0.3
 
-    def suggest_action(self, context: DecisionContext, score: float) -> Optional[DecisionAction]:
+    def suggest_action(self, context: AgentContext, score: float) -> Optional[AgentAction]:
         """Suggère ACCEPT_AS_IS pour les OF urgents avec petit gap de composants."""
         if not context.feasibility_result or context.feasibility_result.feasible:
             return None
@@ -50,10 +50,10 @@ class UrgencyCriterion(BaseCriterion):
         if score >= 1.0:  # Very urgent
             max_gap = self.config.get("very_urgent_tolerance", 0.05)
             if gap_pct <= max_gap:
-                return DecisionAction.ACCEPT_AS_IS
+                return AgentAction.ACCEPT_AS_IS
         elif score >= 0.8:  # Urgent
             max_gap = self.config.get("urgent_tolerance", 0.02)
             if gap_pct <= max_gap:
-                return DecisionAction.ACCEPT_AS_IS
+                return AgentAction.ACCEPT_AS_IS
 
         return None

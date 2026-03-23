@@ -8,7 +8,7 @@ from rich.console import Console
 from .checkers import ProjectedChecker, RecursiveChecker
 from .algorithms import CommandeOFMatcher
 from .reports import format_rapport_s1
-from .agents import DecisionEngine, DecisionContext
+from .agents import AgentEngine, AgentContext
 
 
 def main_s1(args, loader, include_previsions=False):
@@ -131,11 +131,11 @@ def main_s1(args, loader, include_previsions=False):
             decisions_pre[of.num_of] = decision
 
         # Statistiques des décisions
-        from .agents.models import DecisionAction
-        accept_as_is = sum(1 for d in decisions_pre.values() if d.action == DecisionAction.ACCEPT_AS_IS)
-        accept_partial = sum(1 for d in decisions_pre.values() if d.action == DecisionAction.ACCEPT_PARTIAL)
-        reject = sum(1 for d in decisions_pre.values() if d.action == DecisionAction.REJECT)
-        defer = sum(1 for d in decisions_pre.values() if d.action in [DecisionAction.DEFER, DecisionAction.DEFER_PARTIAL])
+        from .agents.models import AgentAction
+        accept_as_is = sum(1 for d in decisions_pre.values() if d.action == AgentAction.ACCEPT_AS_IS)
+        accept_partial = sum(1 for d in decisions_pre.values() if d.action == AgentAction.ACCEPT_PARTIAL)
+        reject = sum(1 for d in decisions_pre.values() if d.action == AgentAction.REJECT)
+        defer = sum(1 for d in decisions_pre.values() if d.action in [AgentAction.DEFER, AgentAction.DEFER_PARTIAL])
 
         console.print(f"✅ Évaluation terminée : {len(decisions_pre)} décisions")
         console.print(f"   ✓ Accepter tel quel : {accept_as_is}")
@@ -147,7 +147,7 @@ def main_s1(args, loader, include_previsions=False):
         # Appliquer les décisions ACCEPT_PARTIAL
         of_original_quantities: Dict[str, int] = {}
         for of_num, decision in decisions_pre.items():
-            if decision.action == DecisionAction.ACCEPT_PARTIAL and decision.modified_quantity:
+            if decision.action == AgentAction.ACCEPT_PARTIAL and decision.modified_quantity:
                 of = next((o for o in ofs_a_verifier if o.num_of == of_num), None)
                 if of:
                     # Sauvegarder la quantité originale

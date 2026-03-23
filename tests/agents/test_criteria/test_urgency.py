@@ -4,7 +4,7 @@ import pytest
 from datetime import date, timedelta
 
 from src.agents.criteria.urgency import UrgencyCriterion
-from src.agents.models import DecisionContext, DecisionAction
+from src.agents.models import AgentContext, AgentAction
 from src.models.of import OF
 from src.checkers.base import FeasibilityResult
 
@@ -29,7 +29,7 @@ def base_context(today):
         qte_a_fabriquer=100,
         qte_fabriquee=0
     )
-    return DecisionContext(
+    return AgentContext(
         of=of,
         current_date=today,
         feasibility_result=None
@@ -121,7 +121,7 @@ def test_urgency_criterion_suggest_action_very_urgent(today):
         missing_components=missing
     )
 
-    context = DecisionContext(
+    context = AgentContext(
         of=of,
         current_date=today,
         feasibility_result=feasibility
@@ -132,7 +132,7 @@ def test_urgency_criterion_suggest_action_very_urgent(today):
     action = criterion.suggest_action(context, score)
 
     assert score == 1.0
-    assert action == DecisionAction.ACCEPT_AS_IS
+    assert action == AgentAction.ACCEPT_AS_IS
 
 
 def test_urgency_criterion_suggest_action_urgent(today):
@@ -159,7 +159,7 @@ def test_urgency_criterion_suggest_action_urgent(today):
         missing_components=missing
     )
 
-    context = DecisionContext(
+    context = AgentContext(
         of=of,
         current_date=today,
         feasibility_result=feasibility
@@ -170,7 +170,7 @@ def test_urgency_criterion_suggest_action_urgent(today):
     action = criterion.suggest_action(context, score)
 
     assert score == 0.8
-    assert action == DecisionAction.ACCEPT_AS_IS
+    assert action == AgentAction.ACCEPT_AS_IS
 
 
 def test_urgency_criterion_no_action_if_feasible(today):
@@ -192,7 +192,7 @@ def test_urgency_criterion_no_action_if_feasible(today):
         missing_components={}
     )
 
-    context = DecisionContext(
+    context = AgentContext(
         of=of,
         current_date=today,
         feasibility_result=feasibility
@@ -230,7 +230,7 @@ def test_urgency_criterion_no_action_if_large_gap(today):
         missing_components=missing
     )
 
-    context = DecisionContext(
+    context = AgentContext(
         of=of,
         current_date=today,
         feasibility_result=feasibility

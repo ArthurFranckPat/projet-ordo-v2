@@ -4,7 +4,7 @@ import json
 import os
 from typing import Dict, List, Any
 
-from .models import DecisionResult
+from .models import AgentDecision
 
 
 class DecisionPersistence:
@@ -26,7 +26,7 @@ class DecisionPersistence:
     def save_decision(
         self,
         of_num: str,
-        decision: DecisionResult,
+        decision: AgentDecision,
         allocation_phase: str
     ):
         """Sauvegarde une décision dans l'historique.
@@ -35,7 +35,7 @@ class DecisionPersistence:
         ----------
         of_num : str
             Numéro de l'OF
-        decision : DecisionResult
+        decision : AgentDecision
             Décision à sauvegarder
         allocation_phase : str
             Phase d'allocation ("pre" ou "post")

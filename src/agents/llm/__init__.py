@@ -14,7 +14,7 @@ from .models import (
 )
 from .llm_client import BaseLLMClient, MockLLMClient
 from .mistral_client import MistralLLMClient
-from .llm_decision_rule import LLMBasedDecisionRule
+from .llm_decision_rule import LLMDecisionAgent
 
 __all__ = [
     # Models
@@ -29,5 +29,5 @@ __all__ = [
     "MockLLMClient",
     "MistralLLMClient",
     # Decision rule
-    "LLMBasedDecisionRule",
+    "LLMDecisionAgent",
 ]

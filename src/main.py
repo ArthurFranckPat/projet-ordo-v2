@@ -9,7 +9,7 @@ from rich.console import Console
 from .loaders import DataLoader
 from .checkers import ImmediateChecker, ProjectedChecker, RecursiveChecker
 from .algorithms import AllocationManager, AllocationStatus
-from .agents import DecisionEngine
+from .agents import AgentEngine
 from .algorithms import calculate_weekly_charge_heatmap
 from .utils import format_of_table, format_detailed_report, format_summary
 from .utils import format_charge_heatmap, format_charge_summary

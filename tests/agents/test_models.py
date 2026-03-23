@@ -2,28 +2,28 @@
 
 import pytest
 from datetime import date, datetime
-from src.agents.models import DecisionAction, DecisionResult, DecisionContext
+from src.agents.models import AgentAction, AgentDecision, AgentContext
 from src.models.of import OF
 from src.checkers.base import FeasibilityResult
 
 
 def test_decision_action_enum():
-    """Test que DecisionAction a toutes les valeurs requises."""
-    assert hasattr(DecisionAction, 'ACCEPT_AS_IS')
-    assert hasattr(DecisionAction, 'ACCEPT_PARTIAL')
-    assert hasattr(DecisionAction, 'REJECT')
-    assert hasattr(DecisionAction, 'DEFER')
-    assert hasattr(DecisionAction, 'DEFER_PARTIAL')
+    """Test que AgentAction a toutes les valeurs requises."""
+    assert hasattr(AgentAction, 'ACCEPT_AS_IS')
+    assert hasattr(AgentAction, 'ACCEPT_PARTIAL')
+    assert hasattr(AgentAction, 'REJECT')
+    assert hasattr(AgentAction, 'DEFER')
+    assert hasattr(AgentAction, 'DEFER_PARTIAL')
 
 
 def test_decision_result_creation():
-    """Test la création d'un DecisionResult."""
-    result = DecisionResult(
-        action=DecisionAction.ACCEPT_AS_IS,
+    """Test la création d'un AgentDecision."""
+    result = AgentDecision(
+        action=AgentAction.ACCEPT_AS_IS,
         reason="Test reason"
     )
 
-    assert result.action == DecisionAction.ACCEPT_AS_IS
+    assert result.action == AgentAction.ACCEPT_AS_IS
     assert result.reason == "Test reason"
     assert result.modified_quantity is None
     assert result.defer_date is None
@@ -32,9 +32,9 @@ def test_decision_result_creation():
 
 
 def test_decision_result_with_partial_acceptance():
-    """Test DecisionResult avec acceptation partielle."""
-    result = DecisionResult(
-        action=DecisionAction.ACCEPT_PARTIAL,
+    """Test AgentDecision avec acceptation partielle."""
+    result = AgentDecision(
+        action=AgentAction.ACCEPT_PARTIAL,
         reason="Accepter 98.6%",
         modified_quantity=145,
         metadata={
@@ -43,13 +43,13 @@ def test_decision_result_with_partial_acceptance():
         }
     )
 
-    assert result.action == DecisionAction.ACCEPT_PARTIAL
+    assert result.action == AgentAction.ACCEPT_PARTIAL
     assert result.modified_quantity == 145
     assert result.metadata["original_quantity"] == 147
 
 
 def test_decision_context_creation():
-    """Test la création d'un DecisionContext."""
+    """Test la création d'un AgentContext."""
     of = OF(
         num_of="F123",
         article="TEST",
@@ -63,7 +63,7 @@ def test_decision_context_creation():
     )
     feasibility = FeasibilityResult(feasible=False)
 
-    context = DecisionContext(
+    context = AgentContext(
         of=of,
         feasibility_result=feasibility,
         initial_stock={"COMP1": 50},
@@ -79,7 +79,7 @@ def test_decision_context_creation():
 
 
 def test_decision_context_with_all_fields():
-    """Test DecisionContext avec tous les champs."""
+    """Test AgentContext avec tous les champs."""
     from src.models.besoin_client import BesoinClient, NatureBesoin, TypeCommande
 
     of = OF(
@@ -108,7 +108,7 @@ def test_decision_context_with_all_fields():
         qte_restante=100
     )
 
-    context = DecisionContext(
+    context = AgentContext(
         of=of,
         commande=commande,
         feasibility_result=None,

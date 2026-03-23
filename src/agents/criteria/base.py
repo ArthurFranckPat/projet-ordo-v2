@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
 
-from ..models import DecisionContext, DecisionAction
+from ..models import AgentContext, AgentAction
 
 
 class BaseCriterion(ABC):
@@ -29,7 +29,7 @@ class BaseCriterion(ABC):
         self.config = config
 
     @abstractmethod
-    def score(self, context: DecisionContext) -> float:
+    def score(self, context: AgentContext) -> float:
         """Calcule un score entre 0 et 1.
 
         - 1.0 = Favorable (accepter sans hésitation)
@@ -38,7 +38,7 @@ class BaseCriterion(ABC):
 
         Parameters
         ----------
-        context : DecisionContext
+        context : AgentContext
             Contexte de décision
 
         Returns
@@ -49,24 +49,24 @@ class BaseCriterion(ABC):
         pass
 
     @abstractmethod
-    def suggest_action(self, context: DecisionContext, score: float) -> Optional[DecisionAction]:
+    def suggest_action(self, context: AgentContext, score: float) -> Optional[AgentAction]:
         """Suggère une action basée sur le score.
 
         Parameters
         ----------
-        context : DecisionContext
+        context : AgentContext
             Contexte de décision
         score : float
             Score calculé par la méthode score()
 
         Returns
         -------
-        Optional[DecisionAction]
+        Optional[AgentAction]
             Action suggérée, ou None si le critère ne suggère rien
         """
         pass
 
-    def is_applicable(self, context: DecisionContext) -> bool:
+    def is_applicable(self, context: AgentContext) -> bool:
         """Vérifie si le critère s'applique au contexte.
 
         Par défaut, tous les critères sont applicables. Overridez cette
@@ -74,7 +74,7 @@ class BaseCriterion(ABC):
 
         Parameters
         ----------
-        context : DecisionContext
+        context : AgentContext
             Contexte de décision
 
         Returns

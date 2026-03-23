@@ -78,11 +78,11 @@ class TestValidateDecisionConfidence:
         assert parser.validate_decision(decision) is False
 
 
-class TestDecisionEngineDefaultConfig:
-    """Test configuration par défaut du DecisionEngine."""
+class TestAgentEngineDefaultConfig:
+    """Test configuration par défaut du AgentEngine."""
 
     def test_use_llm_false_par_defaut(self, tmp_path):
-        """DecisionEngine() sans use_llm doit avoir use_llm=False."""
+        """AgentEngine() sans use_llm doit avoir use_llm=False."""
         src_config = "/Users/arthurbledou/Desktop/Code/ordo v2/config/decisions.yaml"
         config_dir = tmp_path / "config"
         config_dir.mkdir()
@@ -91,8 +91,8 @@ class TestDecisionEngineDefaultConfig:
         old_cwd = os.getcwd()
         try:
             os.chdir(tmp_path)
-            from src.agents.engine import DecisionEngine
-            engine = DecisionEngine()
+            from src.agents.engine import AgentEngine
+            engine = AgentEngine()
             assert engine.use_llm is False
         finally:
             os.chdir(old_cwd)
@@ -240,7 +240,7 @@ class TestReceptionsInContext:
 # Tests Task 3 : Pré-filtre LLM
 # ---------------------------------------------------------------------------
 
-from src.agents.models import DecisionAction
+from src.agents.models import AgentAction
 
 
 class TestPreFiltreOff:
@@ -301,33 +301,33 @@ class TestPreFiltreOff:
 
     def test_prefiltre_faisable_retourne_accept_sans_llm(self):
         """Si situation = faisable, retourner ACCEPT_AS_IS sans appeler le LLM."""
-        from src.agents.llm.llm_decision_rule import LLMBasedDecisionRule
+        from src.agents.llm.llm_decision_rule import LLMDecisionAgent
         llm_client = MagicMock()
-        rule = LLMBasedDecisionRule(llm_client=llm_client)
+        rule = LLMDecisionAgent(llm_client=llm_client)
         context = self._make_context_faisable()
 
         result = rule._apply_prefilter(context)
 
         assert result is not None
-        assert result.action == DecisionAction.ACCEPT_AS_IS
+        assert result.action == AgentAction.ACCEPT_AS_IS
         llm_client.call_llm_with_retry.assert_not_called()
 
     def test_prefiltre_rupture_franche_retourne_reject_sans_llm(self):
         """Si situation = non_faisable sans bloqué ni réception, retourner REJECT sans LLM."""
-        from src.agents.llm.llm_decision_rule import LLMBasedDecisionRule
+        from src.agents.llm.llm_decision_rule import LLMDecisionAgent
         llm_client = MagicMock()
-        rule = LLMBasedDecisionRule(llm_client=llm_client)
+        rule = LLMDecisionAgent(llm_client=llm_client)
         context = self._make_context_non_faisable_hard()
 
         result = rule._apply_prefilter(context)
 
         assert result is not None
-        assert result.action == DecisionAction.REJECT
+        assert result.action == AgentAction.REJECT
 
     def test_prefiltre_retourne_none_pour_cas_ambigu(self):
         """Si situation = faisable_avec_conditions, retourner None (appeler le LLM)."""
         from src.agents.llm.models import LLMAnalysisContext, OFInfo, SituationGlobale
-        from src.agents.llm.llm_decision_rule import LLMBasedDecisionRule
+        from src.agents.llm.llm_decision_rule import LLMDecisionAgent
 
         context = LLMAnalysisContext(
             of_info=OFInfo(
@@ -345,7 +345,7 @@ class TestPreFiltreOff:
             )
         )
         llm_client = MagicMock()
-        rule = LLMBasedDecisionRule(llm_client=llm_client)
+        rule = LLMDecisionAgent(llm_client=llm_client)
 
         result = rule._apply_prefilter(context)
 

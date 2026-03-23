@@ -3,7 +3,7 @@
 import pytest
 from datetime import date, timedelta
 from src.agents.criteria.client import ClientCriterion
-from src.agents.models import DecisionContext, DecisionAction
+from src.agents.models import AgentContext, AgentAction
 from src.models.of import OF
 from src.models.besoin_client import BesoinClient, NatureBesoin, TypeCommande
 from src.checkers.base import FeasibilityResult
@@ -28,7 +28,7 @@ def test_client_criterion_priority_client():
         qte_restante=100
     )
 
-    context = DecisionContext(of=of, commande=commande)
+    context = AgentContext(of=of, commande=commande)
 
     criterion = ClientCriterion({
         "priority_clients": ["ALDES"],
@@ -60,7 +60,7 @@ def test_client_criterion_strategic_client():
         qte_restante=100
     )
 
-    context = DecisionContext(of=of, commande=commande)
+    context = AgentContext(of=of, commande=commande)
 
     criterion = ClientCriterion({
         "priority_clients": ["ALDES"],
@@ -91,7 +91,7 @@ def test_client_criterion_standard_client():
         qte_restante=100
     )
 
-    context = DecisionContext(of=of, commande=commande)
+    context = AgentContext(of=of, commande=commande)
 
     criterion = ClientCriterion({})
 
@@ -104,7 +104,7 @@ def test_client_criterion_no_commande():
     """Test le score sans commande."""
     of = OF(num_of="F123", article="TEST", qte_restante=100, description="Test OF", statut_num=1, statut_texte="Ferme", date_fin=date.today(), qte_a_fabriquer=100, qte_fabriquee=0)
 
-    context = DecisionContext(of=of, commande=None)
+    context = AgentContext(of=of, commande=None)
 
     criterion = ClientCriterion({})
 
@@ -145,7 +145,7 @@ def test_client_criterion_suggest_action_for_priority():
     feasibility = FeasibilityResult(feasible=False)
     feasibility.add_missing("COMP1", 3)  # 3% manquant
 
-    context = DecisionContext(
+    context = AgentContext(
         of=of,
         commande=commande,
         feasibility_result=feasibility
@@ -159,4 +159,4 @@ def test_client_criterion_suggest_action_for_priority():
     score = criterion.score(context)
     action = criterion.suggest_action(context, score)
 
-    assert action == DecisionAction.ACCEPT_AS_IS
+    assert action == AgentAction.ACCEPT_AS_IS

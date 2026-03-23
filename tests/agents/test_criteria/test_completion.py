@@ -3,7 +3,7 @@
 import pytest
 from datetime import date
 from src.agents.criteria.completion import CompletionCriterion
-from src.agents.models import DecisionContext, DecisionAction
+from src.agents.models import AgentContext, AgentAction
 from src.models.of import OF
 from src.checkers.base import FeasibilityResult
 
@@ -24,7 +24,7 @@ def test_completion_criterion_100_percent():
 
     feasibility = FeasibilityResult(feasible=True)
 
-    context = DecisionContext(
+    context = AgentContext(
         of=of,
         feasibility_result=feasibility,
         initial_stock={"11019971": 147},
@@ -42,7 +42,7 @@ def test_completion_criterion_100_percent():
     action = criterion.suggest_action(context, score)
 
     assert score == 1.0
-    assert action == DecisionAction.ACCEPT_AS_IS
+    assert action == AgentAction.ACCEPT_AS_IS
 
 
 def test_completion_criterion_98_6_percent():
@@ -62,7 +62,7 @@ def test_completion_criterion_98_6_percent():
     feasibility = FeasibilityResult(feasible=False)
     feasibility.add_missing("11019971", 2)
 
-    context = DecisionContext(
+    context = AgentContext(
         of=of,
         feasibility_result=feasibility,
         initial_stock={"11019971": 145},
@@ -80,7 +80,7 @@ def test_completion_criterion_98_6_percent():
     action = criterion.suggest_action(context, score)
 
     assert score == 1.0  # 98.6% >= 95% target
-    assert action == DecisionAction.ACCEPT_PARTIAL
+    assert action == AgentAction.ACCEPT_PARTIAL
 
 
 def test_completion_criterion_below_minimum():
@@ -100,7 +100,7 @@ def test_completion_criterion_below_minimum():
     feasibility = FeasibilityResult(feasible=False)
     feasibility.add_missing("COMP1", 50)  # 50%
 
-    context = DecisionContext(
+    context = AgentContext(
         of=of,
         feasibility_result=feasibility,
         initial_stock={"COMP1": 50},
@@ -135,7 +135,7 @@ def test_completion_criterion_no_feasibility_result():
         qte_restante=100
     )
 
-    context = DecisionContext(
+    context = AgentContext(
         of=of,
         feasibility_result=None,
         initial_stock={},

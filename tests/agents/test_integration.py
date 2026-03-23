@@ -2,7 +2,7 @@
 
 import pytest
 from datetime import date, timedelta
-from src.agents.engine import DecisionEngine
+from src.agents.engine import AgentEngine
 from src.algorithms.allocation import AllocationManager
 from src.loaders.data_loader import DataLoader
 from src.checkers.recursive import RecursiveChecker
@@ -12,7 +12,7 @@ from src.models.besoin_client import BesoinClient
 
 @pytest.fixture
 def full_system_with_decision():
-    """Setup un système complet avec DecisionEngine."""
+    """Setup un système complet avec AgentEngine."""
     # NOTE: Ce test nécessite des données de test
     # Adapté selon votre environnement de test
 
@@ -20,7 +20,7 @@ def full_system_with_decision():
     loader.load_all()
 
     checker = RecursiveChecker(loader, use_receptions=False)
-    decision_engine = DecisionEngine("config/decisions.yaml")
+    decision_engine = AgentEngine("config/decisions.yaml")
 
     allocation_manager = AllocationManager(
         data_loader=loader,
