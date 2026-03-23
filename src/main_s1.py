@@ -1,12 +1,14 @@
 """Fonction main_s1 pour le mode S+1."""
 
 from datetime import date
+from typing import Dict
 
 from rich.console import Console
 
-from .checkers import ProjectedChecker
+from .checkers import ProjectedChecker, RecursiveChecker
 from .algorithms import CommandeOFMatcher
 from .reports import format_rapport_s1
+from .decisions import DecisionEngine, DecisionContext
 
 
 def main_s1(args, loader, include_previsions=False):
@@ -72,10 +74,71 @@ def main_s1(args, loader, include_previsions=False):
         console.print(f"   Prévisions matchées : {previsions_match}")
     console.print()
 
-    # 3. Vérifier la faisabilité des OF
+    # 3. Évaluation pré-allocation avec DecisionEngine
     ofs_a_verifier = [r.of for r in resultats_matching if r.of is not None]
+    resultats_faisabilite: Dict[str, any] = {}
 
     if ofs_a_verifier:
+        console.print(f"[bold cyan]🧠 Évaluation décisionnelle pré-allocation...[/bold cyan]")
+
+        # Créer le DecisionEngine
+        decision_engine = DecisionEngine("config/decisions.yaml")
+
+        # Évaluer tous les OF avec leur contexte de commande
+        decisions_pre: Dict[str, any] = {}
+        for resultat in resultats_matching:
+            if resultat.of is None:
+                continue
+
+            of = resultat.of
+            commande = resultat.commande
+
+            # Récupérer le stock initial
+            initial_stock = {}
+            for article_code, stock_info in loader.stocks.items():
+                available = stock_info.stock_physique - stock_info.stock_alloue - stock_info.stock_bloque
+                if available > 0:
+                    initial_stock[article_code] = available
+
+            # Évaluer avant allocation
+            decision = decision_engine.evaluate_pre_allocation(
+                of=of,
+                initial_stock=initial_stock,
+                competing_ofs=ofs_a_verifier,
+                commande=commande
+            )
+            decisions_pre[of.num_of] = decision
+
+        # Statistiques des décisions
+        from .decisions.models import DecisionAction
+        accept_as_is = sum(1 for d in decisions_pre.values() if d.action == DecisionAction.ACCEPT_AS_IS)
+        accept_partial = sum(1 for d in decisions_pre.values() if d.action == DecisionAction.ACCEPT_PARTIAL)
+        reject = sum(1 for d in decisions_pre.values() if d.action == DecisionAction.REJECT)
+        defer = sum(1 for d in decisions_pre.values() if d.action in [DecisionAction.DEFER, DecisionAction.DEFER_PARTIAL])
+
+        console.print(f"✅ Évaluation terminée : {len(decisions_pre)} décisions")
+        console.print(f"   ✓ Accepter tel quel : {accept_as_is}")
+        console.print(f"   ➤ Accepter partiel : {accept_partial}")
+        console.print(f"   ✗ Rejeter : {reject}")
+        console.print(f"   ⏰ Reporter : {defer}")
+        console.print()
+
+        # Appliquer les décisions ACCEPT_PARTIAL
+        of_original_quantities: Dict[str, int] = {}
+        for of_num, decision in decisions_pre.items():
+            if decision.action == DecisionAction.ACCEPT_PARTIAL and decision.modified_quantity:
+                of = next((o for o in ofs_a_verifier if o.num_of == of_num), None)
+                if of:
+                    # Sauvegarder la quantité originale
+                    of_original_quantities[of_num] = of.qte_restante
+                    # Modifier temporairement
+                    of.qte_restante = decision.modified_quantity
+                    console.print(f"   [yellow]➤[/yellow] {of_num} : {of_original_quantities[of_num]} → {decision.modified_quantity}")
+
+        if of_original_quantities:
+            console.print()
+
+        # 4. Vérifier la faisabilité des OF (avec quantités modifiées pour ACCEPT_PARTIAL)
         console.print(f"[bold cyan]🔍 Vérification de faisabilité...[/bold cyan]")
         checker = ProjectedChecker(loader)
         resultats_faisabilite = checker.check_all_ofs(ofs_a_verifier)
@@ -83,8 +146,88 @@ def main_s1(args, loader, include_previsions=False):
         faisables = sum(1 for r in resultats_faisabilite.values() if r.feasible)
         console.print(f"✅ {faisables}/{len(ofs_a_verifier)} OF faisables")
         console.print()
+
+        # 5. Évaluation post-allocation pour les OF non faisables
+        console.print(f"[bold cyan]🧠 Évaluation décisionnelle post-allocation...[/bold cyan]")
+        non_faisable_ofs = [of for of in ofs_a_verifier if not resultats_faisabilite[of.num_of].feasible]
+
+        if non_faisable_ofs:
+            decisions_post: Dict[str, any] = {}
+            for resultat in resultats_matching:
+                if resultat.of is None or resultat.of.num_of not in [of.num_of for of in non_faisable_ofs]:
+                    continue
+
+                of = resultat.of
+                commande = resultat.commande
+
+                # Récupérer le stock restant après allocation virtuelle
+                remaining_stock = {}
+                for article_code, stock_info in loader.stocks.items():
+                    available = stock_info.stock_physique - stock_info.stock_alloue - stock_info.stock_bloque
+                    if available > 0:
+                        remaining_stock[article_code] = available
+
+                # Créer le contexte avec stock alloué
+                context = DecisionContext(
+                    of=of,
+                    commande=commande,
+                    initial_stock={},
+                    allocated_stock={},
+                    remaining_stock=remaining_stock,
+                    competing_ofs=ofs_a_verifier,
+                    current_date=date.today(),
+                    feasibility_result=resultats_faisabilite[of.num_of]
+                )
+
+                decision = decision_engine.smart_rule.evaluate(context)
+                decisions_post[of.num_of] = decision
+
+            console.print(f"✅ {len(decisions_post)} décisions post-allocation")
+            console.print()
+
+        # 6. Restaurer les quantités originales
+        for of_num, original_qty in of_original_quantities.items():
+            of = next((o for o in ofs_a_verifier if o.num_of == of_num), None)
+            if of:
+                of.qte_restante = original_qty
+
+        # 7. Générer les rapports de décisions
+        try:
+            from src.decisions.reports import DecisionReporter
+            import os
+            from dataclasses import dataclass
+
+            @dataclass
+            class DecisionWrapper:
+                """Wrapper pour adapter DecisionResult au format attendu par DecisionReporter."""
+                decision: any
+
+            # Créer des wrappers pour les décisions
+            wrapped_decisions = {
+                of_num: DecisionWrapper(decision=decision)
+                for of_num, decision in decisions_pre.items()
+            }
+
+            reporter = DecisionReporter()
+            output_dir = "reports/decisions"
+
+            # Créer le répertoire si nécessaire
+            os.makedirs(output_dir, exist_ok=True)
+
+            # Générer rapport Markdown
+            md_path = os.path.join(output_dir, "decisions_report.md")
+            reporter.generate_markdown_report(wrapped_decisions, md_path)
+            console.print(f"✅ Rapport Markdown généré : {md_path}")
+
+            # Générer rapport JSON
+            json_path = os.path.join(output_dir, "decisions_report.json")
+            reporter.generate_json_report(wrapped_decisions, json_path)
+            console.print(f"✅ Rapport JSON généré : {json_path}")
+            console.print()
+        except Exception as e:
+            console.print(f"[yellow]⚠️  Impossible de générer les rapports: {e}[/yellow]")
+            console.print()
     else:
-        resultats_faisabilite = {}
         console.print("[yellow]⚠️  Aucun OF à vérifier[/yellow]")
         console.print()
 

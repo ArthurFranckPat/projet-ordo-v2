@@ -12,6 +12,38 @@ class TypeArticle(Enum):
     FABRIQUE = "Fabriqué"
 
 
+class NatureConsommation(Enum):
+    """Nature de la consommation d'un composant."""
+
+    FORFAIT = "Au Forfait"  # 1 unité par OF, indépendamment de la quantité fabriquée
+    PROPORTIONNEL = "Proportionnel"  # Qté lien × Quantité fabriquée
+
+    # Alias pour compatibilité
+    @classmethod
+    def from_string(cls, value: str) -> "NatureConsommation":
+        """Crée une NatureConsommation depuis une chaîne, avec gestion des variations.
+
+        Parameters
+        ----------
+        value : str
+            Chaîne représentant la nature (ex: "Au Forfait", "FORFAIT", "Proportionnel")
+
+        Returns
+        -------
+        NatureConsommation
+            Instance correspondante
+        """
+        value_upper = value.upper().strip()
+
+        if "FORFAIT" in value_upper or "À FORFAIT" in value_upper:
+            return cls.FORFAIT
+        elif "PROPORTIONNEL" in value_upper:
+            return cls.PROPORTIONNEL
+        else:
+            # Défaut : proportionnel
+            return cls.PROPORTIONNEL
+
+
 @dataclass
 class NomenclatureEntry:
     """Entrée de nomenclature (relation parent → composant).
@@ -32,6 +64,8 @@ class NomenclatureEntry:
         Quantité nécessaire pour 1 unité parent (peut être décimale)
     type_article : TypeArticle
         Type du composant ("Acheté" ou "Fabriqué")
+    nature_consommation : NatureConsommation
+        Nature de la consommation ("FORFAIT" ou "PROPORTIONNEL")
     """
 
     article_parent: str
@@ -41,6 +75,7 @@ class NomenclatureEntry:
     designation_composant: str
     qte_lien: float
     type_article: TypeArticle
+    nature_consommation: NatureConsommation = NatureConsommation.PROPORTIONNEL  # Défaut
 
     def is_achete(self) -> bool:
         """Vérifie si le composant est acheté."""
@@ -74,6 +109,13 @@ class NomenclatureEntry:
         except ValueError:
             type_article = TypeArticle.ACHETE
 
+        # Lire la nature de consommation (défaut: PROPORTIONNEL pour compatibilité)
+        nature_str = row.get("Nature consommation", "Proportionnel")
+        try:
+            nature_consommation = NatureConsommation.from_string(nature_str)
+        except (ValueError, AttributeError):
+            nature_consommation = NatureConsommation.PROPORTIONNEL
+
         return cls(
             article_parent=row.get("Article parent", ""),
             designation_parent=row.get("Designation parent", ""),
@@ -82,6 +124,7 @@ class NomenclatureEntry:
             designation_composant=row.get("Désignation composant", ""),
             qte_lien=qte_lien,
             type_article=type_article,
+            nature_consommation=nature_consommation
         )
 
     def __repr__(self) -> str:
