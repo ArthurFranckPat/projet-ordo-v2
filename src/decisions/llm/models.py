@@ -42,6 +42,8 @@ class ComposantAnalyse:
     stock_net_pour_of: int  # dispo + alloué_à_cet_of
     situation: str  # "disponible", "rupture", "bloqué", "tension"
     ratio_couverture: float  # stock_net_pour_of / quantite_requise
+    receptions_imminentes: int = 0          # Total des réceptions prévues dans l'horizon
+    date_reception_prochaine: Optional[date] = None  # Date de la prochaine réception
 
 
 @dataclass
@@ -107,7 +109,9 @@ class LLMAnalysisContext:
                     "stock_disponible": c.stock_disponible,
                     "stock_net_pour_of": c.stock_net_pour_of,
                     "situation": c.situation,
-                    "ratio_couverture": c.ratio_couverture
+                    "ratio_couverture": c.ratio_couverture,
+                    "receptions_imminentes": c.receptions_imminentes,
+                    "date_reception_prochaine": c.date_reception_prochaine.isoformat() if c.date_reception_prochaine else None
                 }
                 for c in self.composants
             ],

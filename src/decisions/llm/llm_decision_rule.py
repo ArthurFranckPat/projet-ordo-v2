@@ -196,8 +196,8 @@ class LLMBasedDecisionRule:
                 metadata={"fallback": True, "faisabilite": faisabilite}
             )
 
-        elif faisabilite == "faisable_avec_conditions":
-            # Faisable après déblocage → DEFER
+        elif faisabilite in ("faisable_avec_conditions", "faisable_apres_reception"):
+            # Faisable après déblocage ou réception → DEFER
             from datetime import timedelta
 
             # Estimer la date de déblocage (2-3 jours)

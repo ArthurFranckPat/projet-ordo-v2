@@ -127,7 +127,8 @@ class LLMContextBuilder:
         situation_globale = self._analyser_situation_globale(
             composants_analyses,
             composants_critiques,
-            of
+            of,
+            current_date=current_date
         )
 
         return LLMAnalysisContext(
@@ -202,6 +203,17 @@ class LLMContextBuilder:
             stock_bloque
         )
 
+        # Récupérer les réceptions imminentes (horizon : date_fin OF + 14 jours)
+        from datetime import timedelta
+        horizon_reception = of.date_fin + timedelta(days=14)
+        receptions = self.loader.get_receptions(comp.article_composant)
+        receptions_futures = [r for r in receptions if r.date_reception_prevue <= horizon_reception]
+        receptions_imminentes = sum(r.quantite_restante for r in receptions_futures)
+        date_reception_prochaine = (
+            min(r.date_reception_prevue for r in receptions_futures)
+            if receptions_futures else None
+        )
+
         return ComposantAnalyse(
             article=comp.article_composant,
             niveau=comp.niveau,
@@ -214,7 +226,9 @@ class LLMContextBuilder:
             stock_disponible=stock_disponible,
             stock_net_pour_of=stock_net_pour_of,
             situation=situation,
-            ratio_couverture=ratio_couverture
+            ratio_couverture=ratio_couverture,
+            receptions_imminentes=receptions_imminentes,
+            date_reception_prochaine=date_reception_prochaine
         )
 
     def _classifier_situation(
@@ -393,7 +407,8 @@ class LLMContextBuilder:
         self,
         composants: List[ComposantAnalyse],
         composants_critiques: List[ComposantCritique],
-        of: OF
+        of: OF,
+        current_date: date = None
     ) -> SituationGlobale:
         """Analyse la situation globale de l'OF.
 
@@ -444,6 +459,34 @@ class LLMContextBuilder:
                 raison_blocage="Composants en contrôle qualité",
                 conditions_deblocage=conditions,
                 delai_estime="2-3 jours"
+            )
+
+        if current_date is None:
+            current_date = date.today()
+
+        # Vérifier si les réceptions imminentes couvrent les manques (hors cas bloqué déjà géré)
+        ruptures_couvertes_par_reception = [
+            c for c in composants
+            if c.situation in ("rupture", "tension")
+            and c.receptions_imminentes >= (c.quantite_requise - c.stock_net_pour_of)
+            and c.date_reception_prochaine is not None
+        ]
+        composants_en_manque = [
+            c for c in composants if c.situation in ("rupture", "tension")
+        ]
+        if ruptures_couvertes_par_reception and len(ruptures_couvertes_par_reception) == len(composants_en_manque):
+            dates = [c.date_reception_prochaine for c in ruptures_couvertes_par_reception]
+            date_max = max(dates)
+            delai = f"{(date_max - current_date).days} jours"
+            conditions = [
+                f"Réception de {c.receptions_imminentes} {c.article} prévue le {c.date_reception_prochaine}"
+                for c in ruptures_couvertes_par_reception
+            ]
+            return SituationGlobale(
+                faisabilite="faisable_apres_reception",
+                raison_blocage="Composants en attente de réception fournisseur",
+                conditions_deblocage=conditions,
+                delai_estime=delai
             )
 
         # Vérifier s'il y a des composants en rupture vraie (sans bloqué)

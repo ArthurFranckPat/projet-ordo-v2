@@ -61,26 +61,29 @@ class LLMPromptBuilder:
         # Ajouter l'analyse des composants
         prompt += f"""
 # Analyse des Composants
-Composant | Niv | Type | Requis | Phys | Alloué* | Alloué† | Bloqué | Dispo | Net‡ | Situation | Ratio
----------|-----|------|-------|------|----------|----------|--------|------|------|----------|-------
+Composant  | Niv | Type | Requis | Phys | Alloué* | Alloué† | Bloqué | Dispo | Net‡ | Situation | Ratio | Récept. | Date Récept.
+-----------|-----|------|--------|------|---------|---------|--------|-------|------|-----------|-------|---------|-------------
 """
 
         for comp in context['composants']:
-            # type_article est déjà une string ("Acheté" ou "Fabriqué")
             type_article_short = comp['type_article'][0] if comp['type_article'] else 'A'
+            recept = comp.get('receptions_imminentes', 0)
+            date_recept = comp.get('date_reception_prochaine', '') or ''
             prompt += (
                 f"{comp['article'][:10]:10} | "
-                f"{comp['niveau']:4} | "
+                f"{comp['niveau']:3} | "
                 f"{type_article_short:4} | "
                 f"{comp['quantite_requise']:6} | "
                 f"{comp['stock_physique']:5} | "
-                f"{comp['stock_alloue_total']:8} | "
-                f"{comp['stock_alloue_cet_of']:8} | "
+                f"{comp['stock_alloue_total']:7} | "
+                f"{comp['stock_alloue_cet_of']:7} | "
                 f"{comp['stock_bloque']:6} | "
                 f"{comp['stock_disponible']:5} | "
-                f"{comp['stock_net_pour_of']:5} | "
-                f"{comp['situation']:10} | "
-                f"{comp['ratio_couverture']:.1%}\n"
+                f"{comp['stock_net_pour_of']:4} | "
+                f"{comp['situation']:9} | "
+                f"{comp['ratio_couverture']:.0%}   | "
+                f"{recept:7} | "
+                f"{date_recept}\n"
             )
 
         prompt += """
@@ -136,6 +139,9 @@ Propose une décision métier nuancée en considérant:
         if sit['faisabilite'] == "faisable_avec_conditions":
             if sit.get('delai_estime'):
                 prompt += f"2. Le délai de déblocage ({sit['delai_estime']}) est-il acceptable au vu de l'urgence ?\n"
+        elif sit['faisabilite'] == "faisable_apres_reception":
+            if sit.get('delai_estime'):
+                prompt += f"2. Les réceptions imminentes couvrent le manque dans {sit['delai_estime']} — DEFER est la décision logique\n"
 
         prompt += """3. Les actions concrètes à entreprendre
 4. Les contraintes de production (délai, qualité, etc.)
