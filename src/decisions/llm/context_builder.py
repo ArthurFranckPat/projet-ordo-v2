@@ -44,7 +44,8 @@ class LLMContextBuilder:
     def build_context(
         self,
         of: OF,
-        commande: Optional[BesoinClient] = None
+        commande: Optional[BesoinClient] = None,
+        current_date: date = None
     ) -> LLMAnalysisContext:
         """Construit le contexte complet d'analyse pour un OF.
 
@@ -54,12 +55,17 @@ class LLMContextBuilder:
             OF à analyser
         commande : BesoinClient, optional
             Commande associée (si disponible)
+        current_date : date, optional
+            Date de référence (défaut: date.today())
 
         Returns
         -------
         LLMAnalysisContext
             Contexte structuré complet
         """
+        if current_date is None:
+            current_date = date.today()
+
         # 1. Informations OF
         of_info = OFInfo(
             num_of=of.num_of,
@@ -73,7 +79,7 @@ class LLMContextBuilder:
         # 2. Informations commande (si disponible)
         commande_info = None
         if commande:
-            urgence = self._calculer_urgence(commande.date_expedition_demandee)
+            urgence = self._calculer_urgence(commande.date_expedition_demandee, current_date=current_date)
             commande_info = CommandeInfo(
                 num_commande=commande.num_commande,
                 client=commande.nom_client,
@@ -464,21 +470,24 @@ class LLMContextBuilder:
             delai_estime=None
         )
 
-    def _calculer_urgence(self, date_expedition: date) -> str:
+    def _calculer_urgence(self, date_expedition: date, current_date: date = None) -> str:
         """Calcule le niveau d'urgence d'une commande.
 
         Parameters
         ----------
         date_expedition : date
             Date d'expédition demandée
+        current_date : date, optional
+            Date de référence (défaut: date.today())
 
         Returns
         -------
         str
             Niveau d'urgence
         """
-        aujourd_hui = date.today()
-        delta = (date_expedition - aujourd_hui).days
+        if current_date is None:
+            current_date = date.today()
+        delta = (date_expedition - current_date).days
 
         if delta <= 2:
             return "TRÈS ÉLEVÉE"

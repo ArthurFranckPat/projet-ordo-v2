@@ -27,7 +27,7 @@ class MistralLLMClient(BaseLLMClient):
         self,
         api_key: Optional[str] = None,
         model: str = "mistral-large-latest",
-        temperature: float = 0.3,
+        temperature: float = 0.0,
         max_tokens: int = 2000
     ):
         """Initialise le client Mistral.

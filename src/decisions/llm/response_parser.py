@@ -223,8 +223,9 @@ class LLMResponseParser:
             if decision.defer_date is None:
                 return False
 
-        # Valider la confidence
-        if decision.confidence < 0.5:
+        # Rejeter uniquement confidence = 0.0 (le LLM dit lui-même qu'il ne sait pas)
+        # Les cas ambigus avec confidence faible mais > 0.0 sont valides
+        if decision.confidence <= 0.0:
             return False
 
         return True
