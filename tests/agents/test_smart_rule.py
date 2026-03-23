@@ -2,8 +2,8 @@
 
 import pytest
 from datetime import date
-from src.decisions.smart_rule import SmartDecisionRule
-from src.decisions.models import DecisionContext, DecisionAction
+from src.agents.smart_rule import SmartDecisionRule
+from src.agents.models import DecisionContext, DecisionAction
 from src.models.of import OF
 from src.models.besoin_client import BesoinClient, TypeCommande, NatureBesoin
 from src.checkers.base import FeasibilityResult

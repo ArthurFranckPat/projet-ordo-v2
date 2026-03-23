@@ -1,8 +1,8 @@
 """Tests de l'interface BaseCriterion."""
 
 import pytest
-from src.decisions.criteria.base import BaseCriterion
-from src.decisions.models import DecisionContext, DecisionAction
+from src.agents.criteria.base import BaseCriterion
+from src.agents.models import DecisionContext, DecisionAction
 from src.models.of import OF
 
 

@@ -3,8 +3,8 @@
 import pytest
 from datetime import date, timedelta
 
-from src.decisions.criteria.urgency import UrgencyCriterion
-from src.decisions.models import DecisionContext, DecisionAction
+from src.agents.criteria.urgency import UrgencyCriterion
+from src.agents.models import DecisionContext, DecisionAction
 from src.models.of import OF
 from src.checkers.base import FeasibilityResult
 

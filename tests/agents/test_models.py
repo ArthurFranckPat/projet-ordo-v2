@@ -2,7 +2,7 @@
 
 import pytest
 from datetime import date, datetime
-from src.decisions.models import DecisionAction, DecisionResult, DecisionContext
+from src.agents.models import DecisionAction, DecisionResult, DecisionContext
 from src.models.of import OF
 from src.checkers.base import FeasibilityResult
 

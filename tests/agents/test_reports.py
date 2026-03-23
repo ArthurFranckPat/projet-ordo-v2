@@ -5,8 +5,8 @@ import tempfile
 import os
 from datetime import date
 from unittest.mock import Mock
-from src.decisions.reports import DecisionReporter
-from src.decisions.models import DecisionResult, DecisionAction
+from src.agents.reports import DecisionReporter
+from src.agents.models import DecisionResult, DecisionAction
 from src.models.of import OF
 from src.checkers.base import FeasibilityResult
 

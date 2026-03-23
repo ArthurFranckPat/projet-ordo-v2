@@ -2,8 +2,8 @@
 
 import pytest
 from datetime import date
-from src.decisions.criteria.completion import CompletionCriterion
-from src.decisions.models import DecisionContext, DecisionAction
+from src.agents.criteria.completion import CompletionCriterion
+from src.agents.models import DecisionContext, DecisionAction
 from src.models.of import OF
 from src.checkers.base import FeasibilityResult
 

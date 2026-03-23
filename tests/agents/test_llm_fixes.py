@@ -5,9 +5,9 @@ import os
 from datetime import date, timedelta
 from unittest.mock import MagicMock
 
-from src.decisions.llm.context_builder import LLMContextBuilder
-from src.decisions.llm.mistral_client import MistralLLMClient
-from src.decisions.llm.response_parser import LLMResponseParser, ParsedLLMDecision
+from src.agents.llm.context_builder import LLMContextBuilder
+from src.agents.llm.mistral_client import MistralLLMClient
+from src.agents.llm.response_parser import LLMResponseParser, ParsedLLMDecision
 
 
 class TestCalculerUrgence:
@@ -91,7 +91,7 @@ class TestDecisionEngineDefaultConfig:
         old_cwd = os.getcwd()
         try:
             os.chdir(tmp_path)
-            from src.decisions.engine import DecisionEngine
+            from src.agents.engine import DecisionEngine
             engine = DecisionEngine()
             assert engine.use_llm is False
         finally:
@@ -126,7 +126,7 @@ class TestReceptionsInContext:
 
     def test_composant_analyse_a_champ_receptions_imminentes(self):
         """ComposantAnalyse doit avoir le champ receptions_imminentes."""
-        from src.decisions.llm.models import ComposantAnalyse
+        from src.agents.llm.models import ComposantAnalyse
         comp = ComposantAnalyse(
             article="A001",
             niveau=5,
@@ -148,8 +148,8 @@ class TestReceptionsInContext:
 
     def test_situation_globale_faisable_apres_reception(self):
         """_analyser_situation_globale retourne faisable_apres_reception si réceptions couvrent le manque."""
-        from src.decisions.llm.models import ComposantAnalyse, ComposantCritique
-        from src.decisions.llm.context_builder import LLMContextBuilder
+        from src.agents.llm.models import ComposantAnalyse, ComposantCritique
+        from src.agents.llm.context_builder import LLMContextBuilder
 
         comp = ComposantAnalyse(
             article="A001",
@@ -193,7 +193,7 @@ class TestReceptionsInContext:
 
     def test_prompt_inclut_colonne_reception(self):
         """Le prompt généré doit inclure les informations de réception."""
-        from src.decisions.llm.prompt_builder import LLMPromptBuilder
+        from src.agents.llm.prompt_builder import LLMPromptBuilder
 
         builder = LLMPromptBuilder()
         context = {
@@ -240,14 +240,14 @@ class TestReceptionsInContext:
 # Tests Task 3 : Pré-filtre LLM
 # ---------------------------------------------------------------------------
 
-from src.decisions.models import DecisionAction
+from src.agents.models import DecisionAction
 
 
 class TestPreFiltreOff:
     """Test que le pré-filtre évite les appels LLM inutiles."""
 
     def _make_context_faisable(self):
-        from src.decisions.llm.models import (
+        from src.agents.llm.models import (
             LLMAnalysisContext, OFInfo, SituationGlobale
         )
         return LLMAnalysisContext(
@@ -267,7 +267,7 @@ class TestPreFiltreOff:
         )
 
     def _make_context_non_faisable_hard(self):
-        from src.decisions.llm.models import (
+        from src.agents.llm.models import (
             LLMAnalysisContext, OFInfo, SituationGlobale, ComposantCritique, ComposantAnalyse
         )
         comp = ComposantAnalyse(
@@ -301,7 +301,7 @@ class TestPreFiltreOff:
 
     def test_prefiltre_faisable_retourne_accept_sans_llm(self):
         """Si situation = faisable, retourner ACCEPT_AS_IS sans appeler le LLM."""
-        from src.decisions.llm.llm_decision_rule import LLMBasedDecisionRule
+        from src.agents.llm.llm_decision_rule import LLMBasedDecisionRule
         llm_client = MagicMock()
         rule = LLMBasedDecisionRule(llm_client=llm_client)
         context = self._make_context_faisable()
@@ -314,7 +314,7 @@ class TestPreFiltreOff:
 
     def test_prefiltre_rupture_franche_retourne_reject_sans_llm(self):
         """Si situation = non_faisable sans bloqué ni réception, retourner REJECT sans LLM."""
-        from src.decisions.llm.llm_decision_rule import LLMBasedDecisionRule
+        from src.agents.llm.llm_decision_rule import LLMBasedDecisionRule
         llm_client = MagicMock()
         rule = LLMBasedDecisionRule(llm_client=llm_client)
         context = self._make_context_non_faisable_hard()
@@ -326,8 +326,8 @@ class TestPreFiltreOff:
 
     def test_prefiltre_retourne_none_pour_cas_ambigu(self):
         """Si situation = faisable_avec_conditions, retourner None (appeler le LLM)."""
-        from src.decisions.llm.models import LLMAnalysisContext, OFInfo, SituationGlobale
-        from src.decisions.llm.llm_decision_rule import LLMBasedDecisionRule
+        from src.agents.llm.models import LLMAnalysisContext, OFInfo, SituationGlobale
+        from src.agents.llm.llm_decision_rule import LLMBasedDecisionRule
 
         context = LLMAnalysisContext(
             of_info=OFInfo(

@@ -2,8 +2,8 @@
 
 import pytest
 from datetime import date, timedelta
-from src.decisions.criteria.client import ClientCriterion
-from src.decisions.models import DecisionContext, DecisionAction
+from src.agents.criteria.client import ClientCriterion
+from src.agents.models import DecisionContext, DecisionAction
 from src.models.of import OF
 from src.models.besoin_client import BesoinClient, NatureBesoin, TypeCommande
 from src.checkers.base import FeasibilityResult

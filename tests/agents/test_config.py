@@ -2,7 +2,7 @@
 
 import pytest
 import os
-from src.decisions.config import load_config
+from src.agents.config import load_config
 
 
 def test_load_config_from_file():

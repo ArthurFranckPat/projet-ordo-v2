@@ -8,7 +8,7 @@ from rich.console import Console
 from .checkers import ProjectedChecker, RecursiveChecker
 from .algorithms import CommandeOFMatcher
 from .reports import format_rapport_s1
-from .decisions import DecisionEngine, DecisionContext
+from .agents import DecisionEngine, DecisionContext
 
 
 def main_s1(args, loader, include_previsions=False):
@@ -131,7 +131,7 @@ def main_s1(args, loader, include_previsions=False):
             decisions_pre[of.num_of] = decision
 
         # Statistiques des décisions
-        from .decisions.models import DecisionAction
+        from .agents.models import DecisionAction
         accept_as_is = sum(1 for d in decisions_pre.values() if d.action == DecisionAction.ACCEPT_AS_IS)
         accept_partial = sum(1 for d in decisions_pre.values() if d.action == DecisionAction.ACCEPT_PARTIAL)
         reject = sum(1 for d in decisions_pre.values() if d.action == DecisionAction.REJECT)

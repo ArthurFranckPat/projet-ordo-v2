@@ -5,8 +5,8 @@ import json
 import tempfile
 import os
 from datetime import datetime, date
-from src.decisions.persistence import DecisionPersistence
-from src.decisions.models import DecisionResult, DecisionAction
+from src.agents.persistence import DecisionPersistence
+from src.agents.models import DecisionResult, DecisionAction
 from src.models.of import OF
 
 

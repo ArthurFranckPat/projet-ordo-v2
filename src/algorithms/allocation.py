@@ -6,7 +6,7 @@ from typing import Optional
 
 from ..models.of import OF
 from ..checkers.base import FeasibilityResult
-from ..decisions.models import DecisionResult, DecisionAction
+from ..agents.models import DecisionResult, DecisionAction
 
 
 class AllocationStatus(Enum):

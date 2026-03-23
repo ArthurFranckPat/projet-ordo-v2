@@ -34,9 +34,9 @@ class TestLLMCLIFlags:
         import shutil
         import tempfile
         with patch.dict(os.environ, {"MISTRAL_API_KEY": "fake-key-for-test"}):
-            with patch("src.decisions.llm.mistral_client.Mistral"):
-                from src.decisions.llm.mistral_client import MistralLLMClient
-                from src.decisions.engine import DecisionEngine
+            with patch("src.agents.llm.mistral_client.Mistral"):
+                from src.agents.llm.mistral_client import MistralLLMClient
+                from src.agents.engine import DecisionEngine
 
                 with tempfile.TemporaryDirectory() as tmp_dir:
                     config_dir = os.path.join(tmp_dir, "config")
@@ -72,13 +72,13 @@ class TestCompetingOFsInPrompt:
     def test_context_builder_accepte_competing_ofs(self):
         """LLMContextBuilder.build_context() doit accepter competing_ofs."""
         import inspect
-        from src.decisions.llm.context_builder import LLMContextBuilder
+        from src.agents.llm.context_builder import LLMContextBuilder
         sig = inspect.signature(LLMContextBuilder.build_context)
         assert "competing_ofs" in sig.parameters
 
     def test_prompt_inclut_section_concurrence(self):
         """Le prompt doit inclure les OFs concurrents quand competing_ofs_summary est présent."""
-        from src.decisions.llm.prompt_builder import LLMPromptBuilder
+        from src.agents.llm.prompt_builder import LLMPromptBuilder
 
         builder = LLMPromptBuilder()
         context = {
@@ -108,7 +108,7 @@ class TestCompetingOFsInPrompt:
 
     def test_llm_analysis_context_a_competing_ofs_summary(self):
         """LLMAnalysisContext doit avoir le champ competing_ofs_summary."""
-        from src.decisions.llm.models import LLMAnalysisContext, OFInfo, SituationGlobale, CompetingOFsSummary
+        from src.agents.llm.models import LLMAnalysisContext, OFInfo, SituationGlobale, CompetingOFsSummary
 
         context = LLMAnalysisContext(
             of_info=OFInfo(

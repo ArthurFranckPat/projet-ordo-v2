@@ -2,7 +2,7 @@
 
 import pytest
 from datetime import date, timedelta
-from src.decisions.engine import DecisionEngine
+from src.agents.engine import DecisionEngine
 from src.algorithms.allocation import AllocationManager
 from src.loaders.data_loader import DataLoader
 from src.checkers.recursive import RecursiveChecker
@@ -96,7 +96,7 @@ def test_decision_persistence_integration(full_system_with_decision):
 
 def test_report_generation(full_system_with_decision):
     """Test la génération de rapports."""
-    from src.decisions.reports import DecisionReporter
+    from src.agents.reports import DecisionReporter
     import tempfile
     import os
 

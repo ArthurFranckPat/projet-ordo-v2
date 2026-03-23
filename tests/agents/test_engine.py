@@ -3,8 +3,8 @@
 import pytest
 from datetime import date, timedelta
 from unittest.mock import Mock
-from src.decisions.engine import DecisionEngine
-from src.decisions.models import DecisionAction
+from src.agents.engine import DecisionEngine
+from src.agents.models import DecisionAction
 from src.models.of import OF
 from src.models.besoin_client import BesoinClient
 from src.checkers.base import FeasibilityResult
