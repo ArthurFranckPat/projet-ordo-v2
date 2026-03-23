@@ -81,8 +81,29 @@ def main_s1(args, loader, include_previsions=False):
     if ofs_a_verifier:
         console.print(f"[bold cyan]🧠 Évaluation décisionnelle pré-allocation...[/bold cyan]")
 
-        # Créer le DecisionEngine
-        decision_engine = DecisionEngine("config/decisions.yaml")
+        # Créer le DecisionEngine (mode LLM si --llm activé)
+        use_llm = getattr(args, 'llm', False)
+        llm_model = getattr(args, 'llm_model', 'mistral-large-latest')
+
+        if use_llm:
+            import os
+            api_key = os.environ.get("MISTRAL_API_KEY")
+            if not api_key:
+                console.print("[bold red]Erreur: MISTRAL_API_KEY non défini. Mode LLM désactivé.[/bold red]")
+                use_llm = False
+
+        if use_llm:
+            from .decisions.llm.mistral_client import MistralLLMClient
+            llm_client = MistralLLMClient(model=llm_model)
+            decision_engine = DecisionEngine(
+                "config/decisions.yaml",
+                use_llm=True,
+                llm_client=llm_client,
+                loader=loader
+            )
+            console.print(f"[bold yellow]⚡ Mode LLM activé : {llm_model}[/bold yellow]")
+        else:
+            decision_engine = DecisionEngine("config/decisions.yaml")
 
         # Évaluer tous les OF avec leur contexte de commande
         decisions_pre: Dict[str, any] = {}

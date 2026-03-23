@@ -89,6 +89,18 @@ def main():
         default=4,
         help="Nombre de semaines pour la heatmap (défaut: 4)",
     )
+    parser.add_argument(
+        "--llm",
+        action="store_true",
+        default=False,
+        help="Active le mode LLM pour les décisions (nécessite MISTRAL_API_KEY)",
+    )
+    parser.add_argument(
+        "--llm-model",
+        type=str,
+        default="mistral-large-latest",
+        help="Modèle LLM à utiliser (défaut: mistral-large-latest)",
+    )
 
     args = parser.parse_args()
 
