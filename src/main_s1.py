@@ -188,19 +188,16 @@ def main_s1(args, loader, include_previsions=False):
                     if available > 0:
                         remaining_stock[article_code] = available
 
-                # Créer le contexte avec stock alloué
-                context = DecisionContext(
-                    of=of,
-                    commande=commande,
-                    initial_stock={},
-                    allocated_stock={},
-                    remaining_stock=remaining_stock,
-                    competing_ofs=ofs_a_verifier,
-                    current_date=date.today(),
-                    feasibility_result=resultats_faisabilite[of.num_of]
-                )
+                # Évaluer via le moteur (gère LLM et mode classique)
+                class _FeasStub:
+                    def __init__(self, feasibility_result):
+                        self.feasibility_result = feasibility_result
 
-                decision = decision_engine.smart_rule.evaluate(context)
+                decision = decision_engine.evaluate_post_allocation(
+                    of=of,
+                    allocation_result=_FeasStub(resultats_faisabilite[of.num_of]),
+                    commande=commande
+                )
                 decisions_post[of.num_of] = decision
 
             console.print(f"✅ {len(decisions_post)} décisions post-allocation")

@@ -1,0 +1,319 @@
+#!/usr/bin/env python3
+"""Menu interactif Rich pour l'ordonnancement production."""
+
+import argparse
+import os
+import sys
+from datetime import date, timedelta
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+
+import questionary
+from rich.console import Console
+from rich.panel import Panel
+
+from src.algorithms import AllocationManager, calculate_weekly_charge_heatmap
+from src.checkers import ImmediateChecker, ProjectedChecker, RecursiveChecker
+from src.decisions import DecisionEngine
+from src.loaders import DataLoader
+from src.main_s1 import main_s1
+from src.utils import format_charge_heatmap, format_charge_summary
+from src.utils import format_detailed_report, format_of_table, format_summary
+
+console = Console()
+
+
+def load_data(data_dir: str = "data") -> DataLoader:
+    with console.status("[bold cyan]Chargement des données...[/bold cyan]"):
+        loader = DataLoader(data_dir)
+        loader.load_all()
+    console.print(
+        f"[green]Données chargées :[/green] "
+        f"{len(loader.articles)} articles, "
+        f"{len(loader.ofs)} OF, "
+        f"{len(loader.commandes_clients)} commandes"
+    )
+    return loader
+
+
+def run_feasibility_all(loader: DataLoader) -> None:
+    detailed = questionary.confirm("Rapport détaillé ?", default=False).ask()
+    if detailed is None:
+        return
+    limit_str = questionary.text("Limite d'OFs (Entrée = tous)", default="").ask()
+    if limit_str is None:
+        return
+    limit = int(limit_str) if limit_str.strip() else None
+    no_allocation = questionary.confirm("Désactiver la gestion de concurrence ?", default=False).ask()
+    if no_allocation is None:
+        return
+
+    ofs = loader.get_ofs_to_check()
+    if limit:
+        ofs = ofs[:limit]
+        console.print(f"[dim]Limite : {len(ofs)} OF[/dim]")
+
+    console.print(f"\n[bold]📋 {len(ofs)} OF à vérifier[/bold]\n")
+
+    console.print("[bold cyan]🔍 Vérification immédiate (stock actuel)...[/bold cyan]")
+    immediate_checker = ImmediateChecker(loader)
+    immediate_results = immediate_checker.check_all_ofs(ofs)
+    imm_feasible = sum(1 for r in immediate_results.values() if r.feasible)
+    console.print(f"[green]✅ Terminé : {imm_feasible}/{len(ofs)} OF faisables[/green]\n")
+
+    console.print("[bold cyan]🔮 Vérification projetée (stock + réceptions)...[/bold cyan]")
+    projected_checker = ProjectedChecker(loader)
+    projected_results = projected_checker.check_all_ofs(ofs)
+    proj_feasible = sum(1 for r in projected_results.values() if r.feasible)
+    console.print(f"[green]✅ Terminé : {proj_feasible}/{len(ofs)} OF faisables[/green]\n")
+
+    allocation_results = None
+    if not no_allocation:
+        console.print("[bold cyan]📦 Gestion de la concurrence avec allocation virtuelle...[/bold cyan]")
+        recursive_checker = RecursiveChecker(
+            loader,
+            use_receptions=True,
+            check_date=date.today(),
+        )
+        decision_engine = DecisionEngine()
+        allocation_manager = AllocationManager(
+            data_loader=loader,
+            checker=recursive_checker,
+            decision_engine=decision_engine,
+        )
+        allocation_results = allocation_manager.allocate_stock(ofs)
+        alloc_feasible = sum(1 for r in allocation_results.values() if r.status.value == "feasible")
+        console.print(f"[green]✅ Terminé : {alloc_feasible}/{len(ofs)} OF alloués[/green]\n")
+
+    format_of_table(ofs, immediate_results, projected_results, allocation_results)
+    format_summary(immediate_results, projected_results, allocation_results)
+
+    if detailed:
+        for of in ofs:
+            result = projected_results.get(of.num_of)
+            if result and not result.feasible:
+                format_detailed_report(of, result)
+
+    try:
+        from src.decisions.reports import DecisionReporter
+        reporter = DecisionReporter()
+        output_dir = "reports/decisions"
+        md_path = os.path.join(output_dir, "decisions_report.md")
+        reporter.generate_markdown_report(allocation_results, md_path)
+        console.print(f"[green]✅ Rapport Markdown : {md_path}[/green]")
+        json_path = os.path.join(output_dir, "decisions_report.json")
+        reporter.generate_json_report(allocation_results, json_path)
+        console.print(f"[green]✅ Rapport JSON : {json_path}[/green]")
+    except Exception as e:
+        console.print(f"[yellow]⚠️  Impossible de générer les rapports : {e}[/yellow]")
+
+
+def run_feasibility_of(loader: DataLoader) -> None:
+    num_of = questionary.text("Numéro de l'OF (ex: F426-08419)").ask()
+    if not num_of:
+        return
+    detailed = questionary.confirm("Rapport détaillé ?", default=False).ask()
+    if detailed is None:
+        return
+
+    ofs = [of for of in loader.ofs if of.num_of == num_of]
+    if not ofs:
+        console.print(f"[bold red]OF {num_of} introuvable[/bold red]")
+        return
+
+    console.print(f"\n[bold]🎯 Vérification de l'OF {num_of}[/bold]\n")
+
+    console.print("[bold cyan]🔍 Vérification immédiate...[/bold cyan]")
+    immediate_checker = ImmediateChecker(loader)
+    immediate_results = immediate_checker.check_all_ofs(ofs)
+    imm_feasible = sum(1 for r in immediate_results.values() if r.feasible)
+    console.print(f"[green]✅ {imm_feasible}/{len(ofs)} faisable[/green]\n")
+
+    console.print("[bold cyan]🔮 Vérification projetée...[/bold cyan]")
+    projected_checker = ProjectedChecker(loader)
+    projected_results = projected_checker.check_all_ofs(ofs)
+    proj_feasible = sum(1 for r in projected_results.values() if r.feasible)
+    console.print(f"[green]✅ {proj_feasible}/{len(ofs)} faisable[/green]\n")
+
+    console.print("[bold cyan]📦 Allocation virtuelle...[/bold cyan]")
+    recursive_checker = RecursiveChecker(loader, use_receptions=True, check_date=date.today())
+    decision_engine = DecisionEngine()
+    allocation_manager = AllocationManager(
+        data_loader=loader, checker=recursive_checker, decision_engine=decision_engine
+    )
+    allocation_results = allocation_manager.allocate_stock(ofs)
+    alloc_feasible = sum(1 for r in allocation_results.values() if r.status.value == "feasible")
+    console.print(f"[green]✅ {alloc_feasible}/{len(ofs)} alloué[/green]\n")
+
+    format_of_table(ofs, immediate_results, projected_results, allocation_results)
+    format_summary(immediate_results, projected_results, allocation_results)
+
+    if detailed:
+        for of in ofs:
+            result = projected_results.get(of.num_of)
+            if result and not result.feasible:
+                format_detailed_report(of, result)
+
+
+def run_commande(loader: DataLoader) -> None:
+    num_commande = questionary.text("Numéro de commande (ex: AR2600885)").ask()
+    if not num_commande:
+        return
+
+    commandes = [c for c in loader.commandes_clients if c.num_commande == num_commande]
+    if not commandes:
+        console.print(f"[bold red]Commande {num_commande} introuvable[/bold red]")
+        return
+
+    commande = commandes[0]
+    type_str = "MTS" if commande.is_mts() else "NOR/MTO"
+    console.print(f"\n[bold]🎯 Commande {num_commande}[/bold]")
+    console.print(f"   Client : {commande.nom_client}")
+    console.print(f"   Article : {commande.article} - {commande.description}")
+    console.print(f"   Qté restante : {commande.qte_restante}")
+    console.print(f"   Type : {type_str}")
+    if commande.is_mts() and commande.of_contremarque:
+        console.print(f"   OF lié : {commande.of_contremarque}")
+    console.print()
+
+    allocations = loader.get_allocations_of(num_commande)
+    if allocations:
+        console.print(f"   📦 Allocations : {len(allocations)} composant(s)")
+        for alloc in allocations[:5]:
+            console.print(f"      - {alloc.article} : {alloc.qte_allouee}")
+        if len(allocations) > 5:
+            console.print(f"      ... et {len(allocations) - 5} autres")
+    else:
+        console.print("   📦 Aucune allocation connue")
+    console.print()
+
+    console.print("[bold cyan]🔍 Vérification récursive avec allocations...[/bold cyan]")
+    checker = RecursiveChecker(loader)
+    result = checker.check_commande(commande)
+
+    console.print(f"   {result}")
+    if result.missing_components:
+        console.print()
+        console.print("[bold red]Composants manquants :[/bold red]")
+        for article, qte in result.missing_components.items():
+            console.print(f"   ❌ {article} : {qte} unités")
+    if result.alerts:
+        console.print()
+        console.print("[yellow]Alertes :[/yellow]")
+        for alert in result.alerts[:5]:
+            console.print(f"   ⚠️  {alert}")
+        if len(result.alerts) > 5:
+            console.print(f"   ... et {len(result.alerts) - 5} autres alertes")
+    console.print()
+    console.print(f"   📊 Composants vérifiés : {result.components_checked}")
+    console.print(f"   📊 Profondeur récursion : {result.depth}")
+
+
+def run_s1(loader: DataLoader) -> None:
+    horizon_str = questionary.text("Horizon (jours)", default="7").ask()
+    if horizon_str is None:
+        return
+    horizon = int(horizon_str) if horizon_str else 7
+    previsions = questionary.confirm("Inclure les prévisions ?", default=False).ask()
+    if previsions is None:
+        return
+    use_llm = questionary.confirm("Activer le LLM (nécessite MISTRAL_API_KEY) ?", default=False).ask()
+    if use_llm is None:
+        return
+    llm_model = "mistral-large-latest"
+    if use_llm:
+        if not os.environ.get("MISTRAL_API_KEY"):
+            console.print("[bold yellow]⚠️  MISTRAL_API_KEY non définie — LLM désactivé[/bold yellow]")
+            use_llm = False
+        else:
+            llm_model = questionary.text("Modèle LLM", default="mistral-large-latest").ask() or "mistral-large-latest"
+
+    args = argparse.Namespace(horizon=horizon, llm=use_llm, llm_model=llm_model)
+    main_s1(args, loader, include_previsions=previsions)
+
+
+def run_heatmap(loader: DataLoader) -> None:
+    weeks_str = questionary.text("Nombre de semaines", default="4").ask()
+    if weeks_str is None:
+        return
+    num_weeks = int(weeks_str) if weeks_str else 4
+
+    console.print(f"\n[bold cyan]🔥 Calcul de la charge ({num_weeks} semaines)...[/bold cyan]\n")
+
+    date_ref = date.today()
+    weekday = date_ref.weekday()
+    lundi_semaine_en_cours = date_ref - timedelta(days=weekday)
+    horizon_end = lundi_semaine_en_cours + timedelta(days=num_weeks * 7 + 6)
+
+    besoins = [
+        b for b in loader.commandes_clients
+        if b.date_expedition_demandee <= horizon_end and b.qte_restante > 0
+    ]
+
+    console.print(f"[bold cyan]{len(besoins)}[/bold cyan] besoins analysés")
+    console.print(
+        f"   Période : [bold white]BACKLOG[/bold white] + [bold white]EN_COURS[/bold white] "
+        f"+ [bold white]{num_weeks}[/bold white] semaines"
+    )
+    console.print()
+
+    heatmap = calculate_weekly_charge_heatmap(
+        besoins=besoins,
+        data_loader=loader,
+        num_weeks=num_weeks,
+    )
+
+    week_labels = ["BACKLOG", "EN_COURS"] + [f"S+{i}" for i in range(1, num_weeks + 1)]
+    format_charge_heatmap(heatmap, week_labels)
+    format_charge_summary(heatmap, len(besoins), num_weeks)
+
+
+MENU_CHOICES = {
+    "Vérification de faisabilité (tous les OFs)": run_feasibility_all,
+    "Vérifier un OF spécifique": run_feasibility_of,
+    "Analyser une commande client": run_commande,
+    "Mode S+1 (court terme)": run_s1,
+    "Heatmap de charge": run_heatmap,
+    "Quitter": None,
+}
+
+
+def run_menu(loader: DataLoader) -> None:
+    while True:
+        console.print()
+        choice = questionary.select(
+            "Que voulez-vous faire ?",
+            choices=list(MENU_CHOICES.keys()),
+        ).ask()
+
+        if choice is None or choice == "Quitter":
+            console.print("[bold green]Au revoir ![/bold green]")
+            break
+
+        console.print()
+        try:
+            MENU_CHOICES[choice](loader)
+        except KeyboardInterrupt:
+            console.print("\n[dim]Action annulée.[/dim]")
+        except Exception as e:
+            console.print(Panel(
+                f"[bold red]Erreur :[/bold red] {e}",
+                title="[red]Erreur[/red]",
+                border_style="red",
+            ))
+
+
+def main() -> None:
+    console.print(Panel.fit(
+        "[bold cyan]Bienvenue dans Ordo v2[/bold cyan]\n"
+        "[dim]Système d'ordonnancement production[/dim]",
+        border_style="cyan",
+    ))
+    console.print()
+    loader = load_data()
+    run_menu(loader)
+
+
+if __name__ == "__main__":
+    main()

@@ -122,8 +122,6 @@ class LLMBasedDecisionRule:
             prefilter_result = self._apply_prefilter(context)
             if prefilter_result is not None:
                 logger.info(f"[{of.num_of}] Pré-filtre appliqué : {prefilter_result.action.value}")
-                if self.persistence:
-                    pass  # La persistance est gérée par DecisionEngine
                 return prefilter_result
 
             # 3. Construire le prompt (cas ambigu → appel LLM)
