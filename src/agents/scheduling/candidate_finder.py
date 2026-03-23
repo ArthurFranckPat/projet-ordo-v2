@@ -36,11 +36,12 @@ class CandidateFinder:
 
     def calculate_of_hours_per_poste(self, of) -> Dict[str, float]:
         """Calcule les heures de charge par poste pour un OF."""
-        gammes = self.loader.get_gammes(of.article)
+        gamme = self.loader.get_gamme(of.article)
         hours = {}
-        for gamme in gammes:
-            if gamme.cadence and gamme.cadence > 0:
-                hours[gamme.poste_charge] = of.qte_restante / gamme.cadence
+        if gamme:
+            for operation in gamme.operations:
+                if operation.cadence and operation.cadence > 0:
+                    hours[operation.poste_charge] = of.qte_restante / operation.cadence
         return hours
 
     def find_candidates(

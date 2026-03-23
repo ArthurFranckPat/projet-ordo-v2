@@ -40,10 +40,13 @@ def test_get_s2_s3_orders_filters_by_horizon():
 def test_calculate_of_hours_per_poste():
     """Les heures par poste sont calculées à partir des cadences."""
     loader = MagicMock()
+    # Mock une gamme avec des operations
+    operation = MagicMock()
+    operation.poste_charge = "PP_830"
+    operation.cadence = 100.0
     gamme = MagicMock()
-    gamme.poste_charge = "PP_830"
-    gamme.cadence = 100.0
-    loader.get_gammes.return_value = [gamme]
+    gamme.operations = [operation]
+    loader.get_gamme.return_value = gamme
 
     finder = CandidateFinder(loader=loader, config=SchedulingConfig())
     of = MagicMock()

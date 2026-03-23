@@ -93,9 +93,9 @@ def main_s1(args, loader, include_previsions=False):
                 use_llm = False
 
         if use_llm:
-            from .decisions.llm.mistral_client import MistralLLMClient
+            from .agents.llm.mistral_client import MistralLLMClient
             llm_client = MistralLLMClient(model=llm_model)
-            decision_engine = DecisionEngine(
+            decision_engine = AgentEngine(
                 "config/decisions.yaml",
                 use_llm=True,
                 llm_client=llm_client,
@@ -103,7 +103,7 @@ def main_s1(args, loader, include_previsions=False):
             )
             console.print(f"[bold yellow]⚡ Mode LLM activé : {llm_model}[/bold yellow]")
         else:
-            decision_engine = DecisionEngine("config/decisions.yaml")
+            decision_engine = AgentEngine("config/decisions.yaml", loader=loader)
 
         # Évaluer tous les OF avec leur contexte de commande
         decisions_pre: Dict[str, any] = {}
@@ -189,7 +189,7 @@ def main_s1(args, loader, include_previsions=False):
                         remaining_stock[article_code] = available
 
                 # Créer le contexte avec stock alloué
-                context = DecisionContext(
+                context = AgentContext(
                     of=of,
                     commande=commande,
                     initial_stock={},
@@ -214,13 +214,13 @@ def main_s1(args, loader, include_previsions=False):
 
         # 7. Générer les rapports de décisions
         try:
-            from src.decisions.reports import DecisionReporter
+            from src.agents.reports import DecisionReporter
             import os
             from dataclasses import dataclass
 
             @dataclass
             class DecisionWrapper:
-                """Wrapper pour adapter DecisionResult au format attendu par DecisionReporter."""
+                """Wrapper pour adapter AgentDecision au format attendu par DecisionReporter."""
                 decision: any
 
             # Créer des wrappers pour les décisions

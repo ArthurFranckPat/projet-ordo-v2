@@ -23,8 +23,11 @@ def test_build_s1_schedule_from_feasible_ofs():
     optimizer = ChargeOptimizer(config=SchedulingConfig(), component_analyzer=MagicMock())
     of1 = MagicMock(num_of="F001", article="ART1", qte_restante=700)
     loader = MagicMock()
-    gamme = MagicMock(poste_charge="PP_830", cadence=100.0)
-    loader.get_gammes.return_value = [gamme]
+    # Mock une gamme avec des operations
+    operation = MagicMock(poste_charge="PP_830", cadence=100.0)
+    gamme = MagicMock()
+    gamme.operations = [operation]
+    loader.get_gamme.return_value = gamme
 
     schedule = optimizer.build_s1_poste_schedule(feasible_ofs=[of1], loader=loader)
     assert "PP_830" in schedule

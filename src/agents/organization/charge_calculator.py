@@ -1,7 +1,7 @@
 """Charge calculator for workshop load analysis."""
 
 from datetime import date, timedelta
-from typing import Dict, List
+from typing import Dict, List, Set, Optional
 
 
 class ChargeCalculator:
@@ -17,6 +17,101 @@ class ChargeCalculator:
             Data loader with access to commandes and gammes
         """
         self.loader = loader
+        self._calculated_articles: Set[tuple[str, str]] = set()  # (article, poste) pour éviter les cycles
+
+    def _calculate_article_charge_recursive(
+        self,
+        article: str,
+        quantity: float,
+        target_poste: str,
+        visited: Optional[Set[str]] = None
+    ) -> float:
+        """
+        Calcule récursivement la charge totale d'un article pour un poste.
+
+        Inclut la charge directe de l'article + la charge des composants fabriqués.
+
+        Parameters
+        ----------
+        article : str
+            Code de l'article
+        quantity : float
+            Quantité à fabriquer
+        target_poste : str
+            Poste de charge cible (pour éviter de compter d'autres postes)
+        visited : Set[str], optional
+            Articles déjà visités (pour détecter les cycles)
+
+        Returns
+        -------
+        float
+            Charge totale en heures
+        """
+        if visited is None:
+            visited = set()
+
+        # Détection de cycle
+        article_key = f"{article}_{target_poste}"
+        if article_key in self._calculated_articles:
+            return 0.0  # Déjà calculé dans ce contexte
+
+        if article in visited:
+            return 0.0  # Cycle détecté
+
+        visited.add(article)
+        self._calculated_articles.add(article_key)
+
+        total_hours = 0.0
+
+        # 1. Charge directe de l'article sur le poste cible
+        gamme = self.loader.get_gamme(article)
+        if gamme:
+            for operation in gamme.operations:
+                if operation.poste_charge == target_poste and operation.cadence and operation.cadence > 0:
+                    total_hours += quantity / operation.cadence
+
+        # 2. Charge des composants fabriqués
+        nomenclature = self.loader.get_nomenclature(article)
+        if nomenclature:
+            for composant in nomenclature.composants:
+                if composant.is_fabrique():
+                    # Calcul récursif de la charge du composant
+                    composant_qty = quantity * composant.qte_lien
+                    total_hours += self._calculate_article_charge_recursive(
+                        composant.article_composant,
+                        composant_qty,
+                        target_poste,
+                        visited.copy()  # Copie pour éviter les interférences
+                    )
+
+        return total_hours
+
+    def calculate_of_charge_recursive(
+        self,
+        of,
+        target_poste: str
+    ) -> float:
+        """
+        Calcule récursivement la charge totale d'un OF pour un poste.
+
+        Parameters
+        ----------
+        of : OF
+            Ordre de fabrication
+        target_poste : str
+            Poste de charge cible
+
+        Returns
+        -------
+        float
+            Charge totale en heures
+        """
+        self._calculated_articles.clear()  # Reset pour chaque OF
+        return self._calculate_article_charge_recursive(
+            of.article,
+            of.qte_restante,
+            target_poste
+        )
 
     def calculate_charge_for_horizon(
         self,
@@ -61,8 +156,11 @@ class ChargeCalculator:
         # Matcher commandes → OF
         matching_results = matcher.match_commandes(commandes_in_horizon)
 
-        # Calculer les heures par poste
+        # Calculer les heures par poste de manière récursive
         hours_per_poste: Dict[str, float] = {}
+        postes_to_calculate: Set[str] = set()
+
+        # Identifier tous les postes concernés
         for result in matching_results:
             if result.of is None:
                 continue
@@ -73,9 +171,17 @@ class ChargeCalculator:
             if gamme:
                 for operation in gamme.operations:
                     if operation.cadence and operation.cadence > 0:
-                        h = of.qte_restante / operation.cadence
-                        poste = operation.poste_charge
-                        hours_per_poste[poste] = hours_per_poste.get(poste, 0) + h
+                        postes_to_calculate.add(operation.poste_charge)
+
+        # Calculer la charge récursive pour chaque poste
+        for poste in postes_to_calculate:
+            for result in matching_results:
+                if result.of is None:
+                    continue
+
+                of = result.of
+                charge = self.calculate_of_charge_recursive(of, poste)
+                hours_per_poste[poste] = hours_per_poste.get(poste, 0) + charge
 
         return hours_per_poste
 

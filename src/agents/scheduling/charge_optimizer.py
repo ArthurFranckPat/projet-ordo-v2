@@ -16,11 +16,12 @@ class ChargeOptimizer:
         """Calcule les heures S+1 déjà planifiées par poste."""
         hours_per_poste: Dict[str, float] = {}
         for of in feasible_ofs:
-            gammes = loader.get_gammes(of.article)
-            for gamme in gammes:
-                if gamme.cadence and gamme.cadence > 0:
-                    h = of.qte_restante / gamme.cadence
-                    hours_per_poste[gamme.poste_charge] = hours_per_poste.get(gamme.poste_charge, 0) + h
+            gamme = loader.get_gamme(of.article)
+            if gamme:
+                for operation in gamme.operations:
+                    if operation.cadence and operation.cadence > 0:
+                        h = of.qte_restante / operation.cadence
+                        hours_per_poste[operation.poste_charge] = hours_per_poste.get(operation.poste_charge, 0) + h
         return hours_per_poste
 
     def score_candidates(
