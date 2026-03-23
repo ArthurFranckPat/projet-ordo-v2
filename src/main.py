@@ -106,6 +106,11 @@ def main():
         default="mistral-large-latest",
         help="Modèle LLM à utiliser (défaut: mistral-large-latest)",
     )
+    parser.add_argument(
+        "--organization",
+        action="store_true",
+        help="Analyse l'organisation de l'atelier sur 4 semaines",
+    )
 
     args = parser.parse_args()
 
@@ -174,6 +179,23 @@ def main():
     # Mode S+1
     if args.s1:
         main_s1(args, loader, include_previsions=args.with_previsions)
+        return
+
+    # Mode organisation
+    if args.organization:
+        from src.agents.organization.organization_agent import OrganizationAgent
+        from src.agents.organization.formatter import format_organization_table
+        from src.algorithms import CommandeOFMatcher
+
+        agent = OrganizationAgent(loader)
+        matcher = CommandeOFMatcher(loader, date_tolerance_days=10)
+
+        results = agent.analyze_workshop_organization(
+            reference_date=date.today(),
+            matcher=matcher
+        )
+
+        format_organization_table(results)
         return
 
     # Mode vérification commande
