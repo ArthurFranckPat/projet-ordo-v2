@@ -68,6 +68,14 @@ class SituationGlobale:
 
 
 @dataclass
+class CompetingOFsSummary:
+    """Résumé des OFs en concurrence pour les mêmes composants."""
+    nb_competing: int
+    of_plus_urgent: Optional[str] = None
+    date_plus_urgent: Optional[date] = None
+
+
+@dataclass
 class LLMAnalysisContext:
     """Contexte d'analyse complet pour le LLM."""
 
@@ -76,6 +84,7 @@ class LLMAnalysisContext:
     composants: List[ComposantAnalyse]
     composants_critiques: List[ComposantCritique]
     situation_globale: SituationGlobale
+    competing_ofs_summary: Optional[CompetingOFsSummary] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Convertit le contexte en dictionnaire pour sérialisation."""
@@ -132,5 +141,10 @@ class LLMAnalysisContext:
                 "raison_blocage": self.situation_globale.raison_blocage,
                 "conditions_deblocage": self.situation_globale.conditions_deblocage,
                 "delai_estime": self.situation_globale.delai_estime
-            }
+            },
+            "competing_ofs_summary": {
+                "nb_competing": self.competing_ofs_summary.nb_competing,
+                "of_plus_urgent": self.competing_ofs_summary.of_plus_urgent,
+                "date_plus_urgent": self.competing_ofs_summary.date_plus_urgent.isoformat() if self.competing_ofs_summary.date_plus_urgent else None
+            } if self.competing_ofs_summary else None
         }

@@ -114,7 +114,9 @@ class LLMBasedDecisionRule:
             # 1. Construire le contexte d'analyse
             logger.info(f"[{of.num_of}] Construction du contexte LLM...")
             self.context_builder.loader = loader
-            context = self.context_builder.build_context(of, commande, current_date=current_date)
+            context = self.context_builder.build_context(
+                of, commande, current_date=current_date, competing_ofs=competing_ofs
+            )
 
             # 2. Pré-filtre : résoudre les cas triviaux sans appel LLM
             prefilter_result = self._apply_prefilter(context)

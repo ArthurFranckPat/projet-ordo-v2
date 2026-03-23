@@ -126,6 +126,16 @@ Composant  | Niv | Type | Requis | Phys | Alloué* | Alloué† | Bloqué | Disp
         if sit.get('delai_estime'):
             prompt += f"- Délai estimé: {sit['delai_estime']}\n"
 
+        # Ajouter les OFs concurrents si présents
+        if context.get('competing_ofs_summary'):
+            c = context['competing_ofs_summary']
+            prompt += f"""
+# Concurrence entre OFs
+- Nombre d'OFs en concurrence pour les mêmes composants : {c['nb_competing']}
+"""
+            if c.get('of_plus_urgent'):
+                prompt += f"- OF concurrent le plus urgent : {c['of_plus_urgent']} (date fin : {c.get('date_plus_urgent', 'inconnue')})\n"
+
         # Ajouter la mission
         prompt += f"""
 # Ta Mission

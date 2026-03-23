@@ -12,7 +12,8 @@ from .models import (
     CommandeInfo,
     ComposantAnalyse,
     ComposantCritique,
-    SituationGlobale
+    SituationGlobale,
+    CompetingOFsSummary
 )
 
 
@@ -45,7 +46,8 @@ class LLMContextBuilder:
         self,
         of: OF,
         commande: Optional[BesoinClient] = None,
-        current_date: date = None
+        current_date: date = None,
+        competing_ofs: Optional[List[OF]] = None
     ) -> LLMAnalysisContext:
         """Construit le contexte complet d'analyse pour un OF.
 
@@ -57,6 +59,8 @@ class LLMContextBuilder:
             Commande associée (si disponible)
         current_date : date, optional
             Date de référence (défaut: date.today())
+        competing_ofs : List[OF], optional
+            OFs en concurrence pour les mêmes composants
 
         Returns
         -------
@@ -103,7 +107,8 @@ class LLMContextBuilder:
                     raison_blocage="Nomenclature non disponible",
                     conditions_deblocage=[],
                     delai_estime=None
-                )
+                ),
+                competing_ofs_summary=None
             )
 
         # 4. Récupérer les allocations pour cet OF
@@ -131,12 +136,25 @@ class LLMContextBuilder:
             current_date=current_date
         )
 
+        # 8. Résumé des OFs concurrents
+        competing_ofs_summary = None
+        if competing_ofs:
+            autres_ofs = [o for o in competing_ofs if o.num_of != of.num_of]
+            if autres_ofs:
+                of_le_plus_urgent = min(autres_ofs, key=lambda o: o.date_fin)
+                competing_ofs_summary = CompetingOFsSummary(
+                    nb_competing=len(autres_ofs),
+                    of_plus_urgent=of_le_plus_urgent.num_of,
+                    date_plus_urgent=of_le_plus_urgent.date_fin
+                )
+
         return LLMAnalysisContext(
             of_info=of_info,
             commande_info=commande_info,
             composants=composants_analyses,
             composants_critiques=composants_critiques,
-            situation_globale=situation_globale
+            situation_globale=situation_globale,
+            competing_ofs_summary=competing_ofs_summary
         )
 
     def _analyser_composant(
