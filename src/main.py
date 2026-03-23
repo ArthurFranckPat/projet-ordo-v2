@@ -9,6 +9,7 @@ from rich.console import Console
 from .loaders import DataLoader
 from .checkers import ImmediateChecker, ProjectedChecker, RecursiveChecker
 from .algorithms import AllocationManager, AllocationStatus
+from .decisions import DecisionEngine
 from .algorithms import calculate_weekly_charge_heatmap
 from .utils import format_of_table, format_detailed_report, format_summary
 from .utils import format_charge_heatmap, format_charge_summary
@@ -283,7 +284,15 @@ def main():
                 check_date=date.today()  # Date du jour
             )
 
-            allocation_manager = AllocationManager(loader, recursive_checker)
+            # Créer le DecisionEngine
+            decision_engine = DecisionEngine()
+
+            # Passer à AllocationManager
+            allocation_manager = AllocationManager(
+                data_loader=loader,
+                checker=recursive_checker,
+                decision_engine=decision_engine
+            )
             allocation_results = allocation_manager.allocate_stock(ofs)
 
             alloc_feasible = sum(1 for r in allocation_results.values() if r.status.value == "feasible")
@@ -300,6 +309,26 @@ def main():
             result = projected_results.get(of.num_of)
             if result and not result.feasible:
                 format_detailed_report(of, result)
+
+    # Générer les rapports de décisions
+    try:
+        from .decisions.reports import DecisionReporter
+        import os
+
+        reporter = DecisionReporter()
+        output_dir = "reports/decisions"
+
+        # Générer rapport Markdown
+        md_path = os.path.join(output_dir, "decisions_report.md")
+        reporter.generate_markdown_report(allocation_results, md_path)
+        console.print(f"✅ Rapport Markdown généré : {md_path}")
+
+        # Générer rapport JSON
+        json_path = os.path.join(output_dir, "decisions_report.json")
+        reporter.generate_json_report(allocation_results, json_path)
+        console.print(f"✅ Rapport JSON généré : {json_path}")
+    except Exception as e:
+        console.print(f"⚠️  Impossible de générer les rapports: {e}")
 
 
 if __name__ == "__main__":
