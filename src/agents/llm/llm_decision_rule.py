@@ -7,7 +7,7 @@ from typing import Dict, Optional, List
 from ..models import AgentDecision, AgentAction, AgentContext
 from ...models import OF, BesoinClient
 from ...loaders import DataLoader
-from .models import LLMAnalysisContext
+from .models import LLMAnalysisContext, LLMDecisionMetadata
 from .context_builder import LLMContextBuilder
 from .prompt_builder import LLMPromptBuilder
 from .response_parser import LLMResponseParser
@@ -36,13 +36,22 @@ class LLMDecisionAgent:
         llm_client : BaseLLMClient
             Client LLM (peut être MockLLMClient pour les tests)
         config_path : str, optional
-            Chemin vers la configuration YAML (pas utilisé pour l'instant)
+            Chemin vers la configuration YAML
         """
         self.llm_client = llm_client
         self.config_path = config_path
 
+        # Charger la configuration
+        self.config = None
+        if config_path:
+            from ..config import load_config
+            try:
+                self.config = load_config(config_path)
+            except FileNotFoundError:
+                pass  # Utilisera les valeurs par défaut
+
         # Initialiser les composants
-        self.context_builder = LLMContextBuilder(loader=None)  # Sera défini dans evaluate()
+        self.context_builder = LLMContextBuilder(loader=None, config=self.config)
         self.prompt_builder = LLMPromptBuilder()
         self.response_parser = LLMResponseParser()
 
@@ -57,10 +66,15 @@ class LLMDecisionAgent:
         faisabilite = context.situation_globale.faisabilite
 
         if faisabilite == "faisable":
+            metadata = LLMDecisionMetadata(
+                situation="disponible",
+                prefilter=True,
+                llm_confidence=1.0
+            )
             return AgentDecision(
                 action=AgentAction.ACCEPT_AS_IS,
                 reason="Tous les composants disponibles, OF faisable immédiatement.",
-                metadata={"prefilter": True, "faisabilite": "faisable"}
+                metadata=metadata.to_dict()
             )
 
         if faisabilite == "non_faisable":
@@ -74,10 +88,15 @@ class LLMDecisionAgent:
             )
             if not a_bloque and not a_reception:
                 raison = context.situation_globale.raison_blocage or "Composants manquants sans perspective"
+                metadata = LLMDecisionMetadata(
+                    situation="rupture",
+                    prefilter=True,
+                    llm_confidence=1.0
+                )
                 return AgentDecision(
                     action=AgentAction.REJECT,
                     reason=f"OF non faisable : {raison}. Aucune perspective de déblocage à court terme.",
-                    metadata={"prefilter": True, "faisabilite": "non_faisable"}
+                    metadata=metadata.to_dict()
                 )
 
         return None
@@ -202,17 +221,19 @@ class LLMDecisionAgent:
                 logger.warning(f"Format de date invalide: {parsed_decision.defer_date}")
 
         # Créer le résultat
+        # Fusionner les métadonnées LLM avec des infos de traçabilité
+        metadata_dict = parsed_decision.metadata.to_dict()
+        metadata_dict.update({
+            "llm_generated": True,
+            "timestamp": datetime.now().isoformat()
+        })
+
         result = AgentDecision(
             action=action,
             reason=parsed_decision.reason,
             modified_quantity=parsed_decision.modified_quantity,
             defer_date=defer_date,
-            metadata={
-                **parsed_decision.metadata,
-                "llm_generated": True,
-                "llm_confidence": parsed_decision.confidence,
-                "timestamp": datetime.now().isoformat()
-            }
+            metadata=metadata_dict
         )
 
         return result
@@ -234,10 +255,15 @@ class LLMDecisionAgent:
         faisabilite = context.situation_globale.faisabilite
 
         if faisabilite == "faisable":
+            metadata = LLMDecisionMetadata(
+                situation="disponible",
+                fallback=True,
+                llm_confidence=1.0
+            )
             return AgentDecision(
                 action=AgentAction.ACCEPT_AS_IS,
                 reason=f"OF faisable (analyse automatique)",
-                metadata={"fallback": True, "faisabilite": faisabilite}
+                metadata=metadata.to_dict()
             )
 
         elif faisabilite in ("faisable_avec_conditions", "faisable_apres_reception"):
@@ -251,28 +277,34 @@ class LLMDecisionAgent:
             conditions = context.situation_globale.conditions_deblocage
             reason = f"OF faisable après déblocage: {', '.join(conditions[:2])}"
 
+            metadata = LLMDecisionMetadata(
+                situation="bloqué_temporaire",
+                delai_estime=context.situation_globale.delai_estime,
+                action_nature="accélérer_process",
+                fallback=True,
+                llm_confidence=0.7
+            )
             return AgentDecision(
                 action=AgentAction.DEFER,
                 reason=reason,
                 defer_date=defer_date,
-                metadata={
-                    "fallback": True,
-                    "faisabilite": faisabilite,
-                    "conditions_deblocage": conditions,
-                    "action_required": "Remplir les conditions de déblocage"
-                }
+                metadata=metadata.to_dict()
             )
 
         else:
             # Non faisable → REJECT
+            composants_limitants = [c.article for c in context.composants_critiques[:3]]
+            metadata = LLMDecisionMetadata(
+                composants_limitants=composants_limitants,
+                situation="rupture",
+                action_nature="approvisionner",
+                fallback=True,
+                llm_confidence=0.5
+            )
             return AgentDecision(
                 action=AgentAction.REJECT,
                 reason=f"OF non faisable: {context.situation_globale.raison_blocage}",
-                metadata={
-                    "fallback": True,
-                    "faisabilite": faisabilite,
-                    "action_required": "Réapprovisionner les composants ou annuler l'OF"
-                }
+                metadata=metadata.to_dict()
             )
 
     def _create_fallback_decision_from_error(
@@ -299,13 +331,14 @@ class LLMDecisionAgent:
         """
         logger.error(f"[{of.num_of}] Erreur LLM, utilisation de fallback REJECT: {error_message}")
 
+        metadata = LLMDecisionMetadata(
+            situation="erreur",
+            fallback=True,
+            llm_error=error_message,
+            llm_confidence=0.0
+        )
         return AgentDecision(
             action=AgentAction.REJECT,
             reason=f"Erreur lors de l'évaluation automatique: {error_message}",
-            metadata={
-                "fallback": True,
-                "error": error_message,
-                "llm_error": True,
-                "action_required": "Révision manuelle requise"
-            }
+            metadata=metadata.to_dict()
         )

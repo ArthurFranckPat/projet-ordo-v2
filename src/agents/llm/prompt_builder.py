@@ -35,7 +35,7 @@ class LLMPromptBuilder:
         str
             Prompt structuré pour le LLM
         """
-        prompt = f"""# {self._get_system_prompt()}
+        prompt = """# Analyse de Faisabilité d'Ordre de Fabrication
 
 # Contexte OF
 - OF: {context['of_info']['num_of']}
@@ -228,7 +228,3 @@ Ta tâche est d'analyser un Ordre de Fabrication (OF) et de proposer une décisi
 ## Format de sortie:
 JSON UNIQUEMENT, sans texte autour, sans markdown.
 """
-
-    def _get_system_prompt(self) -> str:
-        """Retourne le titre du prompt."""
-        return "Analyse de Faisabilité d'Ordre de Fabrication"

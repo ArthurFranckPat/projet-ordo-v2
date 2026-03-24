@@ -69,7 +69,24 @@ def get_default_config() -> Dict[str, Any]:
         },
         "thresholds": {
             "accept_threshold": 0.7,
-            "reject_threshold": 0.3
+            "reject_threshold": 0.3,
+            "stock": {
+                "tension_min": 0.01,
+                "disponible_min": 1.0,
+                "critique_min": 0.5,
+                "preoccupant_min": 0.8,
+                "reception_horizon_days": 14
+            },
+            "llm": {
+                "min_confidence": 0.0,
+                "prefilter_enabled": True
+            }
+        },
+        "llm": {
+            "model": "mistral-large-latest",
+            "temperature": 0.1,
+            "max_retries": 3,
+            "timeout_seconds": 30
         },
         "persistence": {
             "enabled": True,

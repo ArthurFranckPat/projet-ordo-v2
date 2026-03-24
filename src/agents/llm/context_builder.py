@@ -32,15 +32,32 @@ class LLMContextBuilder:
     3. Classifier les composants critiques
     """
 
-    def __init__(self, loader: DataLoader):
+    def __init__(self, loader: DataLoader, config: Optional[Dict] = None):
         """Initialise le builder.
 
         Parameters
         ----------
         loader : DataLoader
             DataLoader avec accès aux stocks, nomenclatures, allocations
+        config : Dict, optional
+            Configuration des seuils (utilise les valeurs par défaut si None)
         """
         self.loader = loader
+        # Charger la configuration ou utiliser les valeurs par défaut
+        if config is None:
+            from ..config import load_config
+            try:
+                config = load_config()
+            except FileNotFoundError:
+                config = {}
+
+        # Seuils de classification des stocks
+        thresholds = config.get("thresholds", {}).get("stock", {})
+        self.tension_min = thresholds.get("tension_min", 0.01)
+        self.disponible_min = thresholds.get("disponible_min", 1.0)
+        self.critique_min = thresholds.get("critique_min", 0.5)
+        self.preoccupant_min = thresholds.get("preoccupant_min", 0.8)
+        self.reception_horizon_days = thresholds.get("reception_horizon_days", 14)
 
     def build_context(
         self,
@@ -221,9 +238,9 @@ class LLMContextBuilder:
             stock_bloque
         )
 
-        # Récupérer les réceptions imminentes (horizon : date_fin OF + 14 jours)
+        # Récupérer les réceptions imminentes (horizon configurable, défaut 14 jours)
         from datetime import timedelta
-        horizon_reception = of.date_fin + timedelta(days=14)
+        horizon_reception = of.date_fin + timedelta(days=self.reception_horizon_days)
         receptions = self.loader.get_receptions(comp.article_composant)
         receptions_futures = [r for r in receptions if r.date_reception_prevue <= horizon_reception]
         receptions_imminentes = sum(r.quantite_restante for r in receptions_futures)
@@ -271,9 +288,15 @@ class LLMContextBuilder:
         str
             "disponible", "rupture", "bloqué", "tension"
         """
-        if stock_net >= quantite_requise:
+        # Calculer le ratio de couverture
+        if quantite_requise > 0:
+            ratio = stock_net / quantite_requise
+        else:
+            ratio = float('inf')  # Pas de besoin = toujours disponible
+
+        if ratio >= self.disponible_min:
             return "disponible"
-        elif stock_net > 0:
+        elif ratio > self.tension_min:
             return "tension"
         elif stock_bloque > 0:
             return "bloqué"
@@ -299,12 +322,12 @@ class LLMContextBuilder:
         critiques = []
 
         for comp in composants:
-            # Critère 1: Ratio de couverture < 50%
-            if comp.ratio_couverture < 0.5:
+            # Critère 1: Ratio de couverture < seuil critique (configurable, défaut 50%)
+            if comp.ratio_couverture < self.critique_min:
                 critiques.append(self._creer_composant_critique(comp, "rupture", "critique"))
 
-            # Critère 2: Ratio entre 50% et 80%
-            elif comp.ratio_couverture < 0.8:
+            # Critère 2: Ratio entre seuil critique et seuil préoccupant (configurable, défaut 50%-80%)
+            elif comp.ratio_couverture < self.preoccupant_min:
                 critiques.append(self._creer_composant_critique(comp, "insuffisant", "moyen"))
 
             # Critère 3: Situation bloqué

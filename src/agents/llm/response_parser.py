@@ -4,6 +4,8 @@ import json
 from dataclasses import dataclass
 from typing import Dict, Any, Optional
 
+from .models import LLMDecisionMetadata
+
 
 @dataclass
 class ParsedLLMDecision:
@@ -14,7 +16,7 @@ class ParsedLLMDecision:
     defer_date: Optional[str]
     action_required: str
     confidence: float
-    metadata: Dict[str, Any]
+    metadata: LLMDecisionMetadata
 
 
 class LLMResponseParser:
@@ -99,15 +101,14 @@ class LLMResponseParser:
 
         if data["action"] in ["DEFER", "DEFER_PARTIAL"]:
             defer_date = data.get("defer_date")
-            if defer_date:
-                # Valider le format de date
-                try:
-                    from datetime import datetime
-                    datetime.strptime(defer_date, "%Y-%m-%d")
-                except ValueError as e:
-                    raise ValueError(f"defer_date invalide (attendu YYYY-MM-DD): {defer_date}")
-            else:
-                raise ValueError(f"{data['action']} requiert defer_date")
+            if not defer_date or not defer_date.strip():
+                raise ValueError(f"{data['action']} requiert defer_date (chaîne non vide)")
+            # Valider le format de date
+            try:
+                from datetime import datetime
+                datetime.strptime(defer_date, "%Y-%m-%d")
+            except ValueError as e:
+                raise ValueError(f"defer_date invalide (attendu YYYY-MM-DD): {defer_date}")
         else:
             defer_date = None
 
@@ -119,6 +120,11 @@ class LLMResponseParser:
         if not action_required:
             raise ValueError("action_required ne peut pas être vide")
 
+        # Créer les métadonnées structurées
+        metadata_raw = data.get("metadata", {})
+        metadata = LLMDecisionMetadata.from_dict(metadata_raw)
+        metadata.llm_confidence = confidence
+
         # Créer la décision parsée
         return ParsedLLMDecision(
             action=data["action"],
@@ -127,7 +133,7 @@ class LLMResponseParser:
             defer_date=defer_date,
             action_required=action_required,
             confidence=confidence,
-            metadata=data.get("metadata", {})
+            metadata=metadata
         )
 
     def _clean_response(self, response: str) -> str:

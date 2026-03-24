@@ -148,3 +148,43 @@ class LLMAnalysisContext:
                 "date_plus_urgent": self.competing_ofs_summary.date_plus_urgent.isoformat() if self.competing_ofs_summary.date_plus_urgent else None
             } if self.competing_ofs_summary else None
         }
+
+
+@dataclass
+class LLMDecisionMetadata:
+    """Métadonnées structurées pour une décision LLM."""
+    composants_limitants: List[str] = field(default_factory=list)
+    situation: str = "inconnue"  # "disponible", "bloqué_temporaire", "rupture", etc.
+    delai_estime: Optional[str] = None  # "2-3 jours", "1 semaine"
+    action_nature: Optional[str] = None  # "accélérer_process", "approvisionner", etc.
+    prefilter: bool = False  # True si décision prise par pré-filtre sans appel LLM
+    fallback: bool = False  # True si décision de fallback due à une erreur
+    llm_confidence: float = 0.0  # Confidence du LLM dans sa décision
+    llm_error: Optional[str] = None  # Message d'erreur si échec LLM
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convertit les métadonnées en dictionnaire."""
+        return {
+            "composants_limitants": self.composants_limitants,
+            "situation": self.situation,
+            "delai_estime": self.delai_estime,
+            "action_nature": self.action_nature,
+            "prefilter": self.prefilter,
+            "fallback": self.fallback,
+            "llm_confidence": self.llm_confidence,
+            "llm_error": self.llm_error
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "LLMDecisionMetadata":
+        """Crée une instance depuis un dictionnaire."""
+        return cls(
+            composants_limitants=data.get("composants_limitants", []),
+            situation=data.get("situation", "inconnue"),
+            delai_estime=data.get("delai_estime"),
+            action_nature=data.get("action_nature"),
+            prefilter=data.get("prefilter", False),
+            fallback=data.get("fallback", False),
+            llm_confidence=data.get("llm_confidence", 0.0),
+            llm_error=data.get("llm_error")
+        )

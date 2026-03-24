@@ -32,6 +32,26 @@ thresholds:
   accept_threshold: 0.7
   reject_threshold: 0.3
 
+  # Seuils de classification des stocks
+  stock:
+    tension_min: 0.01      # Ratio minimum pour être en "tension" (1%)
+    disponible_min: 1.0    # Ratio minimum pour être "disponible" (100%)
+    critique_min: 0.5      # Ratio minimum pour composant critique (50%)
+    preoccupant_min: 0.8   # Ratio minimum pour composant préoccupant (80%)
+    reception_horizon_days: 14  # Horizon pour les réceptions imminentes
+
+  # Seuils de confiance LLM
+  llm:
+    min_confidence: 0.0    # Confidence minimum pour accepter une décision LLM
+    prefilter_enabled: true  # Activer le pré-filtrage des cas triviaux
+
+# Configuration LLM
+llm:
+  model: "mistral-large-latest"
+  temperature: 0.1
+  max_retries: 3
+  timeout_seconds: 30
+
 persistence:
   enabled: true
   file_path: "data/decisions_history.json"
