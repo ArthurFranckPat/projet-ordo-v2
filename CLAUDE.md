@@ -4,22 +4,38 @@ Système de gestion de production et d'ordonnancement manufacturier avec analyse
 
 ## 📁 Structure des données
 
+### Organisation des répertoires
+
+```
+data/
+├── statique/           # Données de référence (peu variables)
+│   ├── articles.csv
+│   ├── gammes.csv
+│   └── nomenclatures.csv
+└── dynamique/          # Données mouvantes (quotidiennes/hebdomadaires)
+    ├── besoins_clients.csv    # Commandes + Prévisions
+    ├── of_entetes.csv
+    ├── stock.csv
+    ├── receptions_oa.csv
+    └── allocations.csv        # Traçabilité des allocations
+```
+
 ### Fichiers CSV disponibles
 
 | Fichier | Lignes | Description |
 |---------|--------|-------------|
-| `articles.csv` | 6 910 | Catalogue produits |
-| `of_entetes.csv` | 15 285 | Ordres de fabrication (en-têtes) |
-| `of_composants.csv` | 215 299 | Nomenclatures OF (composants) |
-| `nomenclatures.csv` | 25 028 | **Nomenclatures articles (table principale)** |
-| `gammes.csv` | 2 954 | Gammes de production |
-| `commandes_clients.csv` | 835 | Commandes clients |
-| `stock.csv` | 6 833 | État des stocks |
-| `receptions_oa.csv` | 1 805 | Réceptions fournisseurs |
+| `statique/articles.csv` | 6 910 | Catalogue produits |
+| `statique/gammes.csv` | 2 954 | Gammes de production |
+| `statique/nomenclatures.csv` | 25 028 | **Nomenclatures articles (table principale)** |
+| `dynamique/besoins_clients.csv` | 11 041 | **Commandes + Prévisions clients** ⭐ |
+| `dynamique/of_entetes.csv` | 15 044 | Ordres de fabrication (en-têtes) |
+| `dynamique/stock.csv` | 6 830 | État des stocks |
+| `dynamique/receptions_oa.csv` | 1 862 | Réceptions fournisseurs |
+| `dynamique/allocations.csv` | 5 133 | **Traçabilité des allocations** ⭐ |
 
 ## 🗂️ Structure des tables
 
-### articles.csv - Catalogue produits
+### statique/articles.csv - Catalogue produits
 ```
 ARTICLE         → Code article (PK)
 DESCRIPTION     → Description produit
@@ -28,7 +44,37 @@ TYPE_APPRO      → Type d'approvisionnement (ACHAT ou FABRICATION)
 DELAI_REAPPRO   → Délai de réapprovisionnement (jours)
 ```
 
-### of_entetes.csv - Ordres de fabrication
+### dynamique/besoins_clients.csv - Commandes et Prévisions ⭐
+
+**Colonnes :**
+```
+NOM_CLIENT                  → Nom client
+PAYS_CLIENT                 → Pays
+TYPE_COMMANDE               → Type (MTS, MTO, NOR)
+NUM_COMMANDE                → Numéro de commande
+NATURE_BESOIN               → Nature (COMMANDE ou PREVISION) ⭐
+ARTICLE                     → Code article (FK → articles)
+OF_CONTREMARQUE             → OF lié (MTS uniquement)
+DATE_COMMANDE               → Date de commande
+DATE_EXPEDITION_DEMANDEE    → Date d'expédition demandée
+QTE_COMMANDEE               → Quantité commandée
+QTE_ALLOUEA                 → Quantité allouée
+QTE_RESTANTE                → Quantité restante à servir
+```
+
+**Statistiques actuelles :**
+- **735** commandes fermes (NATURE_BESOIN = "COMMANDE")
+- **10 307** prévisions (NATURE_BESOIN = "PREVISION")
+- **3 893** MTS (34%)
+- **2 393** MTO (21%)
+- **4 892** NOR (45%)
+
+**Changement majeur :**
+- Anciennement `commandes_clients.csv` (835 lignes)
+- Fusionne maintenant **commandes fermes + prévisions** dans un seul fichier
+- Les prévisions sont consommées par les commandes lors du calcul de charge
+
+### dynamique/of_entetes.csv - Ordres de fabrication
 ```
 NUM_OF              → Numéro d'OF (PK)
 ARTICLE             → Code article à fabriquer (FK → articles)
@@ -45,16 +91,22 @@ QTE_RESTANTE        → Quantité restante
 - **1 = Ferme (Affermi/WOP)** : OF déjà lancé en production, prioritaire pour le matching
 - **3 = Suggéré (WOS)** : OF suggéré par le moteur CBN/MRP, utilisé si pas d'OF affermi disponible
 
-### of_composants.csv - Nomenclatures OF
+### dynamique/allocations.csv - Traçabilité des allocations ⭐ NOUVEAU
+
+**Colonnes :**
 ```
-NUM_OF                  → Numéro d'OF (FK → of_entetes)
-ARTICLE                 → Code article composant (FK → articles)
-DESCRIPTION             → Description composant
-QUANTITE_REQUISE        → Quantité requise
-DATE_BESOIN_COMPOSANT   → Date de besoin du composant
+ARTICLE         → Code article
+QTE_ALLOUEE     → Quantité allouée
+NUM_DOC         → Numéro de document (OF ou commande)
+DATE_BESOIN     → Date de besoin
 ```
 
-### nomenclatures.csv - Nomenclatures articles ⭐
+**Utilité :**
+- Traçabilité complète des allocations de stock
+- Lien entre OF, commandes et articles
+- Historique des mouvements de stock
+
+### statique/nomenclatures.csv - Nomenclatures articles ⭐
 ```
 Article parent           → Article fabriqué (code)
 Designation parent      → Description de l'article parent
@@ -80,11 +132,11 @@ Type article            → "Acheté" ou "Fabriqué"
 ```
 
 **Utilisation :**
-- Remplace `of_composants.csv` pour la vérification de faisabilité
 - Permet de connaître la nomenclature **indépendamment des OF**
 - Essentiel pour la vérification récursive des composants FABRIQUÉS
+- Remplace l'ancien fichier `of_composants.csv` (supprimé)
 
-### gammes.csv - Gammes de production
+### statique/gammes.csv - Gammes de production
 ```
 ARTICLE         → Code article (FK → articles)
 POSTE_CHARGE    → Poste de travail (PP_XXX)
@@ -92,23 +144,7 @@ LIBELLE_POSTE   → Description du poste
 CADENCE         → Cadence (unités/heure)
 ```
 
-### commandes_clients.csv - Commandes clients
-```
-NUM_COMMANDE                → Numéro de commande
-LIGNE_COMMANDE              → Ligne de commande
-CODE_CLIENT                 → Code client
-NOM_CLIENT                  → Nom client
-ARTICLE                     → Code article (FK → articles)
-DESCRIPTION                 → Description
-QTE_COMMANDEE               → Quantité commandée
-QTE_ALLOUEE                 → Quantité allouée
-QTE_RESTANTE                → Quantité restante à servir
-DATE_EXPEDITION_DEMANDEE    → Date d'expédition demandée
-FLAG_CONTREMARQUE           → Type (5 = MTS, 1 = NOR/MTO)
-OF_CONTREMARQUE             → OF lié (MTS uniquement)
-```
-
-### stock.csv - État des stocks
+### dynamique/stock.csv - État des stocks
 ```
 ARTICLE         → Code article (FK → articles)
 STOCK_PHYSIQUE  → Stock physique disponible
@@ -116,7 +152,7 @@ STOCK_ALLOUE    → Stock alloué
 STOCK_BLOQUE    → Stock bloqué
 ```
 
-### receptions_oa.csv - Réceptions fournisseurs
+### dynamique/receptions_oa.csv - Réceptions fournisseurs
 ```
 NUM_COMMANDE            → Numéro de commande fournisseur
 ARTICLE                 → Code article (FK → articles)
@@ -138,35 +174,34 @@ DATE_RECEPTION_PREVUE   → Date de réception prévue
          │                  │                  │                  │               │
          ▼                  ▼                  ▼                  ▼               ▼
 ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
-│ of_entetes      │ │ gammes          │ │ commandes_      │ │ stock           │ │ receptions_oa   │
+│ of_entetes      │ │ gammes          │ │ besoins_        │ │ stock           │ │ receptions_oa   │
 │ (WOP/WOS)       │ │                 │ │ clients         │ │                 │ │                 │
-└────────┬────────┘ └─────────────────┘ └────────┬────────┘ └─────────────────┘ └─────────────────┘
-         │                                      │
-         │                                      │ OF_CONTREMARQUE
-         │                                      │ (MTS uniquement)
-         │                                      └─────→ of_entetes.NUM_OF
-         │
-         ▼
+└─────────────────┘ └─────────────────┘ └────────┬────────┘ └─────────────────┘ └─────────────────┘
+                                               │
+                                               │ OF_CONTREMARQUE
+                                               │ (MTS uniquement)
+                                               └─────→ of_entetes.NUM_OF
+
 ┌─────────────────┐
-│ of_composants   │
-│ (Nomenclatures) │
+│ allocations     │ ← NOUVEAU : Traçabilité
+│                 │
 └─────────────────┘
 ```
 
 ## 🏷️ Types de commandes
 
-### MTS (FLAG_CONTREMARQUE = 5) - Make To Stock avec contre-marque
+### MTS (TYPE_COMMANDE = "MTS") - Make To Stock avec contre-marque
 
 **Caractéristiques :**
 - ✅ Contre-marque OBLIGATOIRE
 - ✅ Lien direct commande → OF via `OF_CONTREMARQUE`
 - ✅ Génère un WOP (Work Order Planned)
 - ✅ Allocation AUTOMATIQUE du stock à la commande
-- ✅ Principalement client ALDES (335/332 commandes)
+- ✅ Peut être COMMANDE ou PREVISION
 
 **Flux :**
 ```
-Commande MTS
+Besoin MTS (COMMANDE ou PREVISION)
     ↓
 Création WOP (lien obligatoire)
     ↓
@@ -181,25 +216,21 @@ Allocation AUTOMATIQUE à la commande
 Expédition
 ```
 
-**Exemples d'articles MTS :**
-- ESHKIT CPT HYGMW- BDH (448 unités)
-- BDH1050 -75 R03PNE -30 N 125AL (384 unités)
-- KIT OPT BDH BAIN CELLIER D80 (48 unités)
-
-### NOR/MTO (FLAG_CONTREMARQUE = 1) - Normal / Make To Order
+### NOR/MTO (TYPE_COMMANDE = "NOR" ou "MTO") - Normal / Make To Order
 
 **Caractéristiques :**
 - ✅ Pas de contre-marque
-- ✅ PAS de lien direct commande → OF
+- ✅ PAS de lien direct besoin → OF
 - ✅ Traité par le moteur CBN/MRP
 - ✅ Génère des WOS (Work Order Suggested)
 - ✅ Regroupement hebdomadaire des besoins
 - ✅ Allocation MANUELLE du stock aux commandes
-- ✅ 14 clients différents (NOR = tous sauf ALDES, MTO = ALDES)
+- ✅ **NOR** = Tous clients sauf ALDES
+- ✅ **MTO** = ALDES (Make To Order)
 
 **Flux :**
 ```
-Commande NOR/MTO
+Besoin NOR/MTO (COMMANDE ou PREVISION)
     ↓
 Moteur CBN/MRP (calcul des besoins nets)
     ↓
@@ -216,22 +247,16 @@ Allocation MANUELLE aux commandes
 Expédition
 ```
 
-**Exemples d'articles NOR/MTO :**
-- EAR 0*35 L-- SP -- BLC AE
-- BXCC1245---- R0 --- - -- 100AE
-- MR MONO D160 170M3/100CFM
-
 ## 📊 Différences clés MTS vs NOR/MTO
 
-| Aspect | MTS (FLAG 5) | NOR/MTO (FLAG 1) |
-|--------|--------------|------------------|
+| Aspect | MTS | NOR/MTO |
+|--------|-----|---------|
 | **Contre-marque** | OBLIGATOIRE | Aucune |
-| **Lien OF → commande** | OUI (obligatoire) | NON |
+| **Lien OF → besoin** | OUI (obligatoire) | NON |
 | **Type OF** | WOP (Planifié) | WOS (Suggéré) |
-| **Génération OF** | 1 commande = 1 WOP | Regroupement hebdo = 1 WOS |
+| **Génération OF** | 1 besoin = 1 WOP | Regroupement hebdo = 1 WOS |
 | **Allocation stock** | **AUTOMATIQUE** | **MANUELLE** |
-| **Clients** | Surtout ALDES | Tous clients (14) |
-| **Articles** | Spécifiques/kits | Standards |
+| **Nature des besoins** | Peut être COMMANDE ou PRÉVISION | Peut être COMMANDE ou PRÉVISION |
 | **Traitement** | Manuel (1 par 1) | Automatisé (CBN/MRP) |
 | **Entrée stock** | Oui | Oui |
 
@@ -239,34 +264,44 @@ Expédition
 
 ### WOP - Work Order Planned
 - Ordre de fabrication planifié
-- Lien obligatoire avec une commande MTS
-- Quantité = quantité de la commande
+- Lien obligatoire avec un besoin MTS
+- Quantité = quantité du besoin
 - Allocation automatique grâce au lien OF_CONTREMARQUE
 
 ### WOS - Work Order Suggested
 - Ordre de fabrication suggéré
-- PAS de lien avec les commandes
+- PAS de lien avec les besoins
 - Généré par le moteur CBN/MRP
 - Regroupe les besoins par article et par semaine
-- Allocation manuelle aux commandes
+- Allocation manuelle aux besoins
+
+### NATURE_BESOIN - NOUVEAU
+- **COMMANDE** : Commande ferme client (à servir)
+- **PREVISION** : Prévision de consommation (consommée par les commandes)
+
+**Exemple de consommation :**
+- Prévision : 720 unités
+- Commandes : 1200 unités
+- **Prévision nette = max(0, 720 - 1200) = 0** → La prévision est complètement consommée
 
 ### Contre-marque
-- Marquage qui lie une commande client à un OF spécifique
-- Présent uniquement pour MTS (FLAG 5)
-- Stock lié automatiquement à la commande
-- Champ `OF_CONTREMARQUE` dans commandes_clients
+- Marquage qui lie un besoin client à un OF spécifique
+- Présent uniquement pour MTS
+- Stock lié automatiquement au besoin
+- Champ `OF_CONTREMARQUE` dans besoins_clients
 
 ### CBN/MRP
 - Calcul des Besoins Nets / Material Requirements Planning
 - Moteur de calcul pour NOR/MTO
 - Regroupe les besoins hebdomadaires
 - Génère des WOS suggérés
+- Consomme les prévisions avec les commandes fermes
 
 ## 🔄 Exemples concrets
 
 ### MTS - Lien obligatoire + Allocation automatique
 ```
-Commande: AR2600881 | ALDES | ESHKIT CPT HYGMW- BDH | 448 unités | FLAG 5 | OF="F426-07941"
+Besoin: AR2600881 | ALDES | ESHKIT CPT HYGMW- BDH | 448 unités | MTS | OF="F426-07941"
     ↓
 Génère: WOP F426-07941 pour 448 unités
     ↓
@@ -275,31 +310,27 @@ Fabriqué → Entrée en stock
 Allocation AUTOMATIQUE : Les 448 unités réservées pour AR2600881
 ```
 
-### NOR/MTO - Regroupement CBN + Allocation manuelle
+### NOR/MTO - Regroupement CBN + Consommation des prévisions
 ```
-Commande 1: AR2600410 | AERECO | EAR2019GM | 360 unités | FLAG 1 | semaine 12
-Commande 2: AR2600411 | AERECO | EAR2019GM | 360 unités | FLAG 1 | semaine 12
-    ↓
-Moteur CBN/MRP regroupe
-    ↓
-Génère: 1 WOS pour 720 unités (semaine 12)
-    ↓
-Fabriqué → Entrée en stock (720 disponibles)
-    ↓
-Allocation MANUELLE : 360 à AR2600410 + 360 à AR2600411
+Prévision 1: ACTHYS SAS | G2H1942AE | 30 unités | MTO | PREVISION | semaine 8
+Prévision 2: ACTHYS SAS | G2H1942AE | 64 unités | MTO | PREVISION | semaine 10
+Commande:  ACTHYS SAS | G2H1942AE | 100 unités | MTO | COMMANDE | semaine 10
+
+Le moteur CBN:
+- Consomme les prévisions de la semaine 10 (64)
+- Reste 36 unités à couvrir par OF
+- Génère WOS pour 36 unités
 ```
 
 ## 🎯 Points clés pour le développement
 
-1. **Lien MTS** : `commandes_clients.OF_CONTREMARQUE` → `of_entetes.NUM_OF`
-2. **Pas de lien NOR/MTO** : Les WOS ne sont pas liés aux commandes dans la base
-3. **Allocation** : MTS = auto, NOR/MTO = manuel (champ QTE_ALLOUEE)
-4. **Regroupement** : Le CBN regroupe par article et semaine pour NOR/MTO
-5. **Clients** :
-   - MTS : Principalement ALDES (80001)
-   - NOR : Autres clients (AERECO, PARTN-AIR, KROBATH, etc.)
-   - MTO : ALDES avec FLAG 1
-6. **Types d'approvisionnement** :
+1. **Lien MTS** : `besoins_clients.OF_CONTREMARQUE` → `of_entetes.NUM_OF`
+2. **Pas de lien NOR/MTO** : Les WOS ne sont pas liés aux besoins dans la base
+3. **Allocation** : MTS = auto, NOR/MTO = manuel (champ QTE_ALLOUEA)
+4. **Consommation des prévisions** : Les commandes consomment les prévisions avant calcul de charge
+5. **Regroupement** : Le CBN regroupe par article et semaine pour NOR/MTO
+6. **Traçabilité** : Le fichier `allocations.csv` permet de retracer tous les mouvements
+7. **Types d'approvisionnement** :
    - ACHAT : Réceptions fournisseurs
    - FABRICATION : OF (WOP ou WOS)
 
@@ -307,38 +338,57 @@ Allocation MANUELLE : 360 à AR2600410 + 360 à AR2600411
 
 | Type | Nombre | % du total |
 |------|--------|------------|
-| MTS (FLAG 5) | 332 | 41% |
-| NOR/MTO (FLAG 1) | 483 | 59% |
+| **MTS** | 3 893 | 34% |
+| **NOR** | 4 892 | 45% |
+| **MTO** | 2 393 | 21% |
+
+| Nature | Nombre | % du total |
+|--------|--------|------------|
+| **COMMANDE** (fermes) | 735 | 7% |
+| **PREVISION** | 10 307 | 93% |
 
 ## 🔍 Requêtes utiles
 
 ### Articles MTS
 ```sql
-SELECT DISTINCT cc.ARTICLE, a.DESCRIPTION, COUNT(*) as nb_commandes
-FROM commandes_clients cc
-JOIN articles a ON cc.ARTICLE = a.ARTICLE
-WHERE cc.FLAG_CONTREMARQUE = 5
-GROUP BY cc.ARTICLE, a.DESCRIPTION
-ORDER BY nb_commandes DESC
+SELECT DISTINCT bc.ARTICLE, a.DESCRIPTION, COUNT(*) as nb_besoins
+FROM besoins_clients bc
+JOIN articles a ON bc.ARTICLE = a.ARTICLE
+WHERE bc.TYPE_COMMANDE = 'MTS'
+GROUP BY bc.ARTICLE, a.DESCRIPTION
+ORDER BY nb_besoins DESC
 ```
 
-### Commandes NOR/MTO par client
+### Besoins NOR/MTO par client
 ```sql
-SELECT CODE_CLIENT, NOM_CLIENT, COUNT(*) as nb_commandes
-FROM commandes_clients
-WHERE FLAG_CONTREMARQUE = 1
-GROUP BY CODE_CLIENT, NOM_CLIENT
-ORDER BY nb_commandes DESC
+SELECT NOM_CLIENT, TYPE_COMMANDE, COUNT(*) as nb_besoins
+FROM besoins_clients
+WHERE TYPE_COMMANDE IN ('NOR', 'MTO')
+GROUP BY NOM_CLIENT, TYPE_COMMANDE
+ORDER BY nb_besoins DESC
 ```
 
 ### WOS regroupement hebdo
 ```sql
 SELECT ARTICLE, WEEK(DATE_EXPEDITION_DEMANDEE, 1) as semaine,
        SUM(QTE_RESTANTE) as total_besoin
-FROM commandes_clients
-WHERE FLAG_CONTREMARQUE = 1 AND QTE_RESTANTE > 0
+FROM besoins_clients
+WHERE TYPE_COMMANDE IN ('NOR', 'MTO') AND QTE_RESTANTE > 0
 GROUP BY ARTICLE, semaine
 ORDER BY ARTICLE, semaine
+```
+
+### Consommation des prévisions
+```sql
+SELECT ARTICLE,
+       SUM(CASE WHEN NATURE_BESOIN = 'PREVISION' THEN QTE_RESTANTE ELSE 0 END) as prevision,
+       SUM(CASE WHEN NATURE_BESOIN = 'COMMANDE' THEN QTE_RESTANTE ELSE 0 END) as commande,
+       SUM(QTE_RESTANTE) as total
+FROM besoins_clients
+WHERE QTE_RESTANTE > 0
+GROUP BY ARTICLE
+HAVING prevision > 0 AND commande > 0
+ORDER BY ARTICLE
 ```
 
 ---
@@ -352,6 +402,7 @@ ORDER BY ARTICLE, semaine
 - **Objectif** : Décider l'organisation des ateliers (2×8, 3×8, etc.)
 - **Horizon** : S+1 à S+3 (semaine(s) suivante(s))
 - **Base** : Charge de production calculée sur les cadences (`gammes.csv`)
+  - **IMPORTANT** : Les prévisions sont consommées par les commandes fermes avant le calcul
 - **Question clé** : "Quelle organisation pour répondre aux besoins de S+1/S+2/S+3 ?"
 
 #### 2. Affermissement et lancement (Courant de semaine)
@@ -400,7 +451,7 @@ Lors de la réunion de charge, on décide d'une organisation (ex: 2×8) pour S+1
 
 ### Règle de nomenclature
 - **1 article fabriqué = 1 nomenclature** (standard)
-- **Nomenclatures disponibles dans `nomenclatures.csv`**
+- **Nomenclatures disponibles dans `statique/nomenclatures.csv`**
 - **Couverture : 84%** des articles FABRICATION (2 501 / 2 964)
 - Pour les 16% restants → Alerte "Nomenclature non disponible"
 
@@ -475,22 +526,6 @@ Avec règle 2:
   OF A (13/03) attend → (sera rejoué quand du stock arrive)
 ```
 
-**Autre exemple :**
-```
-Stock : 50 unités
-
-OF A : Date 10/03, Besoin 40 → ✅ Faisable
-OF B : Date 12/03, Besoin 20 → ✅ Faisable
-OF C : Date 14/03, Besoin 30 → Pas faisable
-
-Ordre:
-1. OF A (10/03) + faisable → Alloue 40 → Reste 10
-2. OF B (12/03) + pas faisable (besoin 20, reste 10) → Passe
-3. OF C (14/03) + pas faisable → Attend
-
-Résultat : OF A validé, OF B rejeté (ou différé), OF C rejeté
-```
-
 **Principe** : Maximiser le nombre d'OF complètement faisables plutôt que respecter strictement l'ordre chronologique.
 
 ---
@@ -514,12 +549,13 @@ Résultat : OF A validé, OF B rejeté (ou différé), OF C rejeté
 
 | Donnée | Fichier | Couverture | Utilité |
 |--------|---------|------------|---------|
-| **Nomenclatures** | `nomenclatures.csv` | 84% (2 501/2 964) | ⭐ Vérification récursive |
-| **OF à vérifier** | `of_entetes.csv` | 15 285 OF | Identification des besoins |
-| **Type approvisionnement** | `articles.csv` | 100% | Distinction ACHAT/FABRIQUÉ |
-| **Stock disponible** | `stock.csv` | 99% (6 833/6 910) | Vérification immédiate |
-| **Réceptions fournisseurs** | `receptions_oa.csv` | 520 articles | Vérification projetée |
-| **Gammes de production** | `gammes.csv` | - | Non utilisé pour faisabilité composants |
+| **Nomenclatures** | `statique/nomenclatures.csv` | 84% (2 501/2 964) | ⭐ Vérification récursive |
+| **OF à vérifier** | `dynamique/of_entetes.csv` | 15 044 OF | Identification des besoins |
+| **Type approvisionnement** | `statique/articles.csv` | 100% | Distinction ACHAT/FABRIQUÉ |
+| **Stock disponible** | `dynamique/stock.csv` | 99% (6 830/6 910) | Vérification immédiate |
+| **Réceptions fournisseurs** | `dynamique/receptions_oa.csv` | 520 articles | Vérification projetée |
+| **Gammes de production** | `statique/gammes.csv` | - | Non utilisé pour faisabilité composants |
+| **Traçabilité** | `dynamique/allocations.csv` | - | Suivi des allocations |
 
 ### Points forts
 
@@ -536,6 +572,9 @@ Résultat : OF A validé, OF B rejeté (ou différé), OF C rejeté
 - Dates de réception prévues disponibles
 - Permettent la vérification "projetée"
 
+✅ **Traçabilité complète**
+- Fichier `allocations.csv` pour retracer tous les mouvements
+
 ### Limitations
 
 ⚠️ **16% d'articles FABRICATION sans nomenclature**
@@ -549,15 +588,16 @@ Résultat : OF A validé, OF B rejeté (ou différé), OF C rejeté
 - ✅ Algorithme récursif fonctionnel
 - ✅ Gestion de la concurrence possible
 - ✅ 2 niveaux de vérification (immédiate/projetée)
+- ✅ Traçabilité complète des allocations
 - ⚠️ 16% de cas limites gérés par alertes
 
 ---
 
-## 🎯 Algorithme de Matching Commande→OF
+## 🎯 Algorithme de Matching Besoin→OF
 
 ### Logique de matching pour NOR/MTO
 
-**Pour les commandes NOR/MTO (FLAG = 1) :**
+**Pour les besoins NOR/MTO (TYPE_COMMANDE = "NOR" ou "MTO") :**
 
 1. **Vérifier le stock disponible**
    - Allouer le stock disponible pour l'article
@@ -574,7 +614,7 @@ Résultat : OF A validé, OF B rejeté (ou différé), OF C rejeté
    - **Critères de tri** : Type d'OF → Date de besoin → Quantité disponible
 
 4. **Partage d'OF**
-   - Plusieurs commandes peuvent partager un OF si capacité suffisante
+   - Plusieurs besoins peuvent partager un OF si capacité suffisante
    - Suivi de consommation via `OFConso`
 
 ### Priorité de sélection des OF
@@ -588,32 +628,11 @@ Ordre de priorité :
 
 **Clé de tri** : `(priorite, ecart_days, -qte_restante)`
 
-### Résultats obtenus
-
-**Taux de service NOR/MTO (S+1) :**
-- Avant : 89.1% (115/129)
-- Après : 99.2% (128/129)
-- Gain : +13 commandes servies
-
-**Répartition NOR/MTO :**
-- 76.7% servies par stock complet
-- 12.4% servies par OF affermi
-- 10.1% servies par OF suggéré
-- 0.8% articles ACHAT (besoin approvisionnement)
-- 0.0% articles FABRICATION sans OF
-
-### Exemple de fonctionnement
-
-**Cas AR2600929 :**
-- Commande : Article EMM716HU, 2160 unités pour le 25/03/2026
-- OF disponible : F126-44769 (affermi, 2160 unités, 24/03/2026)
-- Résultat : OF affermi utilisé (prioritaire sur les suggérés)
-
 ---
 
 ## 📊 Implémentations réalisées
 
-### Matching commande→OF avec partage d'OF
+### Matching besoin→OF avec partage d'OF
 
 **Fichier** : `src/algorithms/matching.py`
 
@@ -621,13 +640,13 @@ Ordre de priorité :
 1. Allocation de stock avant recherche d'OF (utilise QTE_RESTANTE)
 2. Distinction ACHAT vs FABRICATION
 3. Priorité OF affermi > OF suggéré
-4. Partage d'OF entre plusieurs commandes (via OFConso)
+4. Partage d'OF entre plusieurs besoins (via OFConso)
 5. Gestion de la consommation des OF
 
 **Classes clés :**
 - `OFConso` : Suivi de la consommation d'un OF
 - `StockAllocation` : Résultat de l'allocation de stock
-- `MatchingResult` : Résultat du matching commande→OF
+- `MatchingResult` : Résultat du matching besoin→OF
 
 ### Vérification de faisabilité des OF
 
@@ -639,21 +658,35 @@ Ordre de priorité :
 3. Vérification récursive des nomenclatures jusqu'aux composants ACHAT
 4. Gestion de la concurrence composants entre OF
 
+### Heatmap de charge avec consommation des prévisions
+
+**Fonctionnalité** : `calculate_weekly_charge_heatmap()`
+
+**Principe** :
+- Les commandes fermes consomment les prévisions correspondantes
+- Formule : `Prévision nette = max(0, Prévisions - Commandes)`
+- Réduit significativement la surévaluation de la charge
+
 ---
 
 ## 🔧 Commandes utiles
 
+### Heatmap complète
+```bash
+python -m src.main --charge-heatmap --num-weeks 4
+```
+
 ### Lancer le mode S+1
 ```bash
-python -m src.main --data-dir data --s1 --horizon 7
+python -m src.main --s1 --horizon 7
 ```
 
 ### Lancer avec un OF spécifique
 ```bash
-python -m src.main --data-dir data --of F426-08419
+python -m src.main --of F426-08419
 ```
 
 ### Lancer en mode détaillé
 ```bash
-python -m src.main --data-dir data --detailed
+python -m src.main --detailed
 ```
