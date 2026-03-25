@@ -38,6 +38,11 @@ Thumbs.db
 
 # Project specific
 .claude/
+.omc/
+
+# Generated reports & artifacts
+reports/
+data/decisions_history.json
 
 # Git worktrees
 .worktrees/
