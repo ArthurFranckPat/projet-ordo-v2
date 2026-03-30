@@ -40,7 +40,7 @@ Thumbs.db
 .omc/
 
 # Generated reports & artifacts
-reports/
+/reports/
 data/decisions_history.json
 
 # Git worktrees

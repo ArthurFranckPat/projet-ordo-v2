@@ -1,13 +1,19 @@
 """Fonction main_s1 pour le mode S+1."""
 
 from datetime import date
+import os
 from typing import Dict
 
 from rich.console import Console
 
 from .checkers import ProjectedChecker, RecursiveChecker
 from .algorithms import CommandeOFMatcher
-from .reports import format_rapport_s1
+from .reports import (
+    build_action_report,
+    format_rapport_s1,
+    render_action_report_console,
+    write_action_report_markdown,
+)
 from .agents import AgentEngine, AgentContext
 
 
@@ -86,7 +92,6 @@ def main_s1(args, loader, include_previsions=False):
         llm_model = getattr(args, 'llm_model', 'mistral-large-latest')
 
         if use_llm:
-            import os
             api_key = os.environ.get("MISTRAL_API_KEY")
             if not api_key:
                 console.print("[bold red]Erreur: MISTRAL_API_KEY non défini. Mode LLM désactivé.[/bold red]")
@@ -168,7 +173,22 @@ def main_s1(args, loader, include_previsions=False):
         console.print(f"✅ {faisables}/{len(ofs_a_verifier)} OF faisables")
         console.print()
 
-        # 5. Évaluation post-allocation pour les OF non faisables
+        # 5. Rapport d'actions appro S+1
+        action_report = build_action_report(
+            loader,
+            resultats_matching,
+            resultats_faisabilite,
+            reference_date=date_ref,
+        )
+        if action_report.component_lines:
+            render_action_report_console(action_report)
+            output_dir = "reports/actions"
+            output_path = os.path.join(output_dir, "s1_action_report.md")
+            write_action_report_markdown(action_report, output_path)
+            console.print(f"[green]✅ Rapport d'actions appro généré : {output_path}[/green]")
+            console.print()
+
+        # 6. Évaluation post-allocation pour les OF non faisables
         console.print(f"[bold cyan]🧠 Évaluation décisionnelle post-allocation...[/bold cyan]")
         non_faisable_ofs = [of for of in ofs_a_verifier if not resultats_faisabilite[of.num_of].feasible]
 
@@ -203,16 +223,15 @@ def main_s1(args, loader, include_previsions=False):
             console.print(f"✅ {len(decisions_post)} décisions post-allocation")
             console.print()
 
-        # 6. Restaurer les quantités originales
+        # 7. Restaurer les quantités originales
         for of_num, original_qty in of_original_quantities.items():
             of = next((o for o in ofs_a_verifier if o.num_of == of_num), None)
             if of:
                 of.qte_restante = original_qty
 
-        # 7. Générer les rapports de décisions
+        # 8. Générer les rapports de décisions
         try:
             from src.agents.reports import DecisionReporter
-            import os
             from dataclasses import dataclass
 
             @dataclass
@@ -249,7 +268,7 @@ def main_s1(args, loader, include_previsions=False):
         console.print("[yellow]⚠️  Aucun OF à vérifier[/yellow]")
         console.print()
 
-    # 5. Planification de charge (si --schedule activé)
+    # 9. Planification de charge (si --schedule activé)
     if getattr(args, 'schedule', False) and ofs_a_verifier:
         console.print("[bold cyan]📅 Planification de charge...[/bold cyan]")
         ofs_faisables_s1 = [of for of in ofs_a_verifier if resultats_faisabilite[of.num_of].feasible]
