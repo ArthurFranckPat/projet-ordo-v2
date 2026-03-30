@@ -81,6 +81,7 @@ ARTICLE             → Code article à fabriquer (FK → articles)
 DESCRIPTION         → Description
 STATUT_NUM_OF       → Status (1 = Ferme/Affermi, 3 = Suggéré)
 STATUT_TEXTE_OF     → Status texte ("Ferme", "Suggéré")
+DATE_DEBUT          → Date de début prévue (jalonnement CBN)
 DATE_FIN            → Date de fin prévue
 QTE_A_FABRIQUER     → Quantité à fabriquer
 QTE_FABRIQUEE       → Quantité fabriquée

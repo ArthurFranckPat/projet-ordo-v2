@@ -1,8 +1,9 @@
 """Modèle OF (Ordre de Fabrication)."""
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from enum import Enum
+from typing import Optional
 
 
 class StatutOF(Enum):
@@ -31,6 +32,8 @@ class OF:
         Statut en texte ("Ferme", "Suggéré", etc.)
     date_fin : date
         Date de fin prévue
+    date_debut : Optional[date]
+        Date de début prévue si disponible dans l'export ERP
     qte_a_fabriquer : int
         Quantité à fabriquer
     qte_fabriquee : int
@@ -48,6 +51,7 @@ class OF:
     qte_a_fabriquer: int
     qte_fabriquee: int
     qte_restante: int
+    date_debut: Optional[date] = None
 
     def is_ferme(self) -> bool:
         """Vérifie si l'OF est ferme (WOP)."""
@@ -71,21 +75,23 @@ class OF:
         OF
             Instance d'OF créée à partir de la ligne CSV
         """
-        from datetime import datetime
+        def _parse_date(value, default: Optional[date] = None) -> Optional[date]:
+            """Convertit une valeur CSV en date, sinon retourne `default`."""
+            if isinstance(value, date):
+                return value
+            if not value:
+                return default
 
-        date_str = row.get("DATE_FIN", "")
-        if date_str:
-            # Essayer le format français (DD/MM/YYYY) d'abord
-            try:
-                date_fin = datetime.strptime(date_str, "%d/%m/%Y").date()
-            except ValueError:
-                # Essayer le format ISO (YYYY-MM-DD)
+            for fmt in ("%d/%m/%Y", "%Y-%m-%d"):
                 try:
-                    date_fin = datetime.strptime(date_str, "%Y-%m-%d").date()
+                    return datetime.strptime(str(value).strip(), fmt).date()
                 except ValueError:
-                    date_fin = date.today()
-        else:
-            date_fin = date.today()
+                    continue
+
+            return default
+
+        date_fin = _parse_date(row.get("DATE_FIN", ""), default=date.today())
+        date_debut = _parse_date(row.get("DATE_DEBUT", ""))
 
         def _parse_int(value) -> int:
             """Convertit une valeur en int, en gérant les virgules de milliers."""
@@ -108,6 +114,7 @@ class OF:
             qte_a_fabriquer=_parse_int(row.get("QTE_A_FABRIQUER", 0)),
             qte_fabriquee=_parse_int(row.get("QTE_FABRIQUEE", 0)),
             qte_restante=_parse_int(row.get("QTE_RESTANTE", 0)),
+            date_debut=date_debut,
         )
 
     def __repr__(self) -> str:

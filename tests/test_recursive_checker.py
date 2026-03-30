@@ -2,6 +2,7 @@
 
 import pytest
 from datetime import date
+from types import SimpleNamespace
 
 from src.loaders import DataLoader
 from src.checkers.recursive import RecursiveChecker
@@ -156,3 +157,59 @@ class TestRecursiveChecker:
         # StockState.get_available() retourne 0 si article absent
         assert result.feasible is False
         assert article in result.missing_components
+
+    def test_get_date_besoin_uses_date_debut_in_priority(self):
+        """DATE_DEBUT passe avant toute autre source de date."""
+        checker = RecursiveChecker(SimpleNamespace(commandes_clients=[]))
+        of = OF(
+            num_of="F426-10001",
+            article="ART001",
+            description="OF test",
+            statut_num=3,
+            statut_texte="Suggéré",
+            date_fin=date(2026, 4, 18),
+            qte_a_fabriquer=10,
+            qte_fabriquee=0,
+            qte_restante=10,
+            date_debut=date(2026, 4, 15),
+        )
+
+        assert checker._get_date_besoin_commande(of) == date(2026, 4, 15)
+
+    def test_get_date_besoin_falls_back_to_linked_commande_minus_two_days(self):
+        """Sans DATE_DEBUT, la date de commande liée est utilisée avec le décalage J-2."""
+        commande = SimpleNamespace(
+            of_contremarque="F426-10002",
+            date_expedition_demandee=date(2026, 4, 20),
+        )
+        checker = RecursiveChecker(SimpleNamespace(commandes_clients=[commande]))
+        of = OF(
+            num_of="F426-10002",
+            article="ART002",
+            description="OF test",
+            statut_num=3,
+            statut_texte="Suggéré",
+            date_fin=date(2026, 4, 18),
+            qte_a_fabriquer=10,
+            qte_fabriquee=0,
+            qte_restante=10,
+        )
+
+        assert checker._get_date_besoin_commande(of) == date(2026, 4, 18)
+
+    def test_get_date_besoin_falls_back_to_date_fin_minus_two_days(self):
+        """Sans DATE_DEBUT ni commande liée, on replie sur DATE_FIN - 2 jours."""
+        checker = RecursiveChecker(SimpleNamespace(commandes_clients=[]))
+        of = OF(
+            num_of="F426-10003",
+            article="ART003",
+            description="OF test",
+            statut_num=3,
+            statut_texte="Suggéré",
+            date_fin=date(2026, 4, 18),
+            qte_a_fabriquer=10,
+            qte_fabriquee=0,
+            qte_restante=10,
+        )
+
+        assert checker._get_date_besoin_commande(of) == date(2026, 4, 16)

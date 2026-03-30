@@ -1,5 +1,6 @@
 """Recursive Checker - Algorithme de vérification récursive des nomenclatures."""
 
+from datetime import timedelta
 from typing import Optional
 
 from .base import BaseChecker, FeasibilityResult
@@ -62,11 +63,9 @@ class RecursiveChecker(BaseChecker):
         # L'OF parent est FERME si statut = 1
         of_est_ferme = (of.statut_num == 1)
 
-        # Pour les réceptions, la date de référence est la date d'expédition
-        # de la commande liée (MTS via OF_CONTREMARQUE), qui est antérieure
-        # à date_fin et représente le vrai besoin client.
-        # Fallback sur of.date_fin si aucune commande liée.
-        date_besoin = self._get_date_besoin_commande(of) or of.date_fin
+        # Pour les réceptions, la date de besoin suit la priorité métier:
+        # DATE_DEBUT si disponible, sinon commande liée - 2j, sinon DATE_FIN - 2j.
+        date_besoin = self._get_date_besoin_commande(of)
 
         return self._check_article_recursive(
             article=of.article,
@@ -78,7 +77,7 @@ class RecursiveChecker(BaseChecker):
         )
 
     def _get_date_besoin_commande(self, of: OF):
-        """Retourne la date d'expédition de la commande liée à un OF (MTS).
+        """Retourne la date de besoin composants d'un OF.
 
         Parameters
         ----------
@@ -87,16 +86,20 @@ class RecursiveChecker(BaseChecker):
 
         Returns
         -------
-        date | None
-            Date d'expédition de la commande liée, ou None si introuvable
+        date
+            Date de besoin des composants selon la priorité métier
         """
+        if of.date_debut is not None:
+            return of.date_debut
+
         commandes = [
             c for c in self.data_loader.commandes_clients
             if c.of_contremarque == of.num_of
         ]
         if commandes:
-            return min(c.date_expedition_demandee for c in commandes)
-        return None
+            return min(c.date_expedition_demandee for c in commandes) - timedelta(days=2)
+
+        return of.date_fin - timedelta(days=2)
 
     def check_commande(self, commande: BesoinClient) -> FeasibilityResult:
         """Vérifie la faisabilité d'une commande client avec récursion.
