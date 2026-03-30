@@ -16,40 +16,157 @@ from ..models.stock import Stock
 from collections import defaultdict
 
 
+def resolve_downloads_files(downloads_dir: str | Path = None) -> tuple[dict[str, Path], list[str]]:
+    """Trouve les fichiers les plus récents dans le dossier Téléchargements.
+
+    Pour chaque code connu (ex: ORDART), cherche les fichiers de la forme
+    ``*_ORDART.csv`` et retient celui dont le nom est le plus grand
+    (timestamp le plus élevé = le plus récent).
+
+    Parameters
+    ----------
+    downloads_dir : str | Path, optional
+        Dossier à scanner. Si None, utilise ``~/Downloads`` (ou ``~/Téléchargements``
+        sur Windows FR).
+
+    Returns
+    -------
+    tuple[dict[str, Path], list[str]]
+        - resolved : ``{nom_interne: chemin}`` ex: ``{"articles.csv": Path(...)}``
+        - missing  : liste des noms internes non trouvés
+    """
+    if downloads_dir is None:
+        # Chercher ~/Downloads puis ~/Téléchargements (Windows FR)
+        home = Path.home()
+        for candidate in ("Downloads", "Téléchargements"):
+            if (home / candidate).exists():
+                downloads_dir = home / candidate
+                break
+        else:
+            downloads_dir = home / "Downloads"
+
+    downloads_dir = Path(downloads_dir)
+
+    resolved: dict[str, Path] = {}
+    missing: list[str] = []
+
+    for code, internal_name in CSVLoader.FILE_CODE_MAP.items():
+        candidates = sorted(downloads_dir.glob(f"*_{code}.csv"), reverse=True)
+        if candidates:
+            resolved[internal_name] = candidates[0]
+        else:
+            missing.append(internal_name)
+
+    return resolved, missing
+
+
 class CSVLoader:
     """Loader pour les fichiers CSV de données de production.
 
+    Supporte deux modes :
+    - **Classique** : ``data_dir`` avec sous-dossiers ``statique/`` et ``dynamique/``
+    - **Downloads** : fichiers résolus individuellement via ``resolved_files``
+
     Attributes
     ----------
-    data_dir : Path
-        Répertoire racine contenant les sous-dossiers statique/ et dynamique/
-    statique_dir : Path
-        Répertoire des données statiques (articles, gammes, nomenclatures)
-    dynamique_dir : Path
-        Répertoire des données dynamiques (commandes, OF, stock, réceptions)
+    FILE_CODE_MAP : dict[str, str]
+        Mapping code export (ex: ``ORDART``) → nom de fichier interne (ex: ``articles.csv``)
+    data_dir : Path | None
+        Répertoire racine (mode classique uniquement)
+    statique_dir : Path | None
+        Répertoire des données statiques (mode classique uniquement)
+    dynamique_dir : Path | None
+        Répertoire des données dynamiques (mode classique uniquement)
     """
 
-    def __init__(self, data_dir: str | Path):
-        """Initialise le loader avec un répertoire de données.
+    FILE_CODE_MAP: dict[str, str] = {
+        "ORDART":   "articles.csv",
+        "ORDGAMME": "gammes.csv",
+        "ORDNOM":   "nomenclatures.csv",
+        "ORDBESCL": "besoins_clients.csv",
+        "ORDOF":    "of_entetes.csv",
+        "ORDSTK":   "stock.csv",
+        "ORDOA":    "receptions_oa.csv",
+        "ORDALLOC": "allocations.csv",
+    }
+
+    def __init__(self, data_dir: str | Path = None, *, resolved_files: dict[str, Path] = None):
+        """Initialise le loader.
 
         Parameters
         ----------
-        data_dir : str | Path
-            Chemin vers le répertoire racine contenant statique/ et dynamique/
+        data_dir : str | Path, optional
+            Répertoire racine contenant ``statique/`` et ``dynamique/``.
+        resolved_files : dict[str, Path], optional
+            Mapping ``{nom_interne: chemin}`` prêt à l'emploi (mode downloads).
+            Incompatible avec ``data_dir``.
+
+        Raises
+        ------
+        ValueError
+            Si ni ``data_dir`` ni ``resolved_files`` n'est fourni.
+        FileNotFoundError
+            Si ``data_dir`` ou ses sous-dossiers sont introuvables (mode classique).
         """
-        self.data_dir = Path(data_dir)
-        if not self.data_dir.exists():
-            raise FileNotFoundError(f"Répertoire de données introuvable: {self.data_dir}")
+        if resolved_files is not None:
+            # Mode downloads : chemins explicites, pas de sous-dossiers
+            self.data_dir = None
+            self.statique_dir = None
+            self.dynamique_dir = None
+            self._resolved_files = resolved_files
+        elif data_dir is not None:
+            # Mode classique
+            self.data_dir = Path(data_dir)
+            if not self.data_dir.exists():
+                raise FileNotFoundError(f"Répertoire de données introuvable: {self.data_dir}")
+            self.statique_dir = self.data_dir / "statique"
+            self.dynamique_dir = self.data_dir / "dynamique"
+            if not self.statique_dir.exists():
+                raise FileNotFoundError(f"Sous-dossier 'statique' introuvable: {self.statique_dir}")
+            if not self.dynamique_dir.exists():
+                raise FileNotFoundError(f"Sous-dossier 'dynamique' introuvable: {self.dynamique_dir}")
+            self._resolved_files = None
+        else:
+            raise ValueError("data_dir ou resolved_files est requis")
 
-        # Sous-dossiers
-        self.statique_dir = self.data_dir / "statique"
-        self.dynamique_dir = self.data_dir / "dynamique"
+    def get_file_path(self, filename: str) -> Path:
+        """Retourne le chemin vers un fichier (fonctionne dans les deux modes).
 
-        # Vérifier que les sous-dossiers existent
-        if not self.statique_dir.exists():
-            raise FileNotFoundError(f"Sous-dossier 'statique' introuvable: {self.statique_dir}")
-        if not self.dynamique_dir.exists():
-            raise FileNotFoundError(f"Sous-dossier 'dynamique' introuvable: {self.dynamique_dir}")
+        Parameters
+        ----------
+        filename : str
+            Nom interne du fichier (ex: ``"allocations.csv"``).
+
+        Returns
+        -------
+        Path
+            Chemin résolu vers le fichier.
+
+        Raises
+        ------
+        FileNotFoundError
+            Si le fichier est introuvable.
+        """
+        if self._resolved_files is not None:
+            path = self._resolved_files.get(filename)
+            if path is None:
+                raise FileNotFoundError(
+                    f"Fichier '{filename}' non trouvé dans les téléchargements. "
+                    f"Attendu un fichier *_{self._code_for(filename)}.csv"
+                )
+            return path
+        # Mode classique : déterminer le sous-dossier d'après FILE_CODE_MAP
+        subdir = "dynamique" if filename not in ("articles.csv", "gammes.csv", "nomenclatures.csv") else "statique"
+        return self.data_dir / subdir / filename
+
+    def _code_for(self, internal_name: str) -> str:
+        """Retourne le code export associé à un nom de fichier interne."""
+        return self._code_for_static(internal_name)
+
+    @staticmethod
+    def _code_for_static(internal_name: str) -> str:
+        """Version statique de _code_for (utilisable sans instance)."""
+        return next((k for k, v in CSVLoader.FILE_CODE_MAP.items() if v == internal_name), "?")
 
     def _load_csv(self, filename: str, subdir: str = None, sep: str = ";") -> pd.DataFrame:
         """Charge un fichier CSV dans un DataFrame.
@@ -59,7 +176,7 @@ class CSVLoader:
         filename : str
             Nom du fichier CSV
         subdir : str, optional
-            Sous-dossier ("statique" ou "dynamique"). Si None, utilise le répertoire racine.
+            Sous-dossier ("statique" ou "dynamique"). Ignoré en mode downloads.
         sep : str
             Séparateur (défaut: ";" pour les CSV français)
 
@@ -73,15 +190,19 @@ class CSVLoader:
         FileNotFoundError
             Si le fichier n'existe pas
         """
-        # Déterminer le répertoire approprié
-        if subdir:
-            target_dir = self.data_dir / subdir
+        if self._resolved_files is not None:
+            # Mode downloads : ignorer subdir, utiliser le chemin résolu
+            filepath = self._resolved_files.get(filename)
+            if filepath is None:
+                raise FileNotFoundError(
+                    f"Fichier '{filename}' non trouvé dans les téléchargements."
+                )
         else:
-            target_dir = self.data_dir
-
-        filepath = target_dir / filename
-        if not filepath.exists():
-            raise FileNotFoundError(f"Fichier introuvable: {filepath}")
+            # Mode classique
+            target_dir = self.data_dir / subdir if subdir else self.data_dir
+            filepath = target_dir / filename
+            if not filepath.exists():
+                raise FileNotFoundError(f"Fichier introuvable: {filepath}")
 
         # Essayer UTF-8 d'abord, puis latin-1 si ça échoue
         try:

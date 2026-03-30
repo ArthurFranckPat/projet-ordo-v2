@@ -24,7 +24,7 @@ class AgentEngine:
     def __init__(
         self,
         config_path: str = "config/decisions.yaml",
-        persistence_enabled: bool = True,
+        persistence_enabled: bool = False,
         use_llm: bool = False,
         llm_client=None,
         loader: Optional["DataLoader"] = None
@@ -36,7 +36,7 @@ class AgentEngine:
         config_path : str
             Chemin vers le fichier de configuration YAML
         persistence_enabled : bool
-            Active la persistance des décisions en JSON
+            Active la persistance des décisions en JSON (désactivée par défaut)
         use_llm : bool
             Active le mode LLM pour les décisions (défaut: False)
         llm_client : BaseLLMClient, optional

@@ -41,15 +41,22 @@ class DataLoader:
         Allocations par document (OF ou commande), indexé par NUM_DOC
     """
 
-    def __init__(self, data_dir: str):
+    def __init__(self, data_dir: str = None, *, csv_loader: "CSVLoader" = None):
         """Initialise le DataLoader.
 
         Parameters
         ----------
-        data_dir : str
-            Chemin vers le répertoire contenant les fichiers CSV
+        data_dir : str, optional
+            Chemin vers le répertoire contenant les fichiers CSV (mode classique).
+        csv_loader : CSVLoader, optional
+            Loader pré-configuré (utilisé par ``from_downloads``).
         """
-        self.csv_loader = CSVLoader(data_dir)
+        if csv_loader is not None:
+            self.csv_loader = csv_loader
+        elif data_dir is not None:
+            self.csv_loader = CSVLoader(data_dir)
+        else:
+            raise ValueError("data_dir ou csv_loader est requis")
 
         # Cache pour les données chargées
         self._articles: Optional[dict[str, Article]] = None
@@ -66,6 +73,50 @@ class DataLoader:
 
         # Index des OF par numéro
         self._ofs_by_num: Optional[dict[str, OF]] = None
+
+    @classmethod
+    def from_downloads(cls, downloads_dir=None) -> "DataLoader":
+        """Crée un DataLoader en résolvant les fichiers depuis le dossier Téléchargements.
+
+        Pour chaque fichier attendu, cherche le fichier le plus récent au format
+        ``{timestamp}_{CODE}.csv`` dans ``downloads_dir``.
+
+        Parameters
+        ----------
+        downloads_dir : str | Path, optional
+            Dossier à scanner. Si None, utilise ``~/Downloads``
+            (ou ``~/Téléchargements`` sur Windows FR).
+
+        Returns
+        -------
+        DataLoader
+            DataLoader prêt à l'emploi.
+
+        Raises
+        ------
+        FileNotFoundError
+            Si aucun fichier n'est trouvé pour un code donné.
+
+        Examples
+        --------
+        >>> loader = DataLoader.from_downloads()
+        >>> loader = DataLoader.from_downloads("C:/Users/jdupont/Downloads")
+        """
+        from .csv_loader import resolve_downloads_files
+
+        resolved, missing = resolve_downloads_files(downloads_dir)
+
+        if missing:
+            missing_codes = [
+                f"{name} (code: {CSVLoader._code_for_static(name)})"
+                for name in missing
+            ]
+            raise FileNotFoundError(
+                f"Fichiers introuvables dans le dossier Téléchargements :\n"
+                + "\n".join(f"  - {m}" for m in missing_codes)
+            )
+
+        return cls(csv_loader=CSVLoader(resolved_files=resolved))
 
     def load_all(self):
         """Charge tous les fichiers CSV en mémoire."""
@@ -313,21 +364,13 @@ class DataLoader:
         dict[str, list[OFAllocation]]
             Dictionnaire des allocations indexé par NUM_DOC
         """
-        import pandas as pd
         from collections import defaultdict
 
-        filepath = self.csv_loader.dynamique_dir / "allocations.csv"
-
-        if not filepath.exists():
+        try:
+            df = self.csv_loader._load_csv("allocations.csv", subdir="dynamique")
+        except FileNotFoundError:
             return {}
 
-        # Charger le fichier
-        try:
-            df = pd.read_csv(filepath, sep=";", encoding="utf-8")
-        except UnicodeDecodeError:
-            df = pd.read_csv(filepath, sep=";", encoding="latin-1")
-
-        # Grouper par NUM_DOC
         allocations = defaultdict(list)
         for _, row in df.iterrows():
             allocation = OFAllocation.from_csv_row(row.to_dict())

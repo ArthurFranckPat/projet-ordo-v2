@@ -15,8 +15,8 @@ from rich.panel import Panel
 
 from src.algorithms import AllocationManager, calculate_weekly_charge_heatmap
 from src.checkers import ImmediateChecker, ProjectedChecker, RecursiveChecker
-from src.decisions import DecisionEngine
-from src.loaders import DataLoader
+from src.agents import AgentEngine
+from src.loaders import DataLoader, resolve_downloads_files
 from src.main_s1 import main_s1
 from src.utils import format_charge_heatmap, format_charge_summary
 from src.utils import format_detailed_report, format_of_table, format_summary
@@ -25,9 +25,49 @@ console = Console()
 
 
 def load_data(data_dir: str = "data") -> DataLoader:
+    """Charge les données depuis le répertoire classique data/statique + data/dynamique."""
     with console.status("[bold cyan]Chargement des données...[/bold cyan]"):
         loader = DataLoader(data_dir)
         loader.load_all()
+    console.print(
+        f"[green]Données chargées :[/green] "
+        f"{len(loader.articles)} articles, "
+        f"{len(loader.ofs)} OF, "
+        f"{len(loader.commandes_clients)} commandes"
+    )
+    return loader
+
+
+def load_data_from_downloads(downloads_dir: str = None) -> DataLoader:
+    """Charge les données depuis le dossier Téléchargements.
+
+    Cherche pour chaque fichier le plus récent au format ``{timestamp}_{CODE}.csv``.
+    """
+    from src.loaders.csv_loader import CSVLoader
+
+    # Résoudre les fichiers
+    resolved, missing = resolve_downloads_files(downloads_dir)
+
+    if missing:
+        console.print("[yellow]⚠️  Fichiers non trouvés dans Téléchargements :[/yellow]")
+        for name in missing:
+            code = CSVLoader._code_for_static(name)
+            console.print(f"   [red]✗[/red] {name}  [dim](attendu : *_{code}.csv)[/dim]")
+        console.print()
+
+    if not resolved:
+        raise FileNotFoundError("Aucun fichier trouvé dans le dossier Téléchargements.")
+
+    # Afficher les fichiers retenus
+    console.print("[bold cyan]Fichiers sélectionnés :[/bold cyan]")
+    for name, path in sorted(resolved.items()):
+        console.print(f"   [green]✓[/green] {name:30s} ← [dim]{path.name}[/dim]")
+    console.print()
+
+    with console.status("[bold cyan]Chargement des données...[/bold cyan]"):
+        loader = DataLoader.from_downloads(downloads_dir)
+        loader.load_all()
+
     console.print(
         f"[green]Données chargées :[/green] "
         f"{len(loader.articles)} articles, "
@@ -76,11 +116,11 @@ def run_feasibility_all(loader: DataLoader) -> None:
             use_receptions=True,
             check_date=date.today(),
         )
-        decision_engine = DecisionEngine()
+        agent_engine = AgentEngine()
         allocation_manager = AllocationManager(
             data_loader=loader,
             checker=recursive_checker,
-            decision_engine=decision_engine,
+            decision_engine=agent_engine,
         )
         allocation_results = allocation_manager.allocate_stock(ofs)
         alloc_feasible = sum(1 for r in allocation_results.values() if r.status.value == "feasible")
@@ -96,7 +136,7 @@ def run_feasibility_all(loader: DataLoader) -> None:
                 format_detailed_report(of, result)
 
     try:
-        from src.decisions.reports import DecisionReporter
+        from src.agents.reports import DecisionReporter
         reporter = DecisionReporter()
         output_dir = "reports/decisions"
         md_path = os.path.join(output_dir, "decisions_report.md")
@@ -138,9 +178,9 @@ def run_feasibility_of(loader: DataLoader) -> None:
 
     console.print("[bold cyan]📦 Allocation virtuelle...[/bold cyan]")
     recursive_checker = RecursiveChecker(loader, use_receptions=True, check_date=date.today())
-    decision_engine = DecisionEngine()
+    agent_engine = AgentEngine()
     allocation_manager = AllocationManager(
-        data_loader=loader, checker=recursive_checker, decision_engine=decision_engine
+        data_loader=loader, checker=recursive_checker, decision_engine=agent_engine
     )
     allocation_results = allocation_manager.allocate_stock(ofs)
     alloc_feasible = sum(1 for r in allocation_results.values() if r.status.value == "feasible")
@@ -311,7 +351,31 @@ def main() -> None:
         border_style="cyan",
     ))
     console.print()
-    loader = load_data()
+
+    source = questionary.select(
+        "Source des données ?",
+        choices=[
+            "Téléchargements (fichiers les plus récents)",
+            "Répertoire data/ (classique)",
+        ],
+    ).ask()
+
+    if source is None:
+        return
+
+    try:
+        if source.startswith("Téléchargements"):
+            loader = load_data_from_downloads()
+        else:
+            loader = load_data()
+    except FileNotFoundError as e:
+        console.print(Panel(
+            f"[bold red]{e}[/bold red]",
+            title="[red]Erreur chargement[/red]",
+            border_style="red",
+        ))
+        return
+
     run_menu(loader)
 
 

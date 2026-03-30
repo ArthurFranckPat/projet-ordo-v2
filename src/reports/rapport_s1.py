@@ -48,7 +48,7 @@ def format_rapport_s1(
     table.add_column("Nature", style="cyan", no_wrap=True)  # Nouvelle colonne
     table.add_column("Type", style="yellow")
     table.add_column("Stock dispo", justify="right", style="white")
-    table.add_column("Alloué", justify="right", style="green")
+    table.add_column("Alloué\n[green]ERP[/green] [yellow]~virtuel[/yellow]", justify="right")
     table.add_column("Besoin net", justify="right", style="yellow")
     table.add_column("OF", style="cyan")
     table.add_column("Faisable", justify="center")
@@ -62,11 +62,11 @@ def format_rapport_s1(
         # Formatage de l'allocation
         if commande.is_nor_mto() and alloc:
             stock_dispo = str(alloc.qte_disponible)
-            stock_alloue = str(alloc.qte_allouee)
+            stock_alloue = _format_alloue(alloc)
             besoin_net = str(alloc.besoin_net)
         else:
             stock_dispo = "-"
-            stock_alloue = "-"
+            stock_alloue = Text("-")
             besoin_net = "-"
 
         # Nature : COMMANDE ou PREVISION
@@ -110,6 +110,34 @@ def format_rapport_s1(
 
     # Résumé
     _afficher_resume(resultats_matching, resultats_faisabilite, include_previews=include_previsions)
+
+
+def _format_alloue(alloc) -> Text:
+    """Formate la quantité allouée en distinguant ERP vs virtuel.
+
+    - Vert  : alloué dans l'ERP (QTE_ALLOUEE > 0)
+    - Jaune : alloué virtuellement par l'algorithme (stock dispo, pas encore dans l'ERP)
+    - Les deux peuvent coexister : ex. "200 [green]+ ~50[/green]"
+
+    Légende affichée dans l'en-tête via le titre de colonne :
+      Alloué  (vert = ERP, ~jaune = virtuel)
+    """
+    erp = alloc.qte_allouee_exist    # déjà dans l'ERP
+    virt = alloc.qte_allouee         # calculé par l'algo
+
+    text = Text()
+    if erp > 0 and virt > 0:
+        text.append(str(erp), style="green")
+        text.append(" +~", style="dim yellow")
+        text.append(str(virt), style="yellow")
+    elif erp > 0:
+        text.append(str(erp), style="green")
+    elif virt > 0:
+        text.append("~", style="dim yellow")
+        text.append(str(virt), style="yellow")
+    else:
+        text.append("0", style="dim")
+    return text
 
 
 def _format_missing(resultat: FeasibilityResult) -> str:

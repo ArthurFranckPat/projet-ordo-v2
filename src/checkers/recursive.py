@@ -62,14 +62,41 @@ class RecursiveChecker(BaseChecker):
         # L'OF parent est FERME si statut = 1
         of_est_ferme = (of.statut_num == 1)
 
+        # Pour les réceptions, la date de référence est la date d'expédition
+        # de la commande liée (MTS via OF_CONTREMARQUE), qui est antérieure
+        # à date_fin et représente le vrai besoin client.
+        # Fallback sur of.date_fin si aucune commande liée.
+        date_besoin = self._get_date_besoin_commande(of) or of.date_fin
+
         return self._check_article_recursive(
             article=of.article,
             qte_besoin=of.qte_restante,
-            date_besoin=of.date_fin,
+            date_besoin=date_besoin,
             depth=0,
             of_parent_est_ferme=of_est_ferme,
             num_of_parent=of.num_of,
         )
+
+    def _get_date_besoin_commande(self, of: OF):
+        """Retourne la date d'expédition de la commande liée à un OF (MTS).
+
+        Parameters
+        ----------
+        of : OF
+            Ordre de fabrication
+
+        Returns
+        -------
+        date | None
+            Date d'expédition de la commande liée, ou None si introuvable
+        """
+        commandes = [
+            c for c in self.data_loader.commandes_clients
+            if c.of_contremarque == of.num_of
+        ]
+        if commandes:
+            return min(c.date_expedition_demandee for c in commandes)
+        return None
 
     def check_commande(self, commande: BesoinClient) -> FeasibilityResult:
         """Vérifie la faisabilité d'une commande client avec récursion.
@@ -353,9 +380,10 @@ class RecursiveChecker(BaseChecker):
 
             # Ajouter les réceptions si activé
             if self.use_receptions:
+                # Les réceptions doivent arriver avant la date de besoin
+                # (date d'expédition commande liée, ou date_fin OF en fallback)
                 receptions = self.data_loader.get_receptions(article)
                 for reception in receptions:
-                    # Inclure les réceptions disponibles avant la date de besoin
                     if reception.est_disponible_avant(date_besoin):
                         stock_dispo += reception.quantite_restante
 

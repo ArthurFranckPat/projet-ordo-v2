@@ -1,10 +1,17 @@
 """Persistance des décisions métier en JSON."""
 
 import json
+import logging
 import os
+import shutil
+import time
+from datetime import datetime
 from typing import Dict, List, Any
 
 from .models import AgentDecision
+
+
+logger = logging.getLogger(__name__)
 
 
 class DecisionPersistence:
@@ -74,11 +81,23 @@ class DecisionPersistence:
         if not os.path.exists(self.file_path):
             return []
 
-        with open(self.file_path, 'r') as f:
+        with open(self.file_path, 'r', encoding='utf-8') as f:
             content = f.read().strip()
             if not content:
                 return []
+
+        try:
             return json.loads(content)
+        except json.JSONDecodeError:
+            # Keep a copy of the corrupt history and resume with a clean slate.
+            backup_path = (
+                f"{self.file_path}.corrupt-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+            )
+            try:
+                shutil.copy2(self.file_path, backup_path)
+            except OSError:
+                pass
+            return []
 
     def _save_history(self, history: List[Dict]):
         """Sauvegarde l'historique dans le fichier.
@@ -91,5 +110,30 @@ class DecisionPersistence:
         # Créer le répertoire si nécessaire
         os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
 
-        with open(self.file_path, 'w') as f:
-            json.dump(history, f, indent=2)
+        temp_path = (
+            f"{self.file_path}.{os.getpid()}.{datetime.now().strftime('%Y%m%d%H%M%S%f')}.tmp"
+        )
+        with open(temp_path, 'w', encoding='utf-8') as f:
+            json.dump(history, f, indent=2, ensure_ascii=False)
+
+        last_error = None
+        for attempt in range(5):
+            try:
+                os.replace(temp_path, self.file_path)
+                return
+            except PermissionError as exc:
+                last_error = exc
+                time.sleep(0.2 * (attempt + 1))
+            except OSError as exc:
+                last_error = exc
+                break
+
+        logger.warning(
+            "Impossible de persister l'historique des decisions vers %s: %s",
+            self.file_path,
+            last_error,
+        )
+        try:
+            os.remove(temp_path)
+        except OSError:
+            pass

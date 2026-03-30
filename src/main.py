@@ -8,7 +8,7 @@ from rich.console import Console
 
 from .loaders import DataLoader
 from .checkers import ImmediateChecker, ProjectedChecker, RecursiveChecker
-from .algorithms import AllocationManager, AllocationStatus
+from .algorithms import AllocationManager, AllocationResult, AllocationStatus
 from .agents import AgentEngine
 from .algorithms import calculate_weekly_charge_heatmap
 from .utils import format_of_table, format_detailed_report, format_summary
@@ -324,7 +324,7 @@ def main():
             )
 
             # Créer le DecisionEngine
-            decision_engine = DecisionEngine()
+            decision_engine = AgentEngine("config/decisions.yaml", loader=loader)
 
             # Passer à AllocationManager
             allocation_manager = AllocationManager(
@@ -351,7 +351,7 @@ def main():
 
     # Générer les rapports de décisions
     try:
-        from .decisions.reports import DecisionReporter
+        from .agents.reports import DecisionReporter
         import os
 
         reporter = DecisionReporter()

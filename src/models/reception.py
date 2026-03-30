@@ -41,7 +41,7 @@ class Reception:
         bool
             True si la réception est prévue avant ou à la date limite
         """
-        return self.date_reception_prevue <= date_limite
+        return self.date_reception_prevue < date_limite
 
     @classmethod
     def from_csv_row(cls, row: dict) -> "Reception":
