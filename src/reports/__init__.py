@@ -3,6 +3,8 @@
 from .action_report import (
     ActionReport,
     ComponentActionLine,
+    PosteChargeRiskLine,
+    PosteKanbanRiskLine,
     SupplierActionLine,
     build_action_report,
     render_action_report_console,
@@ -13,6 +15,8 @@ from .rapport_s1 import format_rapport_s1
 __all__ = [
     "ActionReport",
     "ComponentActionLine",
+    "PosteChargeRiskLine",
+    "PosteKanbanRiskLine",
     "SupplierActionLine",
     "build_action_report",
     "render_action_report_console",

@@ -180,7 +180,7 @@ def main_s1(args, loader, include_previsions=False):
             resultats_faisabilite,
             reference_date=date_ref,
         )
-        if action_report.component_lines:
+        if action_report.component_lines or action_report.poste_kanban_lines:
             render_action_report_console(action_report)
             output_dir = "reports/actions"
             output_path = os.path.join(output_dir, "s1_action_report.md")
