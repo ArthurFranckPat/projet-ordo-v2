@@ -120,6 +120,38 @@ def test_build_action_report_classifies_all_action_levels():
     }
 
 
+def test_build_action_report_uses_of_start_date_for_component_need():
+    """La date de besoin composant suit la date de début OF, pas la date client."""
+    of_1 = make_of(
+        "OF_1",
+        "PF_1",
+        3,
+        date(2026, 3, 28),
+        date_debut=date(2026, 3, 24),
+    )
+    cmd_1 = make_commande("CMD_1", "PF_1", date(2026, 3, 27))
+
+    loader = make_loader(
+        ofs=[of_1],
+        commandes=[cmd_1],
+        receptions=[
+            make_reception("COMP_TARD", date(2026, 3, 25), qte=10, fournisseur="SUP_2"),
+        ],
+        stocks={"COMP_TARD": make_stock("COMP_TARD", physique=0)},
+    )
+    loader.get_article.side_effect = lambda article: None
+
+    matching_results = [MatchingResult(commande=cmd_1, of=of_1, matching_method="MTS")]
+    feasibility_results = {"OF_1": _make_feasibility(COMP_TARD=1)}
+
+    report = build_action_report(loader, matching_results, feasibility_results, reference_date=TODAY)
+
+    comp_line = report.component_lines[0]
+    assert comp_line.article_composant == "COMP_TARD"
+    assert comp_line.date_expedition_la_plus_proche == date(2026, 3, 24)
+    assert comp_line.niveau_action == "COUVERTURE_TARDIVE"
+
+
 def test_build_action_report_groups_supplier_actions():
     """Regroupe les lignes d'exécution par fournisseur / commande achat."""
     of_1 = make_of("OF_1", "PF_1", 3, date(2026, 3, 26))

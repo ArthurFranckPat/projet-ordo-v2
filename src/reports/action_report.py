@@ -291,7 +291,7 @@ def render_action_report_console(report: ActionReport) -> None:
         table.add_column("Manque", justify="right")
         table.add_column("Cmd", justify="right")
         table.add_column("OF", justify="right")
-        table.add_column("Échéance", style="white")
+        table.add_column("Besoin OF", style="white")
         table.add_column("Réception", style="white")
         table.add_column("Action", style="yellow")
 
@@ -452,7 +452,7 @@ def write_action_report_markdown(report: ActionReport, output_path: str) -> None
                     f"{', '.join(line.commandes_impactees) if line.commandes_impactees else 'Aucune'}",
                     f"- OF impactés ({line.nb_ofs_impactes}) : "
                     f"{', '.join(line.ofs_impactes) if line.ofs_impactes else 'Aucun'}",
-                    f"- Première échéance client : {_format_date(line.date_expedition_la_plus_proche)}",
+                    f"- Première date de besoin OF : {_format_date(line.date_expedition_la_plus_proche)}",
                     f"- Réceptions ouvertes : {_format_reception(line)}",
                     f"- Fournisseurs concernés : "
                     f"{', '.join(line.fournisseurs_concernes) if line.fournisseurs_concernes else 'Aucun'}",
@@ -603,6 +603,8 @@ def _build_component_lines(
         commandes = context["commandes"]
         feasibility = context["feasibility"]
 
+        date_besoin_of = _get_component_need_date(of, commandes)
+
         for article_composant, quantity in feasibility.missing_components.items():
             entry = aggregated.setdefault(
                 article_composant,
@@ -611,16 +613,15 @@ def _build_component_lines(
                     "ofs": set(),
                     "commandes": set(),
                     "dates": [],
-                    "fallback_dates": [],
                 },
             )
             entry["missing_qty_total"] += int(quantity)
             entry["ofs"].add(of_num)
-            entry["fallback_dates"].append(of.date_fin)
+            if date_besoin_of is not None:
+                entry["dates"].append(date_besoin_of)
 
             for commande in commandes:
                 entry["commandes"].add(commande.num_commande)
-                entry["dates"].append(commande.date_expedition_demandee)
 
     lines: List[ComponentActionLine] = []
     for article_composant, entry in aggregated.items():
@@ -641,9 +642,7 @@ def _build_component_lines(
             r.code_fournisseur for r in receptions if r.code_fournisseur
         )
         supplier_refs = _unique_supplier_refs(receptions)
-        date_expedition = (
-            min(entry["dates"]) if entry["dates"] else min(entry["fallback_dates"], default=None)
-        )
+        date_expedition = min(entry["dates"]) if entry["dates"] else None
         niveau_action = _classify_component_action(receptions, reference_date, date_expedition)
         description = _get_article_description(loader, article_composant)
 
@@ -1231,6 +1230,23 @@ def _classify_kanban_risk(stock_equivalent_jours: float) -> str:
     if stock_equivalent_jours < 2:
         return "TRES_TENDU"
     return "SOUS_SEUIL"
+
+
+def _get_component_need_date(of, commandes: Optional[Iterable] = None) -> Optional[date]:
+    """Date à laquelle le composant doit être disponible pour l'OF."""
+    if getattr(of, "date_debut", None) is not None:
+        return of.date_debut
+    if commandes:
+        dates_commandes = [
+            commande.date_expedition_demandee
+            for commande in commandes
+            if getattr(commande, "date_expedition_demandee", None) is not None
+        ]
+        if dates_commandes:
+            return min(dates_commandes)
+    if getattr(of, "date_fin", None) is not None:
+        return of.date_fin
+    return None
 
 
 def _get_article_description(loader: DataLoader, article_code: str) -> Optional[str]:

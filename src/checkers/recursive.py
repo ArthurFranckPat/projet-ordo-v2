@@ -286,7 +286,7 @@ class RecursiveChecker(BaseChecker):
         if ofs_ferme:
             # OF FERME trouvé → Ses ACHAT sont OK, mais continuer la récursion
             of_ferme = ofs_ferme[0]  # Le plus proche
-            return self._check_article_recursive(
+            result = self._check_article_recursive(
                 article=article,
                 qte_besoin=qte_besoin,
                 date_besoin=date_besoin,
@@ -294,6 +294,9 @@ class RecursiveChecker(BaseChecker):
                 of_parent_est_ferme=True,
                 num_of_parent=of_ferme.num_of,  # ← Passer le num_of
             )
+            if not result.feasible:
+                result.add_missing(article, qte_besoin)
+            return result
 
         # 2. Pas d'OF FERME → Chercher OF PLANIFIÉ (WOP)
         ofs_planifie = self.data_loader.get_ofs_by_article(
@@ -305,7 +308,7 @@ class RecursiveChecker(BaseChecker):
         if ofs_planifie:
             # OF PLANIFIÉ → Vérifier sa faisabilité complète (composants pas alloués)
             of_planifie = ofs_planifie[0]  # Le plus proche
-            return self._check_article_recursive(
+            result = self._check_article_recursive(
                 article=article,
                 qte_besoin=qte_besoin,
                 date_besoin=date_besoin,
@@ -313,6 +316,9 @@ class RecursiveChecker(BaseChecker):
                 of_parent_est_ferme=False,  # Composants PAS alloués
                 num_of_parent=of_planifie.num_of,
             )
+            if not result.feasible:
+                result.add_missing(article, qte_besoin)
+            return result
 
         # 3. Pas d'OF PLANIFIÉ → Chercher OF SUGGÉRÉ
         ofs_suggere = self.data_loader.get_ofs_by_article(
@@ -324,7 +330,7 @@ class RecursiveChecker(BaseChecker):
         if ofs_suggere:
             # OF SUGGÉRÉ → Vérifier sa faisabilité complète
             of_suggere = ofs_suggere[0]  # Le plus proche
-            return self._check_article_recursive(
+            result = self._check_article_recursive(
                 article=article,
                 qte_besoin=qte_besoin,
                 date_besoin=date_besoin,
@@ -332,10 +338,13 @@ class RecursiveChecker(BaseChecker):
                 of_parent_est_ferme=False,
                 num_of_parent=of_suggere.num_of,  # ← Passer le num_of
             )
+            if not result.feasible:
+                result.add_missing(article, qte_besoin)
+            return result
 
-        # 3. Aucun OF trouvé → Fallback sur vérification stock
-        # (comportement actuel : vérifier comme si OF SUGGÉRÉ)
-        return self._check_article_recursive(
+        # 4. Aucun OF trouvé → marquer le sous-ensemble comme manquant
+        # tout en parcourant sa nomenclature pour identifier les achats racines bloquants.
+        result = self._check_article_recursive(
             article=article,
             qte_besoin=qte_besoin,
             date_besoin=date_besoin,
@@ -343,6 +352,10 @@ class RecursiveChecker(BaseChecker):
             of_parent_est_ferme=False,
             num_of_parent=None,  # Pas d'OF parent
         )
+        result.feasible = False
+        result.add_missing(article, qte_besoin)
+        result.add_alert(f"Aucun OF trouvé pour le sous-ensemble fabriqué {article}")
+        return result
 
     def _check_stock(self, article: str, qte_besoin: int, date_besoin) -> FeasibilityResult:
         """Vérifie si le stock est suffisant pour un article.

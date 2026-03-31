@@ -10,7 +10,15 @@ import pytest
 # Helpers de construction de modèles
 # ---------------------------------------------------------------------------
 
-def make_of(num_of, article, statut_num, date_fin, qte_restante=100, description="DESC"):
+def make_of(
+    num_of,
+    article,
+    statut_num,
+    date_fin,
+    qte_restante=100,
+    description="DESC",
+    date_debut=None,
+):
     from src.models.of import OF
     return OF(
         num_of=num_of,
@@ -22,6 +30,7 @@ def make_of(num_of, article, statut_num, date_fin, qte_restante=100, description
         qte_a_fabriquer=qte_restante,
         qte_fabriquee=0,
         qte_restante=qte_restante,
+        date_debut=date_debut,
     )
 
 

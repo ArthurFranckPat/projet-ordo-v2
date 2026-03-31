@@ -7,7 +7,9 @@ from types import SimpleNamespace
 from src.loaders import DataLoader
 from src.checkers.recursive import RecursiveChecker
 from src.algorithms.allocation import StockState
+from src.models.nomenclature import Nomenclature, NomenclatureEntry, TypeArticle
 from src.models.of import OF
+from src.models.stock import Stock
 
 
 @pytest.fixture
@@ -213,3 +215,56 @@ class TestRecursiveChecker:
         )
 
         assert checker._get_date_besoin_commande(of) == date(2026, 4, 16)
+
+    def test_fabricated_component_is_declared_missing_and_traversed_to_buy_part(self):
+        """Un sous-ensemble fabriqué non couvert remonte comme manquant avec son achat racine bloquant."""
+        def make_entry(parent, component, type_article):
+            return NomenclatureEntry(
+                article_parent=parent,
+                designation_parent=f"DESC_{parent}",
+                niveau=10,
+                article_composant=component,
+                designation_composant=f"DESC_{component}",
+                qte_lien=1,
+                type_article=type_article,
+            )
+
+        nomenclatures = {
+            "PF_PARENT": Nomenclature(
+                article="PF_PARENT",
+                designation="DESC_PARENT",
+                composants=[make_entry("PF_PARENT", "SE_FAB", TypeArticle.FABRIQUE)],
+            ),
+            "SE_FAB": Nomenclature(
+                article="SE_FAB",
+                designation="DESC_SE",
+                composants=[make_entry("SE_FAB", "ACH_MISS", TypeArticle.ACHETE)],
+            ),
+        }
+        stocks = {
+            "SE_FAB": Stock("SE_FAB", stock_physique=0, stock_alloue=0, stock_bloque=0),
+            "ACH_MISS": Stock("ACH_MISS", stock_physique=0, stock_alloue=0, stock_bloque=0),
+        }
+
+        loader = SimpleNamespace(
+            commandes_clients=[],
+            get_nomenclature=lambda article: nomenclatures.get(article),
+            get_stock=lambda article: stocks.get(article),
+            get_allocations_of=lambda _num_doc: [],
+            get_ofs_by_article=lambda article, statut=None, date_besoin=None: [],
+            get_receptions=lambda article: [],
+        )
+
+        checker = RecursiveChecker(loader)
+
+        result = checker._check_article_recursive(
+            article="PF_PARENT",
+            qte_besoin=1,
+            date_besoin=date(2026, 4, 1),
+            depth=0,
+        )
+
+        assert result.feasible is False
+        assert result.missing_components["SE_FAB"] == 1
+        assert result.missing_components["ACH_MISS"] == 1
+        assert any("SE_FAB" in alert for alert in result.alerts)
