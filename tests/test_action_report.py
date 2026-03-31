@@ -120,6 +120,32 @@ def test_build_action_report_classifies_all_action_levels():
     }
 
 
+def test_build_action_report_mentions_quality_control_when_blocked_stock_exists():
+    """Ajoute une action contrôle qualité si du stock bloqué existe sur le composant."""
+    of_1 = make_of("OF_1", "PF_1", 3, date(2026, 3, 28))
+    cmd_1 = make_commande("CMD_1", "PF_1", date(2026, 3, 25))
+
+    loader = make_loader(
+        ofs=[of_1],
+        commandes=[cmd_1],
+        receptions=[],
+        stocks={
+            "COMP_QC": make_stock("COMP_QC", physique=5, bloque=5),
+        },
+    )
+    loader.get_article.side_effect = lambda article: None
+
+    matching_results = [MatchingResult(commande=cmd_1, of=of_1, matching_method="MTS")]
+    feasibility_results = {"OF_1": _make_feasibility(COMP_QC=4)}
+
+    report = build_action_report(loader, matching_results, feasibility_results, reference_date=TODAY)
+
+    comp_line = report.component_lines[0]
+    assert comp_line.article_composant == "COMP_QC"
+    assert comp_line.stock_sous_controle == 5
+    assert "controle qualite" in comp_line.action_recommandee.lower()
+
+
 def test_build_action_report_uses_of_start_date_for_component_need():
     """La date de besoin composant suit la date de début OF, pas la date client."""
     of_1 = make_of(

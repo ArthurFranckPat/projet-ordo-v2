@@ -217,7 +217,7 @@ class RecursiveChecker(BaseChecker):
             # Calculer la quantité nécessaire pour ce composant
             qte_composant = int(composant.qte_lien * qte_besoin)
 
-            if composant.is_achete():
+            if self._is_component_treated_as_purchase(composant.article_composant, composant.is_achete(), composant.is_fabrique()):
                 # LOGIQUE : Si le composant est déjà alloué à l'OF parent, skip
                 if of_parent_est_ferme and composant.article_composant in allocations_parent:
                     # Composant déjà alloué à l'OF FERME → Pas de vérification
@@ -409,3 +409,38 @@ class RecursiveChecker(BaseChecker):
             result.add_missing(article, qte_besoin - stock_dispo)
 
         return result
+
+    def _is_component_treated_as_purchase(
+        self,
+        article_code: str,
+        is_achete: bool,
+        is_fabrique: bool,
+    ) -> bool:
+        """Détermine si un composant suit la logique d'appro externe.
+
+        Les articles de sous-traitance (catégorie commençant par ``ST``)
+        sont traités comme des articles achetés, même si la nomenclature
+        les marque comme fabriqués.
+        """
+        if is_achete:
+            return True
+        if not is_fabrique:
+            return False
+        return self._is_subcontracted_article(article_code)
+
+    def _is_subcontracted_article(self, article_code: str) -> bool:
+        """Retourne True si l'article relève de la sous-traitance."""
+        article = None
+        if hasattr(self.data_loader, "get_article"):
+            try:
+                article = self.data_loader.get_article(article_code)
+            except Exception:
+                article = None
+
+        if article is None and hasattr(self.data_loader, "articles"):
+            articles = getattr(self.data_loader, "articles")
+            if isinstance(articles, dict):
+                article = articles.get(article_code)
+
+        categorie = getattr(article, "categorie", "") if article is not None else ""
+        return str(categorie or "").upper().startswith("ST")

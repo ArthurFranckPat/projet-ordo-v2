@@ -8,6 +8,7 @@ from src.loaders import DataLoader
 from src.checkers.recursive import RecursiveChecker
 from src.algorithms.allocation import StockState
 from src.models.nomenclature import Nomenclature, NomenclatureEntry, TypeArticle
+from src.models.article import Article, TypeApprovisionnement
 from src.models.of import OF
 from src.models.stock import Stock
 
@@ -268,3 +269,119 @@ class TestRecursiveChecker:
         assert result.missing_components["SE_FAB"] == 1
         assert result.missing_components["ACH_MISS"] == 1
         assert any("SE_FAB" in alert for alert in result.alerts)
+
+    def test_subcontracted_fabricated_component_is_treated_like_purchase(self):
+        """Un article ST* reste sur la logique stock même si la nomenclature le marque fabriqué."""
+        nomenclatures = {
+            "PF_PARENT": Nomenclature(
+                article="PF_PARENT",
+                designation="DESC_PARENT",
+                composants=[
+                    NomenclatureEntry(
+                        article_parent="PF_PARENT",
+                        designation_parent="DESC_PARENT",
+                        niveau=10,
+                        article_composant="ST_COMP",
+                        designation_composant="DESC_ST",
+                        qte_lien=1,
+                        type_article=TypeArticle.FABRIQUE,
+                    )
+                ],
+            ),
+        }
+        stocks = {
+            "ST_COMP": Stock("ST_COMP", stock_physique=0, stock_alloue=0, stock_bloque=0),
+        }
+        articles = {
+            "ST_COMP": Article(
+                code="ST_COMP",
+                description="Sous-traitance",
+                categorie="ST01",
+                type_appro=TypeApprovisionnement.FABRICATION,
+                delai_reappro=0,
+            ),
+        }
+
+        def fail_if_called(*_args, **_kwargs):
+            raise AssertionError("Aucun OF interne ne doit être recherché pour un article ST*")
+
+        loader = SimpleNamespace(
+            commandes_clients=[],
+            articles=articles,
+            get_article=lambda article: articles.get(article),
+            get_nomenclature=lambda article: nomenclatures.get(article),
+            get_stock=lambda article: stocks.get(article),
+            get_allocations_of=lambda _num_doc: [],
+            get_ofs_by_article=fail_if_called,
+            get_receptions=lambda article: [],
+        )
+
+        checker = RecursiveChecker(loader)
+
+        result = checker._check_article_recursive(
+            article="PF_PARENT",
+            qte_besoin=1,
+            date_besoin=date(2026, 4, 1),
+            depth=0,
+        )
+
+        assert result.feasible is False
+        assert result.missing_components["ST_COMP"] == 1
+
+    def test_subcontracted_fabricated_component_uses_stock_when_available(self):
+        """Un article ST* avec stock disponible est faisable sans chercher d'OF."""
+        nomenclatures = {
+            "PF_PARENT": Nomenclature(
+                article="PF_PARENT",
+                designation="DESC_PARENT",
+                composants=[
+                    NomenclatureEntry(
+                        article_parent="PF_PARENT",
+                        designation_parent="DESC_PARENT",
+                        niveau=10,
+                        article_composant="ST_COMP",
+                        designation_composant="DESC_ST",
+                        qte_lien=2,
+                        type_article=TypeArticle.FABRIQUE,
+                    )
+                ],
+            ),
+        }
+        stocks = {
+            "ST_COMP": Stock("ST_COMP", stock_physique=10, stock_alloue=0, stock_bloque=0),
+        }
+        articles = {
+            "ST_COMP": Article(
+                code="ST_COMP",
+                description="Sous-traitance",
+                categorie="ST99",
+                type_appro=TypeApprovisionnement.FABRICATION,
+                delai_reappro=0,
+            ),
+        }
+
+        def fail_if_called(*_args, **_kwargs):
+            raise AssertionError("Aucun OF interne ne doit être recherché pour un article ST*")
+
+        loader = SimpleNamespace(
+            commandes_clients=[],
+            articles=articles,
+            get_article=lambda article: articles.get(article),
+            get_nomenclature=lambda article: nomenclatures.get(article),
+            get_stock=lambda article: stocks.get(article),
+            get_allocations_of=lambda _num_doc: [],
+            get_ofs_by_article=fail_if_called,
+            get_receptions=lambda article: [],
+        )
+
+        checker = RecursiveChecker(loader)
+
+        result = checker._check_article_recursive(
+            article="PF_PARENT",
+            qte_besoin=3,
+            date_besoin=date(2026, 4, 1),
+            depth=0,
+        )
+
+        assert result.feasible is True
+        assert result.missing_components == {}

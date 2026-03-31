@@ -109,6 +109,7 @@ class ComponentActionLine:
     nb_commandes_impactees: int
     date_expedition_la_plus_proche: Optional[date]
     stock_disponible: int
+    stock_sous_controle: int
     qte_reception_attendue: Optional[int]
     date_premiere_reception: Optional[date]
     fournisseurs_concernes: List[str]
@@ -293,6 +294,7 @@ def render_action_report_console(report: ActionReport) -> None:
         table.add_column("OF", justify="right")
         table.add_column("Besoin OF", style="white")
         table.add_column("Réception", style="white")
+        table.add_column("CQ", justify="right")
         table.add_column("Action", style="yellow")
 
         for line in report.component_lines:
@@ -303,7 +305,8 @@ def render_action_report_console(report: ActionReport) -> None:
                 str(line.nb_ofs_impactes),
                 _format_date(line.date_expedition_la_plus_proche),
                 _format_reception(line),
-                line.niveau_action,
+                str(line.stock_sous_controle),
+                line.action_recommandee,
             )
 
         console.print(table)
@@ -448,6 +451,7 @@ def write_action_report_markdown(report: ActionReport, output_path: str) -> None
                     f"- Description : {line.description or 'N/A'}",
                     f"- Quantité manquante totale : {line.missing_qty_total}",
                     f"- Stock disponible : {line.stock_disponible}",
+                    f"- Stock sous contrôle qualité : {line.stock_sous_controle}",
                     f"- Commandes impactées ({line.nb_commandes_impactees}) : "
                     f"{', '.join(line.commandes_impactees) if line.commandes_impactees else 'Aucune'}",
                     f"- OF impactés ({line.nb_ofs_impactes}) : "
@@ -634,6 +638,7 @@ def _build_component_lines(
 
         stock = loader.get_stock(article_composant)
         stock_disponible = stock.disponible() if stock else 0
+        stock_sous_controle = getattr(stock, "stock_sous_controle", 0) if stock else 0
         qte_reception_attendue = sum(r.quantite_restante for r in receptions) or None
         date_premiere_reception = receptions[0].date_reception_prevue if receptions else None
 
@@ -645,6 +650,11 @@ def _build_component_lines(
         date_expedition = min(entry["dates"]) if entry["dates"] else None
         niveau_action = _classify_component_action(receptions, reference_date, date_expedition)
         description = _get_article_description(loader, article_composant)
+        action_recommandee = _build_component_action_message(
+            niveau_action=niveau_action,
+            stock_sous_controle=stock_sous_controle,
+            missing_qty_total=entry["missing_qty_total"],
+        )
 
         lines.append(
             ComponentActionLine(
@@ -657,12 +667,13 @@ def _build_component_lines(
                 nb_commandes_impactees=len(entry["commandes"]),
                 date_expedition_la_plus_proche=date_expedition,
                 stock_disponible=stock_disponible,
+                stock_sous_controle=stock_sous_controle,
                 qte_reception_attendue=qte_reception_attendue,
                 date_premiere_reception=date_premiere_reception,
                 fournisseurs_concernes=fournisseurs,
                 commandes_achat_concernees=commandes_achat,
                 niveau_action=niveau_action,
-                action_recommandee=ACTION_MESSAGES[niveau_action],
+                action_recommandee=action_recommandee,
                 supplier_refs=supplier_refs,
             )
         )
@@ -1222,6 +1233,24 @@ def _classify_component_action(
         return "COUVERTURE_TARDIVE"
 
     return "SURVEILLANCE"
+
+
+def _build_component_action_message(
+    niveau_action: str,
+    stock_sous_controle: int,
+    missing_qty_total: int,
+) -> str:
+    """Compose la recommandation d'action composant avec focus contrôle qualité."""
+    base_message = ACTION_MESSAGES[niveau_action]
+    if stock_sous_controle <= 0:
+        return base_message
+
+    qc_message = (
+        f"Accelerer le controle qualite du stock bloque ({stock_sous_controle} u)"
+    )
+    if stock_sous_controle >= missing_qty_total > 0:
+        return f"{qc_message} pour couvrir le besoin prioritaire. {base_message}"
+    return f"{qc_message}, puis completer l'appro si necessaire. {base_message}"
 
 
 def _classify_kanban_risk(stock_equivalent_jours: float) -> str:

@@ -183,3 +183,72 @@ def test_main_s1_generates_action_report_for_kanban_only_risk(monkeypatch, tmp_p
     assert "Articles kanban sous seuil" in content
     assert "MH7624" in content
     assert "PP_145" in content
+
+
+def test_main_s1_uses_immediate_mode_when_requested(monkeypatch):
+    """Le flux S+1 bascule sur ImmediateChecker si le mode est demandé."""
+    of_1 = make_of("OF_1", "PF_1", 3, date(2026, 3, 26))
+    commande = make_commande("CMD_1", "PF_1", date(2026, 3, 24))
+    loader = make_loader(
+        ofs=[of_1],
+        commandes=[commande],
+    )
+
+    calls = {"immediate": 0, "projected": 0}
+
+    class FakeMatcher:
+        def __init__(self, _loader, date_tolerance_days=10):
+            self.loader = _loader
+
+        def match_commandes(self, besoins):
+            assert besoins == [commande]
+            return [MatchingResult(commande=commande, of=of_1, matching_method="MTS")]
+
+    class FakeImmediateChecker:
+        def __init__(self, _loader):
+            self.loader = _loader
+
+        def check_all_ofs(self, ofs):
+            calls["immediate"] += 1
+            assert ofs == [of_1]
+            return {"OF_1": FeasibilityResult(feasible=True)}
+
+    class ForbiddenProjectedChecker:
+        def __init__(self, _loader):
+            calls["projected"] += 1
+            raise AssertionError("ProjectedChecker ne doit pas être utilisé en mode immédiat")
+
+    class FakeAgentEngine:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        def evaluate_pre_allocation(self, **_kwargs):
+            return AgentDecision(
+                action=AgentAction.ACCEPT_AS_IS,
+                reason="OK",
+                metadata={"weighted_score": 1.0},
+            )
+
+        def evaluate_post_allocation(self, **_kwargs):
+            return AgentDecision(
+                action=AgentAction.ACCEPT_AS_IS,
+                reason="OK",
+                metadata={"weighted_score": 1.0},
+            )
+
+    monkeypatch.setattr("src.main_s1.CommandeOFMatcher", FakeMatcher)
+    monkeypatch.setattr("src.main_s1.ImmediateChecker", FakeImmediateChecker)
+    monkeypatch.setattr("src.main_s1.ProjectedChecker", ForbiddenProjectedChecker)
+    monkeypatch.setattr("src.main_s1.AgentEngine", FakeAgentEngine)
+    monkeypatch.setattr("src.main_s1.format_rapport_s1", lambda *args, **kwargs: None)
+    monkeypatch.setattr("src.main_s1.render_action_report_console", lambda report: None)
+    monkeypatch.setattr("src.main_s1.write_action_report_markdown", lambda *args, **kwargs: None)
+    monkeypatch.setattr("src.agents.reports.DecisionReporter.generate_markdown_report", lambda *args, **kwargs: None)
+    monkeypatch.setattr("src.agents.reports.DecisionReporter.generate_json_report", lambda *args, **kwargs: None)
+
+    args = _Args()
+    args.feasibility_mode = "immediate"
+    main_s1(args, loader, include_previsions=False)
+
+    assert calls["immediate"] == 1
+    assert calls["projected"] == 0

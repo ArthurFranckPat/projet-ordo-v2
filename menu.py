@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import questionary
 from rich.console import Console
 from rich.panel import Panel
+from rich.table import Table
 
 from src.algorithms import AllocationManager, calculate_weekly_charge_heatmap
 from src.checkers import ImmediateChecker, ProjectedChecker, RecursiveChecker
@@ -22,6 +23,160 @@ from src.utils import format_charge_heatmap, format_charge_summary
 from src.utils import format_detailed_report, format_of_table, format_summary
 
 console = Console()
+
+FEASIBILITY_MODE_LABELS = {
+    "compare": "Comparer tous les modes (actuel)",
+    "immediate": "Dispo immédiate (stock actuel)",
+    "projected": "Dispo projetée (stock + réceptions)",
+    "allocation": "Allocation virtuelle (gestion de concurrence)",
+}
+
+
+def select_feasibility_mode(include_compare: bool = True) -> str | None:
+    """Demande le mode d'évaluation de disponibilité composants."""
+    choices = []
+    if include_compare:
+        choices.append(FEASIBILITY_MODE_LABELS["compare"])
+    choices.extend(
+        [
+            FEASIBILITY_MODE_LABELS["immediate"],
+            FEASIBILITY_MODE_LABELS["projected"],
+            FEASIBILITY_MODE_LABELS["allocation"],
+        ]
+    )
+    selection = questionary.select(
+        "Mode d'évaluation des composants ?",
+        choices=choices,
+    ).ask()
+    if selection is None:
+        return None
+
+    for mode, label in FEASIBILITY_MODE_LABELS.items():
+        if selection == label:
+            return mode
+    return None
+
+
+def allocation_results_to_feasibility(allocation_results):
+    """Convertit les résultats d'allocation en résultats de faisabilité."""
+    return {
+        of_num: result.feasibility_result
+        for of_num, result in allocation_results.items()
+        if result.feasibility_result is not None
+    }
+
+
+def format_missing_components(result) -> str:
+    """Formate les composants manquants pour une ligne de tableau."""
+    if not result or not result.missing_components:
+        return "-"
+    items = [f"{article}:{quantity}" for article, quantity in result.missing_components.items()]
+    return ", ".join(items)
+
+
+def display_single_mode_results(ofs, mode_label: str, results, allocation_results=None) -> None:
+    """Affiche un tableau synthétique pour un seul mode de vérification."""
+    table = Table(title=f"📋 Résultats de vérification de faisabilité des OF - {mode_label}")
+
+    table.add_column("Numéro OF", style="cyan", no_wrap=True)
+    table.add_column("Article", style="magenta")
+    table.add_column("Qté restante", justify="right", style="white")
+    table.add_column("Date fin", style="white")
+    table.add_column("Statut", justify="center")
+    table.add_column("Composants manquants", style="red")
+
+    for of in ofs:
+        if allocation_results is not None:
+            allocation_result = allocation_results.get(of.num_of)
+            feasibility_result = allocation_result.feasibility_result if allocation_result else None
+            if allocation_result and allocation_result.status.value == "feasible":
+                status = "✅"
+            elif allocation_result and allocation_result.status.value in {"skipped", "deferred"}:
+                status = "⏭️"
+            else:
+                status = "❌"
+        else:
+            feasibility_result = results.get(of.num_of)
+            status = "✅" if feasibility_result and feasibility_result.feasible else "❌"
+
+        table.add_row(
+            of.num_of,
+            of.article,
+            str(of.qte_restante),
+            of.date_fin.strftime("%Y-%m-%d"),
+            status,
+            format_missing_components(feasibility_result),
+        )
+
+    console.print(table)
+
+
+def display_single_mode_summary(mode_label: str, results, allocation_results=None) -> None:
+    """Affiche un résumé synthétique pour un seul mode."""
+    console.print("\n" + "=" * 80)
+    console.print(f"📊 [bold]RÉSUMÉ - {mode_label.upper()}[/bold]")
+    console.print("=" * 80 + "\n")
+
+    if allocation_results is not None:
+        total = len(allocation_results)
+        feasible = sum(1 for result in allocation_results.values() if result.status.value == "feasible")
+        console.print(f"📦 [bold]{mode_label}[/bold]")
+        console.print(f"   ✅ Faisables : {feasible}/{total} ({feasible / total * 100:.1f}%)")
+        console.print(f"   ❌ Non faisables : {total - feasible}/{total}")
+        console.print()
+        return
+
+    total = len(results)
+    feasible = sum(1 for result in results.values() if result.feasible)
+    console.print(f"🔎 [bold]{mode_label}[/bold]")
+    console.print(f"   ✅ Faisables : {feasible}/{total} ({feasible / total * 100:.1f}%)")
+    console.print(f"   ❌ Non faisables : {total - feasible}/{total}")
+    console.print()
+
+
+def run_allocation_mode(loader: DataLoader, ofs):
+    """Exécute le mode allocation virtuelle avec gestion de la concurrence."""
+    console.print("[bold cyan]📦 Allocation virtuelle (gestion de la concurrence)...[/bold cyan]")
+    recursive_checker = RecursiveChecker(
+        loader,
+        use_receptions=True,
+        check_date=date.today(),
+    )
+    agent_engine = AgentEngine()
+    allocation_manager = AllocationManager(
+        data_loader=loader,
+        checker=recursive_checker,
+        decision_engine=agent_engine,
+    )
+    allocation_results = allocation_manager.allocate_stock(ofs)
+    alloc_feasible = sum(1 for result in allocation_results.values() if result.status.value == "feasible")
+    console.print(f"[green]✅ Terminé : {alloc_feasible}/{len(ofs)} OF faisables[/green]\n")
+    return allocation_results
+
+
+def run_single_feasibility_mode(loader: DataLoader, ofs, mode: str):
+    """Exécute un seul mode de vérification de faisabilité."""
+    if mode == "immediate":
+        console.print("[bold cyan]🔍 Vérification immédiate (stock actuel)...[/bold cyan]")
+        checker = ImmediateChecker(loader)
+        results = checker.check_all_ofs(ofs)
+        feasible = sum(1 for result in results.values() if result.feasible)
+        console.print(f"[green]✅ Terminé : {feasible}/{len(ofs)} OF faisables[/green]\n")
+        return FEASIBILITY_MODE_LABELS[mode], results, None
+
+    if mode == "projected":
+        console.print("[bold cyan]🔮 Vérification projetée (stock + réceptions)...[/bold cyan]")
+        checker = ProjectedChecker(loader)
+        results = checker.check_all_ofs(ofs)
+        feasible = sum(1 for result in results.values() if result.feasible)
+        console.print(f"[green]✅ Terminé : {feasible}/{len(ofs)} OF faisables[/green]\n")
+        return FEASIBILITY_MODE_LABELS[mode], results, None
+
+    if mode == "allocation":
+        allocation_results = run_allocation_mode(loader, ofs)
+        return FEASIBILITY_MODE_LABELS[mode], allocation_results_to_feasibility(allocation_results), allocation_results
+
+    raise ValueError(f"Mode de faisabilité inconnu : {mode}")
 
 
 def load_data(data_dir: str = "data") -> DataLoader:
@@ -78,6 +233,9 @@ def load_data_from_downloads(downloads_dir: str = None) -> DataLoader:
 
 
 def run_feasibility_all(loader: DataLoader) -> None:
+    mode = select_feasibility_mode(include_compare=True)
+    if mode is None:
+        return
     detailed = questionary.confirm("Rapport détaillé ?", default=False).ask()
     if detailed is None:
         return
@@ -85,9 +243,11 @@ def run_feasibility_all(loader: DataLoader) -> None:
     if limit_str is None:
         return
     limit = int(limit_str) if limit_str.strip() else None
-    no_allocation = questionary.confirm("Désactiver la gestion de concurrence ?", default=False).ask()
-    if no_allocation is None:
-        return
+    include_allocation = False
+    if mode == "compare":
+        include_allocation = questionary.confirm("Inclure l'allocation virtuelle ?", default=True).ask()
+        if include_allocation is None:
+            return
 
     ofs = loader.get_ofs_to_check()
     if limit:
@@ -96,55 +256,53 @@ def run_feasibility_all(loader: DataLoader) -> None:
 
     console.print(f"\n[bold]📋 {len(ofs)} OF à vérifier[/bold]\n")
 
-    console.print("[bold cyan]🔍 Vérification immédiate (stock actuel)...[/bold cyan]")
-    immediate_checker = ImmediateChecker(loader)
-    immediate_results = immediate_checker.check_all_ofs(ofs)
-    imm_feasible = sum(1 for r in immediate_results.values() if r.feasible)
-    console.print(f"[green]✅ Terminé : {imm_feasible}/{len(ofs)} OF faisables[/green]\n")
-
-    console.print("[bold cyan]🔮 Vérification projetée (stock + réceptions)...[/bold cyan]")
-    projected_checker = ProjectedChecker(loader)
-    projected_results = projected_checker.check_all_ofs(ofs)
-    proj_feasible = sum(1 for r in projected_results.values() if r.feasible)
-    console.print(f"[green]✅ Terminé : {proj_feasible}/{len(ofs)} OF faisables[/green]\n")
-
     allocation_results = None
-    if not no_allocation:
-        console.print("[bold cyan]📦 Gestion de la concurrence avec allocation virtuelle...[/bold cyan]")
-        recursive_checker = RecursiveChecker(
-            loader,
-            use_receptions=True,
-            check_date=date.today(),
-        )
-        agent_engine = AgentEngine()
-        allocation_manager = AllocationManager(
-            data_loader=loader,
-            checker=recursive_checker,
-            decision_engine=agent_engine,
-        )
-        allocation_results = allocation_manager.allocate_stock(ofs)
-        alloc_feasible = sum(1 for r in allocation_results.values() if r.status.value == "feasible")
-        console.print(f"[green]✅ Terminé : {alloc_feasible}/{len(ofs)} OF alloués[/green]\n")
+    if mode == "compare":
+        console.print("[bold cyan]🔍 Vérification immédiate (stock actuel)...[/bold cyan]")
+        immediate_checker = ImmediateChecker(loader)
+        immediate_results = immediate_checker.check_all_ofs(ofs)
+        imm_feasible = sum(1 for r in immediate_results.values() if r.feasible)
+        console.print(f"[green]✅ Terminé : {imm_feasible}/{len(ofs)} OF faisables[/green]\n")
 
-    format_of_table(ofs, immediate_results, projected_results, allocation_results)
-    format_summary(immediate_results, projected_results, allocation_results)
+        console.print("[bold cyan]🔮 Vérification projetée (stock + réceptions)...[/bold cyan]")
+        projected_checker = ProjectedChecker(loader)
+        projected_results = projected_checker.check_all_ofs(ofs)
+        proj_feasible = sum(1 for r in projected_results.values() if r.feasible)
+        console.print(f"[green]✅ Terminé : {proj_feasible}/{len(ofs)} OF faisables[/green]\n")
 
-    if detailed:
-        for of in ofs:
-            result = projected_results.get(of.num_of)
-            if result and not result.feasible:
-                format_detailed_report(of, result)
+        if include_allocation:
+            allocation_results = run_allocation_mode(loader, ofs)
+
+        format_of_table(ofs, immediate_results, projected_results, allocation_results)
+        format_summary(immediate_results, projected_results, allocation_results)
+
+        if detailed:
+            for of in ofs:
+                result = projected_results.get(of.num_of)
+                if result and not result.feasible:
+                    format_detailed_report(of, result)
+    else:
+        mode_label, results, allocation_results = run_single_feasibility_mode(loader, ofs, mode)
+        display_single_mode_results(ofs, mode_label, results, allocation_results)
+        display_single_mode_summary(mode_label, results, allocation_results)
+
+        if detailed:
+            for of in ofs:
+                result = results.get(of.num_of)
+                if result and not result.feasible:
+                    format_detailed_report(of, result)
 
     try:
         from src.agents.reports import DecisionReporter
         reporter = DecisionReporter()
         output_dir = "reports/decisions"
         md_path = os.path.join(output_dir, "decisions_report.md")
-        reporter.generate_markdown_report(allocation_results, md_path)
-        console.print(f"[green]✅ Rapport Markdown : {md_path}[/green]")
-        json_path = os.path.join(output_dir, "decisions_report.json")
-        reporter.generate_json_report(allocation_results, json_path)
-        console.print(f"[green]✅ Rapport JSON : {json_path}[/green]")
+        if allocation_results is not None:
+            reporter.generate_markdown_report(allocation_results, md_path)
+            console.print(f"[green]✅ Rapport Markdown : {md_path}[/green]")
+            json_path = os.path.join(output_dir, "decisions_report.json")
+            reporter.generate_json_report(allocation_results, json_path)
+            console.print(f"[green]✅ Rapport JSON : {json_path}[/green]")
     except Exception as e:
         console.print(f"[yellow]⚠️  Impossible de générer les rapports : {e}[/yellow]")
 
@@ -152,6 +310,9 @@ def run_feasibility_all(loader: DataLoader) -> None:
 def run_feasibility_of(loader: DataLoader) -> None:
     num_of = questionary.text("Numéro de l'OF (ex: F426-08419)").ask()
     if not num_of:
+        return
+    mode = select_feasibility_mode(include_compare=True)
+    if mode is None:
         return
     detailed = questionary.confirm("Rapport détaillé ?", default=False).ask()
     if detailed is None:
@@ -164,36 +325,39 @@ def run_feasibility_of(loader: DataLoader) -> None:
 
     console.print(f"\n[bold]🎯 Vérification de l'OF {num_of}[/bold]\n")
 
-    console.print("[bold cyan]🔍 Vérification immédiate...[/bold cyan]")
-    immediate_checker = ImmediateChecker(loader)
-    immediate_results = immediate_checker.check_all_ofs(ofs)
-    imm_feasible = sum(1 for r in immediate_results.values() if r.feasible)
-    console.print(f"[green]✅ {imm_feasible}/{len(ofs)} faisable[/green]\n")
+    if mode == "compare":
+        console.print("[bold cyan]🔍 Vérification immédiate...[/bold cyan]")
+        immediate_checker = ImmediateChecker(loader)
+        immediate_results = immediate_checker.check_all_ofs(ofs)
+        imm_feasible = sum(1 for r in immediate_results.values() if r.feasible)
+        console.print(f"[green]✅ {imm_feasible}/{len(ofs)} faisable[/green]\n")
 
-    console.print("[bold cyan]🔮 Vérification projetée...[/bold cyan]")
-    projected_checker = ProjectedChecker(loader)
-    projected_results = projected_checker.check_all_ofs(ofs)
-    proj_feasible = sum(1 for r in projected_results.values() if r.feasible)
-    console.print(f"[green]✅ {proj_feasible}/{len(ofs)} faisable[/green]\n")
+        console.print("[bold cyan]🔮 Vérification projetée...[/bold cyan]")
+        projected_checker = ProjectedChecker(loader)
+        projected_results = projected_checker.check_all_ofs(ofs)
+        proj_feasible = sum(1 for r in projected_results.values() if r.feasible)
+        console.print(f"[green]✅ {proj_feasible}/{len(ofs)} faisable[/green]\n")
 
-    console.print("[bold cyan]📦 Allocation virtuelle...[/bold cyan]")
-    recursive_checker = RecursiveChecker(loader, use_receptions=True, check_date=date.today())
-    agent_engine = AgentEngine()
-    allocation_manager = AllocationManager(
-        data_loader=loader, checker=recursive_checker, decision_engine=agent_engine
-    )
-    allocation_results = allocation_manager.allocate_stock(ofs)
-    alloc_feasible = sum(1 for r in allocation_results.values() if r.status.value == "feasible")
-    console.print(f"[green]✅ {alloc_feasible}/{len(ofs)} alloué[/green]\n")
+        allocation_results = run_allocation_mode(loader, ofs)
 
-    format_of_table(ofs, immediate_results, projected_results, allocation_results)
-    format_summary(immediate_results, projected_results, allocation_results)
+        format_of_table(ofs, immediate_results, projected_results, allocation_results)
+        format_summary(immediate_results, projected_results, allocation_results)
 
-    if detailed:
-        for of in ofs:
-            result = projected_results.get(of.num_of)
-            if result and not result.feasible:
-                format_detailed_report(of, result)
+        if detailed:
+            for of in ofs:
+                result = projected_results.get(of.num_of)
+                if result and not result.feasible:
+                    format_detailed_report(of, result)
+    else:
+        mode_label, results, allocation_results = run_single_feasibility_mode(loader, ofs, mode)
+        display_single_mode_results(ofs, mode_label, results, allocation_results)
+        display_single_mode_summary(mode_label, results, allocation_results)
+
+        if detailed:
+            for of in ofs:
+                result = results.get(of.num_of)
+                if result and not result.feasible:
+                    format_detailed_report(of, result)
 
 
 def run_commande(loader: DataLoader) -> None:
@@ -251,6 +415,9 @@ def run_commande(loader: DataLoader) -> None:
 
 
 def run_s1(loader: DataLoader) -> None:
+    mode = select_feasibility_mode(include_compare=False)
+    if mode is None:
+        return
     horizon_str = questionary.text("Horizon (jours)", default="7").ask()
     if horizon_str is None:
         return
@@ -269,7 +436,12 @@ def run_s1(loader: DataLoader) -> None:
         else:
             llm_model = questionary.text("Modèle LLM", default="mistral-large-latest").ask() or "mistral-large-latest"
 
-    args = argparse.Namespace(horizon=horizon, llm=use_llm, llm_model=llm_model)
+    args = argparse.Namespace(
+        horizon=horizon,
+        llm=use_llm,
+        llm_model=llm_model,
+        feasibility_mode=mode,
+    )
     main_s1(args, loader, include_previsions=previsions)
 
 

@@ -6,8 +6,8 @@ from typing import Dict
 
 from rich.console import Console
 
-from .checkers import ProjectedChecker, RecursiveChecker
-from .algorithms import CommandeOFMatcher
+from .checkers import ImmediateChecker, ProjectedChecker, RecursiveChecker
+from .algorithms import AllocationManager, CommandeOFMatcher
 from .reports import (
     build_action_report,
     format_rapport_s1,
@@ -165,9 +165,40 @@ def main_s1(args, loader, include_previsions=False):
             console.print()
 
         # 4. Vérifier la faisabilité des OF (avec quantités modifiées pour ACCEPT_PARTIAL)
-        console.print(f"[bold cyan]🔍 Vérification de faisabilité...[/bold cyan]")
-        checker = ProjectedChecker(loader)
-        resultats_faisabilite = checker.check_all_ofs(ofs_a_verifier)
+        feasibility_mode = getattr(args, "feasibility_mode", "projected")
+        mode_labels = {
+            "immediate": "dispo immédiate",
+            "projected": "dispo projetée",
+            "allocation": "allocation virtuelle",
+        }
+        console.print(
+            f"[bold cyan]🔍 Vérification de faisabilité "
+            f"({mode_labels.get(feasibility_mode, feasibility_mode)})...[/bold cyan]"
+        )
+
+        if feasibility_mode == "immediate":
+            checker = ImmediateChecker(loader)
+            resultats_faisabilite = checker.check_all_ofs(ofs_a_verifier)
+        elif feasibility_mode == "allocation":
+            recursive_checker = RecursiveChecker(
+                loader,
+                use_receptions=True,
+                check_date=date_ref,
+            )
+            allocation_manager = AllocationManager(
+                data_loader=loader,
+                checker=recursive_checker,
+                decision_engine=None,
+            )
+            allocation_results = allocation_manager.allocate_stock(ofs_a_verifier)
+            resultats_faisabilite = {
+                of_num: result.feasibility_result
+                for of_num, result in allocation_results.items()
+                if result.feasibility_result is not None
+            }
+        else:
+            checker = ProjectedChecker(loader)
+            resultats_faisabilite = checker.check_all_ofs(ofs_a_verifier)
 
         faisables = sum(1 for r in resultats_faisabilite.values() if r.feasible)
         console.print(f"✅ {faisables}/{len(ofs_a_verifier)} OF faisables")
