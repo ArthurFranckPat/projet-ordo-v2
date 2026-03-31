@@ -8,6 +8,8 @@ dependencies = [
     "pandas>=2.0.0",
     "rich>=13.0.0",
     "python-dateutil>=2.8.0",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
 ]
 
 [project.optional-dependencies]
