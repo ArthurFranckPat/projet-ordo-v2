@@ -637,3 +637,90 @@ class TestRecursiveChecker:
         assert result.feasible is False
         assert result.missing_components["PHANTOM"] == 5
         assert any("aucune variante complète disponible" in alert for alert in result.alerts)
+
+    def test_fantom_sibling_real_variant_is_ignored_when_phantom_present(self):
+        """Si le parent contient AFANT + variante réelle, on ne mélange pas les deux."""
+        nomenclatures = {
+            "PF_PARENT": Nomenclature(
+                article="PF_PARENT",
+                designation="DESC_PARENT",
+                composants=[
+                    NomenclatureEntry(
+                        article_parent="PF_PARENT",
+                        designation_parent="DESC_PARENT",
+                        niveau=10,
+                        article_composant="PHANTOM",
+                        designation_composant="DESC_PHANTOM",
+                        qte_lien=1,
+                        type_article=TypeArticle.FABRIQUE,
+                    ),
+                    NomenclatureEntry(
+                        article_parent="PF_PARENT",
+                        designation_parent="DESC_PARENT",
+                        niveau=20,
+                        article_composant="REAL_A",
+                        designation_composant="DESC_REAL_A",
+                        qte_lien=1,
+                        type_article=TypeArticle.ACHETE,
+                    ),
+                ],
+            ),
+            "PHANTOM": Nomenclature(
+                article="PHANTOM",
+                designation="DESC_PHANTOM",
+                composants=[
+                    NomenclatureEntry(
+                        article_parent="PHANTOM",
+                        designation_parent="DESC_PHANTOM",
+                        niveau=5,
+                        article_composant="REAL_A",
+                        designation_composant="DESC_REAL_A",
+                        qte_lien=1,
+                        type_article=TypeArticle.ACHETE,
+                    )
+                ],
+            ),
+        }
+        stocks = {
+            "PHANTOM": Stock("PHANTOM", stock_physique=10, stock_alloue=0, stock_bloque=0),
+            "REAL_A": Stock("REAL_A", stock_physique=0, stock_alloue=0, stock_bloque=0),
+        }
+        articles = {
+            "PHANTOM": Article(
+                code="PHANTOM",
+                description="Article fantôme",
+                categorie="AFANT",
+                type_appro=TypeApprovisionnement.ACHAT,
+                delai_reappro=0,
+            ),
+            "REAL_A": Article(
+                code="REAL_A",
+                description="Référence réelle",
+                categorie="AP",
+                type_appro=TypeApprovisionnement.ACHAT,
+                delai_reappro=0,
+            ),
+        }
+
+        loader = SimpleNamespace(
+            commandes_clients=[],
+            articles=articles,
+            get_article=lambda article: articles.get(article),
+            get_nomenclature=lambda article: nomenclatures.get(article),
+            get_stock=lambda article: stocks.get(article),
+            get_allocations_of=lambda _num_doc: [],
+            get_ofs_by_article=lambda *_args, **_kwargs: [],
+            get_receptions=lambda article: [],
+        )
+
+        checker = RecursiveChecker(loader)
+
+        result = checker._check_article_recursive(
+            article="PF_PARENT",
+            qte_besoin=5,
+            date_besoin=date(2026, 4, 1),
+            depth=0,
+        )
+
+        assert result.feasible is True
+        assert result.missing_components == {}

@@ -201,6 +201,8 @@ class RecursiveChecker(BaseChecker):
             result.components_checked = 1
             return result
 
+        phantom_variant_exclusions = self._get_phantom_sibling_variant_exclusions(nomenclature)
+
         # Récupérer les allocations de l'OF parent si fourni
         # IMPORTANT : Les OF FERMES avec allocations ne participent pas à l'allocation virtuelle
         allocations_parent = {}
@@ -212,6 +214,9 @@ class RecursiveChecker(BaseChecker):
 
         # Vérifier chaque composant de la nomenclature
         for composant in nomenclature.composants:
+            if composant.article_composant in phantom_variant_exclusions:
+                continue
+
             result.components_checked += 1
 
             # Calculer la quantité nécessaire pour ce composant
@@ -521,6 +526,23 @@ class RecursiveChecker(BaseChecker):
             (component.article_composant, component.qte_lien)
             for component in nomenclature.composants
         ]
+
+    def _get_phantom_sibling_variant_exclusions(self, nomenclature: Nomenclature) -> set[str]:
+        """Retourne les composants à ignorer car déjà couverts par un AFANT.
+
+        Si un parent contient à la fois un AFANT et sa variante réelle en
+        composants frères, l'AFANT pilote seul le choix de variante pour l'OF.
+        """
+        exclusions: set[str] = set()
+        component_codes = {component.article_composant for component in nomenclature.composants}
+        for component in nomenclature.composants:
+            article_code = component.article_composant
+            if not self._is_phantom_article(article_code):
+                continue
+            for variant_article, _ in self._get_phantom_variants(article_code):
+                if variant_article != article_code and variant_article in component_codes:
+                    exclusions.add(variant_article)
+        return exclusions
 
     def _is_subcontracted_article(self, article_code: str) -> bool:
         """Retourne True si l'article relève de la sous-traitance."""

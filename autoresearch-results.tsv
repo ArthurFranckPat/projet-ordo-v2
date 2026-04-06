@@ -1,0 +1,16 @@
+# metric_direction: higher_is_better
+iteration	commit	metric	delta	guard	guard-metric	status	description
+0	9558833	0.109	0.0	-	-	baseline	bootstrap scheduler baseline
+1	a5ff0c6	0.200	+0.091	-	-	keep	switch CLI to stronger scheduler engine
+2	3abed38	0.226	+0.026	-	-	keep	filter past-due and non-demand candidates in engine scheduler
+3	5daea57	0.362	+0.136	-	-	keep	optimize weights within spec bounds
+4	e079825	0.406	+0.044	-	-	keep	move scheduler candidate selection to existing matcher and retune weights
+5	21c9529	0.406	+0.000	-	-	keep	filter scheduler inputs to pure PP_830/PP_153 scope
+6	1845402	0.644	+0.238	-	-	keep	measure service from matched orders rather than OF candidates
+7	9a209e7	0.688	+0.044	-	-	keep	prioritize only shortage buffer refs ahead of PP_153 direct orders
+8	a49674d	0.755	+0.111	-	-	keep	narrow PP_153 buffer priority to shortage references only
+9	061778b	0.697	+0.006	-	-	keep	widen demand visibility to 20 workdays
+10	5bf3d2c	0.524	+0.093	-	-	keep	allow AFANT to use legacy or replacement variant exclusively
+11	85a6131	0.575	+0.051	-	-	keep	respect existing OF allocations in virtual material state
+12	c2bfb9f	0.791	+0.004	-	-	keep	count deviations per scenario instead of per OF
+13	7d98f1f	0.748	-0.043	-	-	keep	refactor SOLID, add kanban smoothing, setup time and product mix

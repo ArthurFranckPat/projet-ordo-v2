@@ -1,69 +1,56 @@
-"""Modeles pour le scheduler AUTORESEARCH."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date
+from typing import Optional
 
 
-@dataclass(frozen=True)
+@dataclass
 class CandidateOF:
-    """OF candidat au planning journalier."""
+    """Scheduling candidate on one target line."""
 
     num_of: str
     article: str
     description: str
     line: str
     due_date: date
-    charge_hours: float
     quantity: int
-    tracked_bdh_qty: dict[str, int] = field(default_factory=dict)
-    related_orders: list[str] = field(default_factory=list)
-    kind: str = "direct"
+    charge_hours: float
+    is_buffer_bdh: bool = False
+    scheduled_day: Optional[date] = None
+    start_hour: Optional[float] = None
+    end_hour: Optional[float] = None
+    reason: str = ""
+    deviations: int = 0
 
 
-@dataclass(frozen=True)
-class ScheduledTask:
-    """Affectation d'un OF sur une journee."""
+@dataclass
+class DaySchedule:
+    """Daily schedule for one line."""
 
-    num_of: str
-    article: str
     line: str
-    scheduled_day: date
-    start_hour: float
-    end_hour: float
-    charge_hours: float
-    due_date: date
-    quantity: int
-    comfortable: bool
-    kind: str
-
-
-@dataclass(frozen=True)
-class BufferSnapshot:
-    """Etat projete du stock BDH a une date."""
-
     day: date
-    article: str
-    stock_projected: int
+    assignments: list[CandidateOF] = field(default_factory=list)
+
+    @property
+    def total_hours(self) -> float:
+        return round(sum(item.charge_hours for item in self.assignments), 3)
 
 
-@dataclass(frozen=True)
-class PlanningKPIs:
-    """KPIs exposes par le scheduler."""
+@dataclass
+class SchedulerResult:
+    """Final scheduling outputs."""
 
+    score: float
     taux_service: float
     taux_ouverture: float
     nb_deviations: int
-    score: float
-
-
-@dataclass(frozen=True)
-class PlanningResult:
-    """Resultat complet du scheduler."""
-
-    planning_pp830: list[ScheduledTask]
-    planning_pp153: list[ScheduledTask]
-    stock_projection: list[BufferSnapshot]
+    nb_jit: int
+    nb_changements_serie: int
+    planning_pp830: list[CandidateOF]
+    planning_pp153: list[CandidateOF]
+    stock_projection: list[dict[str, object]]
     alerts: list[str]
-    kpis: PlanningKPIs
+    weights: dict[str, float]
+    unscheduled_rows: list[dict[str, object]]
+    order_rows: list[dict[str, object]]

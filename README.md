@@ -68,7 +68,29 @@ src/
 ├── loaders/        # Chargement des CSV
 ├── checkers/       # Algorithmes de vérification
 ├── algorithms/     # Gestion de la concurrence
+├── scheduler/      # Moteur d'ordonnancement (Architecture SOLID)
+│   ├── engine.py     # Orchestrateur principal
+│   ├── lines.py      # Stratégies de planification par ligne (PP830, PP153)
+│   ├── heuristics.py # Algorithmes de tri et calcul de priorités
+│   ├── material.py   # Gestion des stocks, nomenclatures et consos Kanban
+│   ├── reporting.py  # Export CSV/JSON des KPIs et alertes
+│   └── models.py     # Classes de données du scheduler
 └── utils/          # Formatage et affichage
+```
+
+## ⚙️ Moteur de Planification (Scheduler)
+
+Le système intègre désormais un moteur de planification autonome capable de générer des plannings de production optimisés.
+
+**Fonctionnalités clés :**
+- **Lissage Kanban continu** : Algorithme minimisant les pics journaliers de consommation des composants Kanban (avec lecture récursive des nomenclatures).
+- **Temps de changement de série (Setup)** : Déduction dynamique du temps de setup (ex: 15min) sur la capacité de la ligne lors des changements d'articles.
+- **Mix Produit** : Équilibrage automatique des familles de produits fabriquées sur une même journée.
+- **Gestion des buffers (TOC)** : Sécurisation de l'alimentation des lignes d'assemblage finales via les lignes amonts.
+
+Pour générer un planning :
+```bash
+python3 main.py --schedule
 ```
 
 ## 📚 Documentation

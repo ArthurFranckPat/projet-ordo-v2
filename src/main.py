@@ -168,11 +168,34 @@ def main():
         taux_service = getattr(getattr(result, "kpis", result), "taux_service")
         taux_ouverture = getattr(getattr(result, "kpis", result), "taux_ouverture")
         nb_deviations = getattr(getattr(result, "kpis", result), "nb_deviations")
+        nb_changements_serie = getattr(getattr(result, "kpis", result), "nb_changements_serie", 0)
         score = getattr(getattr(result, "kpis", result), "score")
+        
+        # Calculer le cumul de charge par jour et nombre d'OFs
+        console.print("\n[bold cyan]📊 Cumul de charge par jour :[/bold cyan]")
+        from collections import defaultdict
+        charge_jour = defaultdict(lambda: {"PP_830": {"h": 0.0, "ofs": 0}, "PP_153": {"h": 0.0, "ofs": 0}})
+        for item in result.planning_pp830:
+            if item.scheduled_day:
+                charge_jour[item.scheduled_day]["PP_830"]["h"] += item.charge_hours
+                charge_jour[item.scheduled_day]["PP_830"]["ofs"] += 1
+        for item in result.planning_pp153:
+            if item.scheduled_day:
+                charge_jour[item.scheduled_day]["PP_153"]["h"] += item.charge_hours
+                charge_jour[item.scheduled_day]["PP_153"]["ofs"] += 1
+        
+        for jour in sorted(charge_jour.keys()):
+            h830 = charge_jour[jour]["PP_830"]["h"]
+            ofs830 = charge_jour[jour]["PP_830"]["ofs"]
+            h153 = charge_jour[jour]["PP_153"]["h"]
+            ofs153 = charge_jour[jour]["PP_153"]["ofs"]
+            console.print(f"  📅 {jour.isoformat()} : PP_830 = {h830:5.2f}h ({ofs830:2d} OFs) | PP_153 = {h153:5.2f}h ({ofs153:2d} OFs)")
+        
         console.print(
-            f"✅ KPIs : taux_service={taux_service:.3f}, "
+            f"\n✅ KPIs : taux_service={taux_service:.3f}, "
             f"taux_ouverture={taux_ouverture:.3f}, "
-            f"deviations={nb_deviations}"
+            f"deviations={nb_deviations}, "
+            f"changements_serie={nb_changements_serie}"
         )
         print(f"SCORE: {score:.3f}")
         return
