@@ -79,6 +79,8 @@ class SchedulerResult:
     stock_projection: list[dict[str, object]]
     alerts: list[str]
     weights: dict[str, float]
+    unscheduled_rows: list[dict[str, object]]
+    order_rows: list[dict[str, object]]
 
 
 def run_schedule(
@@ -162,8 +164,11 @@ def run_schedule(
     planning_pp830 = [assignment for plan in day_plans[PP_830] for assignment in plan.assignments]
     planning_pp153 = [assignment for plan in day_plans[PP_153] for assignment in plan.assignments]
     _mark_unscheduled_candidates(by_line, alerts)
+    unscheduled_rows = _build_unscheduled_rows(by_line)
 
     planned_by_of = {assignment.num_of: assignment.scheduled_day for assignment in planning_pp830 + planning_pp153}
+    candidate_by_of = {candidate.num_of: candidate for candidate in candidates}
+    order_rows = _build_order_rows(matching_results, planned_by_of, candidate_by_of, loader, checker)
     taux_service, on_time, total_candidates = _compute_service_rate_from_matching(matching_results, planned_by_of)
     taux_ouverture = _compute_open_rate(day_plans)
     nb_deviations = sum(candidate.deviations for candidate in candidates)
@@ -187,6 +192,8 @@ def run_schedule(
         stock_projection=stock_projection,
         alerts=alerts,
         weights=weights,
+        unscheduled_rows=unscheduled_rows,
+        order_rows=order_rows,
     )
     _write_outputs(output_dir, result)
     return result
@@ -332,7 +339,7 @@ def _schedule_line(line, day, candidates, loader, checker, projected_buffer, ale
 
         requirements = _tracked_bdh_requirements(loader, candidate.article, candidate.quantity)
         if any(projected_buffer[article] < qty for article, qty in requirements.items()):
-            candidate.reason = "stock tampon BDH insuffisant"
+            candidate.reason = _format_buffer_shortage_reason(requirements, projected_buffer)
             continue
 
         candidate.reason = ""
@@ -424,6 +431,59 @@ def _schedule_pp153(day, candidates, loader, checker, projected_buffer, incoming
     return plan
 
 
+
+
+def _format_feasibility_cause(result) -> str:
+    """Rend une cause métier lisible à partir du résultat du checker."""
+    details: list[str] = []
+    if getattr(result, 'missing_components', None):
+        missing = ', '.join(
+            f"{article} x{quantity}"
+            for article, quantity in sorted(result.missing_components.items())
+        )
+        details.append(f"composants indisponibles: {missing}")
+    if getattr(result, 'alerts', None):
+        details.extend(result.alerts[:3])
+    if not details:
+        return "composants indisponibles"
+    return ' | '.join(details)
+
+
+def _format_buffer_shortage_reason(requirements: dict[str, float], projected_buffer: dict[str, float]) -> str:
+    """Explique quel stock tampon BDH manque réellement."""
+    shortages = []
+    for article, required_qty in sorted(requirements.items()):
+        available_qty = projected_buffer.get(article, 0.0)
+        if available_qty < required_qty:
+            shortages.append(
+                f"{article} besoin={round(required_qty, 3)} dispo={round(available_qty, 3)}"
+            )
+    if not shortages:
+        return "stock tampon BDH insuffisant"
+    return "stock tampon BDH insuffisant: " + ', '.join(shortages)
+
+
+def _build_unscheduled_rows(by_line: dict[str, list[CandidateOF]]) -> list[dict[str, object]]:
+    """Construit un export structuré des OF non planifiés avec leur cause."""
+    rows: list[dict[str, object]] = []
+    for line, candidates in by_line.items():
+        for candidate in candidates:
+            if candidate.scheduled_day is not None:
+                continue
+            rows.append(
+                {
+                    'ligne': line,
+                    'of': candidate.num_of,
+                    'article': candidate.article,
+                    'date_echeance': candidate.due_date.isoformat(),
+                    'charge_h': round(candidate.charge_hours, 3),
+                    'cause': candidate.reason or 'capacité insuffisante ou hors horizon',
+                }
+            )
+    rows.sort(key=lambda row: (row['ligne'], row['date_echeance'], row['of']))
+    return rows
+
+
 def _availability_status(checker, loader, candidate, day: date) -> tuple[str, str]:
     date_j2 = previous_workday(day, 2)
     date_j1 = previous_workday(day, 1)
@@ -448,7 +508,7 @@ def _availability_status(checker, loader, candidate, day: date) -> tuple[str, st
     stock = loader.get_stock(candidate.article)
     if stock and stock.disponible() >= candidate.quantity:
         return "tight", ""
-    return "blocked", "composants indisponibles"
+    return "blocked", _format_feasibility_cause(result)
 
 
 def _tracked_bdh_requirements(loader, article: str, quantity: int, seen: Optional[set[str]] = None) -> dict[str, float]:
@@ -487,6 +547,73 @@ def _mark_unscheduled_candidates(by_line, alerts) -> None:
                 alerts.append(f"{line} {candidate.num_of} ({candidate.article}) non planifiable : {reason}")
 
 
+
+
+
+
+def _build_order_rows(matching_results, planned_by_of: dict[str, date], candidate_by_of: dict[str, CandidateOF], loader, checker) -> list[dict[str, object]]:
+    """Construit un rapport métier des lignes de besoin avec cause."""
+    rows: list[dict[str, object]] = []
+    for result in matching_results:
+        commande = result.commande
+        of = result.of
+        planned_day = planned_by_of.get(of.num_of) if of else None
+        candidate = candidate_by_of.get(of.num_of) if of else None
+
+        if of is None:
+            if 'stock complet' in result.matching_method.lower():
+                statut = 'Servie sur stock'
+                cause = 'stock complet'
+            else:
+                statut = 'Non couverte'
+                cause = ' | '.join(result.alertes) if result.alertes else result.matching_method
+        elif planned_day is None:
+            statut = 'Non planifiée'
+            cause = candidate.reason if candidate and candidate.reason else 'OF matché mais non injecté au planning'
+        elif planned_day <= commande.date_expedition_demandee:
+            statut = 'Servie par OF planifié à temps'
+            cause = 'OF planifié à temps'
+        else:
+            statut = 'Servie en retard'
+            if candidate is not None:
+                status_at_due, reason_at_due = _availability_status(checker, loader, candidate, commande.date_expedition_demandee)
+                if status_at_due == 'blocked':
+                    cause = reason_at_due
+                else:
+                    cause = (
+                        f"planifié le {planned_day.isoformat()} après l'échéance du {commande.date_expedition_demandee.isoformat()} | "
+                        "capacité ligne saturée avant son tour"
+                    )
+            else:
+                cause = f"planifié le {planned_day.isoformat()} après l'échéance du {commande.date_expedition_demandee.isoformat()}"
+
+        rows.append({
+            'commande': commande.num_commande,
+            'article_commande': commande.article,
+            'date_demande': commande.date_expedition_demandee.isoformat(),
+            'qte': commande.qte_restante,
+            'of': of.num_of if of else '',
+            'article_of': of.article if of else '',
+            'jour_planifie': planned_day.isoformat() if planned_day else '',
+            'statut': statut,
+            'cause': cause,
+            'matching': result.matching_method,
+        })
+
+    rows.sort(key=lambda row: (row['date_demande'], row['commande'], row['article_commande']))
+    return rows
+
+
+def _write_order_rows_csv(path: Path, rows: list[dict[str, object]]) -> None:
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.writer(handle)
+        writer.writerow([
+            "commande", "article_commande", "date_demande", "qte", "of", "article_of", "jour_planifie", "statut", "cause", "matching"
+        ])
+        for row in rows:
+            writer.writerow([
+                row['commande'], row['article_commande'], row['date_demande'], row['qte'], row['of'], row['article_of'], row['jour_planifie'], row['statut'], row['cause'], row['matching']
+            ])
 
 
 def _compute_service_rate_from_matching(matching_results, planned_by_of: dict[str, date]) -> tuple[float, int, int]:
@@ -528,6 +655,9 @@ def _write_outputs(output_dir: str, result: SchedulerResult) -> None:
     _write_planning_csv(output_path / "planning_PP153.csv", result.planning_pp153)
     _write_stock_projection_csv(output_path / "stock_BDH_projete.csv", result.stock_projection)
 
+    _write_unscheduled_csv(output_path / "ofs_non_faisables.csv", result.unscheduled_rows)
+    _write_order_rows_csv(output_path / "lignes_commande_statut.csv", result.order_rows)
+
     with (output_path / "kpis.json").open("w", encoding="utf-8") as handle:
         json.dump(
             {
@@ -545,6 +675,23 @@ def _write_outputs(output_dir: str, result: SchedulerResult) -> None:
     with (output_path / "alertes.txt").open("w", encoding="utf-8") as handle:
         for alert in result.alerts:
             handle.write(alert + "\n")
+
+
+
+
+def _write_unscheduled_csv(path: Path, rows: list[dict[str, object]]) -> None:
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(["ligne", "of", "article", "date_echeance", "charge_h", "cause"])
+        for row in rows:
+            writer.writerow([
+                row['ligne'],
+                row['of'],
+                row['article'],
+                row['date_echeance'],
+                row['charge_h'],
+                row['cause'],
+            ])
 
 
 def _write_planning_csv(path: Path, planning: list[CandidateOF]) -> None:
