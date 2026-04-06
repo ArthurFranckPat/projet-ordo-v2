@@ -17,6 +17,7 @@ class DemandMatch:
     due_date: date
     order_numbers: tuple[str, ...]
     quantity: int
+    due_buckets: tuple[tuple[date, int], ...] = ()
 
 
 def _build_demand_indexes(loader, horizon_end: date) -> tuple[dict[str, DemandMatch], dict[str, DemandMatch]]:
@@ -35,10 +36,17 @@ def _build_demand_indexes(loader, horizon_end: date) -> tuple[dict[str, DemandMa
     def collapse(entries: dict[str, list]) -> dict[str, DemandMatch]:
         collapsed: dict[str, DemandMatch] = {}
         for key, besoins in entries.items():
-            due = min(item.date_expedition_demandee for item in besoins)
-            numbers = tuple(sorted({item.num_commande for item in besoins}))
-            quantity = sum(item.qte_restante for item in besoins)
-            collapsed[key] = DemandMatch(due_date=due, order_numbers=numbers, quantity=quantity)
+            sorted_besoins = sorted(besoins, key=lambda item: (item.date_expedition_demandee, item.num_commande))
+            due = sorted_besoins[0].date_expedition_demandee
+            numbers = tuple(item.num_commande for item in sorted_besoins)
+            quantity = sum(item.qte_restante for item in sorted_besoins)
+            due_buckets = tuple((item.date_expedition_demandee, item.qte_restante) for item in sorted_besoins)
+            collapsed[key] = DemandMatch(
+                due_date=due,
+                order_numbers=numbers,
+                quantity=quantity,
+                due_buckets=due_buckets,
+            )
         return collapsed
 
     return collapse(by_of), collapse(by_article)
@@ -67,6 +75,23 @@ def _make_candidate(loader, bom_graph: BomGraph, of, line: str, demand: DemandMa
         kind=kind,
     )
 
+
+
+
+def _coverage_due_date(demand: DemandMatch, covered_before: int, qty: int) -> date:
+    """Retourne l'echeance du bloc de demande couvert par cet OF."""
+    if not demand.due_buckets:
+        return demand.due_date
+
+    target = covered_before + qty
+    cumulative = 0
+    selected_due = demand.due_date
+    for due_date, bucket_qty in demand.due_buckets:
+        cumulative += bucket_qty
+        selected_due = due_date
+        if cumulative >= target:
+            break
+    return selected_due
 
 def build_candidates(loader, bom_graph: BomGraph, horizon_end: date) -> list[CandidateOF]:
     """Construit les OF cibles PP_830 / PP_153 a planifier.
@@ -117,7 +142,14 @@ def build_candidates(loader, bom_graph: BomGraph, horizon_end: date) -> list[Can
         pool.sort(key=lambda item: (item[0].date_fin, 0 if item[0].is_ferme() else 1, item[0].num_of))
         covered_qty = 0
         for of, line in pool:
-            candidate = _make_candidate(loader, bom_graph, of, line, demand, kind="direct")
+            due_for_slice = _coverage_due_date(demand, covered_qty, of.qte_restante)
+            sliced_demand = DemandMatch(
+                due_date=due_for_slice,
+                order_numbers=demand.order_numbers,
+                quantity=min(of.qte_restante, max(demand.quantity - covered_qty, 0)),
+                due_buckets=demand.due_buckets,
+            )
+            candidate = _make_candidate(loader, bom_graph, of, line, sliced_demand, kind="direct")
             if candidate is None:
                 continue
             candidates.append(candidate)
