@@ -25,6 +25,8 @@ from .weights import load_weights
 
 PP_830 = "PP_830"
 PP_153 = "PP_153"
+PLANNING_WORKDAYS = 5
+DEMAND_WORKDAYS = 20
 LINE_CAPACITY_HOURS = 14.0
 LINE_MIN_OPEN_HOURS = 7.0
 BUFFER_THRESHOLDS = {
@@ -87,20 +89,23 @@ def run_schedule(
     loader,
     *,
     reference_date: Optional[date] = None,
-    horizon_workdays: int = 15,
+    planning_workdays: int = PLANNING_WORKDAYS,
+    demand_workdays: int = DEMAND_WORKDAYS,
     output_dir: str = "outputs",
     weights_path: str = "config/weights.json",
 ) -> SchedulerResult:
     """Run the AUTORESEARCH bootstrap scheduler."""
     reference_date = reference_date or date.today()
     weights = load_weights(weights_path)
-    workdays = build_workdays(reference_date, horizon_workdays)
+    workdays = build_workdays(reference_date, planning_workdays)
+    demand_workdays_list = build_workdays(reference_date, demand_workdays)
     target_lines = _build_target_line_articles(loader)
     checker = RecursiveChecker(loader, use_receptions=True)
 
     candidates, matching_alerts, matching_results = _select_candidates_from_matching(
         loader=loader,
-        workdays=workdays,
+        planning_workdays=workdays,
+        demand_workdays=demand_workdays_list,
         target_lines=target_lines,
     )
 
@@ -225,21 +230,22 @@ def _is_target_scope_order(besoin, loader, target_lines) -> bool:
     return False
 
 
-def _select_candidates_from_matching(loader, workdays, target_lines) -> tuple[list[CandidateOF], list[str], list]:
+def _select_candidates_from_matching(loader, planning_workdays, demand_workdays, target_lines) -> tuple[list[CandidateOF], list[str], list]:
     """Construit les candidats à partir du matching existant commande->OF.
 
     On réutilise le matcher du repo pour éviter de reconstruire la logique
     métier MTS/NOR/MTO. Le scheduler ne décide ensuite que du placement
     journalier et de la stratégie buffer BDH.
     """
-    reference_date = workdays[0]
-    horizon_end = next_workday(workdays[-1])
+    reference_date = planning_workdays[0]
+    demand_horizon_end = next_workday(demand_workdays[-1])
+    planning_horizon_end = next_workday(planning_workdays[-1])
     commandes = [
         besoin
         for besoin in loader.commandes_clients
         if besoin.est_commande()
         and besoin.qte_restante > 0
-        and reference_date <= besoin.date_expedition_demandee <= horizon_end
+        and reference_date <= besoin.date_expedition_demandee <= demand_horizon_end
         and _is_target_scope_order(besoin, loader, target_lines)
     ]
     commandes.sort(key=lambda b: (b.date_expedition_demandee, b.date_commande or date.max, b.num_commande))
@@ -318,7 +324,7 @@ def _select_candidates_from_matching(loader, workdays, target_lines) -> tuple[li
             )
         )
 
-    candidates.sort(key=lambda item: (item.due_date, 0 if item.is_buffer_bdh else 1, item.charge_hours, item.num_of))
+    candidates.sort(key=lambda item: (item.due_date > planning_horizon_end, item.due_date, 0 if item.is_buffer_bdh else 1, item.charge_hours, item.num_of))
     return candidates, alerts, matching_results
 
 
