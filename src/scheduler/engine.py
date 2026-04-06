@@ -363,14 +363,17 @@ def _schedule_pp153(day, candidates, loader, checker, projected_buffer, incoming
     plan = DaySchedule(line=PP_153, day=day)
     used_hours = 0.0
 
-    buffer_first = any(projected_buffer[article] < threshold for article, threshold in BUFFER_THRESHOLDS.items())
+    shortage_articles = {
+        article
+        for article, threshold in BUFFER_THRESHOLDS.items()
+        if projected_buffer.get(article, 0.0) < threshold
+    }
+    buffer_first = bool(shortage_articles)
 
     def sort_key(candidate: CandidateOF) -> tuple:
-        shortage = max(0.0, BUFFER_THRESHOLDS.get(candidate.article, 0) - projected_buffer.get(candidate.article, 0.0))
-        if buffer_first and candidate.is_buffer_bdh:
-            return (0, -shortage, candidate.due_date, candidate.charge_hours)
-        if buffer_first and not candidate.is_buffer_bdh:
-            return (1, candidate.due_date, candidate.charge_hours, candidate.article)
+        if buffer_first:
+            buffer_priority = 0 if (candidate.is_buffer_bdh and candidate.article in shortage_articles) else 1
+            return (buffer_priority, candidate.due_date, candidate.charge_hours, candidate.article)
         return (0 if candidate.is_buffer_bdh else 1, candidate.due_date, candidate.charge_hours, candidate.article)
 
     for candidate in sorted(candidates, key=sort_key):
