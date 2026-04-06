@@ -49,3 +49,5 @@ data/decisions_history.json
 # Frontend
 frontend/node_modules/
 frontend/dist/
+
+autoresearch-results.tsv

@@ -11,6 +11,7 @@ from .checkers import ImmediateChecker, ProjectedChecker, RecursiveChecker
 from .algorithms import AllocationManager, AllocationResult, AllocationStatus
 from .agents import AgentEngine
 from .algorithms import calculate_weekly_charge_heatmap
+from .scheduler import run_schedule
 from .utils import format_of_table, format_detailed_report, format_summary
 from .utils import format_charge_heatmap, format_charge_summary
 from .main_s1 import main_s1
@@ -133,6 +134,22 @@ def main():
     console.print(f"✅ {len(loader.receptions)} réceptions chargées")
     console.print(f"✅ {len(loader.commandes_clients)} commandes clients chargées")
     console.print()
+
+    # Mode AUTORESEARCH scheduler
+    if args.schedule and not args.s1:
+        console.print("[bold cyan]🗓️  Scheduler AUTORESEARCH...[/bold cyan]")
+        result = run_schedule(loader, output_dir="outputs", weights_path="config/weights.json")
+        console.print(
+            f"✅ Planning genere : PP_830={len(result.planning_pp830)} taches, "
+            f"PP_153={len(result.planning_pp153)} taches"
+        )
+        console.print(
+            f"✅ KPIs : taux_service={result.kpis.taux_service:.3f}, "
+            f"taux_ouverture={result.kpis.taux_ouverture:.3f}, "
+            f"deviations={result.kpis.nb_deviations}"
+        )
+        print(f"SCORE: {result.kpis.score:.3f}")
+        return
 
     # Mode Heatmap de charge
     if args.charge_heatmap:
