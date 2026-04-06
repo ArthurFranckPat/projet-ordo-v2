@@ -166,7 +166,7 @@ def build_candidates(loader, bom_graph: BomGraph, horizon_end: date) -> list[Can
                 continue
             pool.append(of)
         pool.sort(key=lambda of: (of.date_fin, 0 if of.is_ferme() else 1, of.num_of))
-        for of in pool[:3]:
+        for of in pool[:8]:
             candidate = _make_candidate(loader, bom_graph, of, "PP_153", None, kind="buffer")
             if candidate is not None:
                 candidates.append(candidate)
