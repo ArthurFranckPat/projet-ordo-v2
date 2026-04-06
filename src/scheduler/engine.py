@@ -200,6 +200,18 @@ def _build_target_line_articles(loader) -> dict[str, set[str]]:
     return target_lines
 
 
+def _is_target_scope_order(besoin, loader, target_lines) -> bool:
+    """Retourne True si le besoin appartient reellement au scope 830/153."""
+    if besoin.article in target_lines[PP_830] or besoin.article in target_lines[PP_153]:
+        return True
+    if besoin.of_contremarque:
+        linked_of = loader.get_of_by_num(besoin.of_contremarque)
+        if linked_of is not None:
+            if linked_of.article in target_lines[PP_830] or linked_of.article in target_lines[PP_153]:
+                return True
+    return False
+
+
 def _select_candidates_from_matching(loader, workdays, target_lines) -> tuple[list[CandidateOF], list[str]]:
     """Construit les candidats à partir du matching existant commande->OF.
 
@@ -215,6 +227,7 @@ def _select_candidates_from_matching(loader, workdays, target_lines) -> tuple[li
         if besoin.est_commande()
         and besoin.qte_restante > 0
         and reference_date <= besoin.date_expedition_demandee <= horizon_end
+        and _is_target_scope_order(besoin, loader, target_lines)
     ]
     commandes.sort(key=lambda b: (b.date_expedition_demandee, b.date_commande or date.max, b.num_commande))
 
