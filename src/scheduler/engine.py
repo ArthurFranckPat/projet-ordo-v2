@@ -520,6 +520,11 @@ def _build_receptions_by_day(loader) -> dict[date, list[tuple[str, int]]]:
     return receptions_by_day
 
 
+def _candidate_has_existing_allocations(loader, candidate: CandidateOF) -> bool:
+    """Retourne True si l'OF possède déjà des allocations ERP."""
+    return bool(loader.get_allocations_of(candidate.num_of))
+
+
 def _apply_receptions_for_day(material_state: StockState, receptions_by_day, day: date) -> None:
     """Ajoute au stock virtuel les réceptions disponibles ce jour."""
     for article, quantity in receptions_by_day.get(day, []):
@@ -528,6 +533,9 @@ def _apply_receptions_for_day(material_state: StockState, receptions_by_day, day
 
 def _reserve_candidate_components(loader, checker, candidate, day: date, material_state: StockState) -> None:
     """Réserve virtuellement les composants consommés par un OF planifié."""
+    if _candidate_has_existing_allocations(loader, candidate):
+        return
+
     allocations = _collect_component_reservations(
         loader,
         checker,
@@ -606,6 +614,7 @@ def _availability_status(checker, loader, candidate, day: date, material_state: 
     date_j2 = previous_workday(day, 2)
     date_j1 = previous_workday(day, 1)
     date_j0 = day
+    has_existing_allocations = _candidate_has_existing_allocations(loader, candidate)
     runtime_checker = (
         RecursiveChecker(
             loader,
@@ -627,7 +636,7 @@ def _availability_status(checker, loader, candidate, day: date, material_state: 
             qte_besoin=candidate.quantity,
             date_besoin=need_date,
             depth=0,
-            of_parent_est_ferme=False,
+            of_parent_est_ferme=has_existing_allocations,
             num_of_parent=candidate.num_of,
         )
         if result.feasible:
