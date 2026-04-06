@@ -1,5 +1,5 @@
 """Scheduler AUTORESEARCH."""
 
-from .run import run_schedule
+from .engine import run_schedule
 
 __all__ = ["run_schedule"]

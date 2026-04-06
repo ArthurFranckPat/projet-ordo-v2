@@ -447,7 +447,7 @@ def _write_outputs(output_dir: str, result: SchedulerResult) -> None:
 
     _write_planning_csv(output_path / "planning_PP830.csv", result.planning_pp830)
     _write_planning_csv(output_path / "planning_PP153.csv", result.planning_pp153)
-    _write_stock_projection_csv(output_path / "stock_BDH_projeté.csv", result.stock_projection)
+    _write_stock_projection_csv(output_path / "stock_BDH_projete.csv", result.stock_projection)
 
     with (output_path / "kpis.json").open("w", encoding="utf-8") as handle:
         json.dump(
