@@ -93,7 +93,11 @@ def run_schedule(
     weights = load_weights(weights_path)
     workdays = build_workdays(reference_date, horizon_workdays)
     target_lines = _build_target_line_articles(loader)
-    due_dates_by_of, due_dates_by_article = _build_due_date_indexes(loader)
+    due_dates_by_of, due_dates_by_article = _build_due_date_indexes(
+        loader,
+        reference_date=reference_date,
+        horizon_end=next_workday(workdays[-1]),
+    )
     checker = RecursiveChecker(loader, use_receptions=True)
 
     candidates = _select_candidates(
@@ -202,11 +206,13 @@ def _build_target_line_articles(loader) -> dict[str, set[str]]:
     return target_lines
 
 
-def _build_due_date_indexes(loader) -> tuple[dict[str, date], dict[str, date]]:
+def _build_due_date_indexes(loader, *, reference_date: date, horizon_end: date) -> tuple[dict[str, date], dict[str, date]]:
     due_by_of: dict[str, date] = {}
     due_by_article: dict[str, date] = {}
     for besoin in loader.commandes_clients:
         if not besoin.est_commande() or besoin.qte_restante <= 0:
+            continue
+        if not (reference_date <= besoin.date_expedition_demandee <= horizon_end):
             continue
         current_article_due = due_by_article.get(besoin.article)
         if current_article_due is None or besoin.date_expedition_demandee < current_article_due:
