@@ -1,7 +1,7 @@
 """Point d'entrée principal du système de vérification de faisabilité."""
 
 import argparse
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 from rich.console import Console
@@ -17,6 +17,19 @@ from .utils import format_charge_heatmap, format_charge_summary
 from .main_s1 import main_s1
 
 console = Console()
+
+
+DEFAULT_REFERENCE_DATE = date(2026, 3, 23)
+
+
+def _resolve_reference_date(raw_value: str | None) -> date:
+    """Resolve la date de reference du run.
+
+    Par defaut, on utilise la date d'extraction des donnees partagee par l'utilisateur.
+    """
+    if not raw_value:
+        return DEFAULT_REFERENCE_DATE
+    return datetime.strptime(raw_value, "%Y-%m-%d").date()
 
 
 def main():
@@ -108,12 +121,21 @@ def main():
         help="Modèle LLM à utiliser (défaut: mistral-large-latest)",
     )
     parser.add_argument(
+        "--reference-date",
+        type=str,
+        default=None,
+        help="Date de reference de l'analyse au format YYYY-MM-DD (defaut: 2026-03-23)",
+    )
+
+    parser.add_argument(
         "--organization",
         action="store_true",
         help="Analyse l'organisation de l'atelier sur 4 semaines",
     )
 
     args = parser.parse_args()
+    reference_date = _resolve_reference_date(args.reference_date)
+    setattr(args, "_resolved_reference_date", reference_date)
 
     # Vérifier que le répertoire de données existe
     data_dir = Path(args.data_dir)
@@ -138,7 +160,7 @@ def main():
     # Mode AUTORESEARCH scheduler
     if args.schedule and not args.s1:
         console.print("[bold cyan]🗓️  Scheduler AUTORESEARCH...[/bold cyan]")
-        result = run_schedule(loader, output_dir="outputs", weights_path="config/weights.json")
+        result = run_schedule(loader, reference_date=reference_date, output_dir="outputs", weights_path="config/weights.json")
         console.print(
             f"✅ Planning genere : PP_830={len(result.planning_pp830)} taches, "
             f"PP_153={len(result.planning_pp153)} taches"
@@ -163,7 +185,7 @@ def main():
         console.print()
 
         # Filtrer les besoins
-        date_ref = date.today()
+        date_ref = reference_date
         besoins = loader.commandes_clients
 
         # Calculer les bornes
@@ -212,7 +234,7 @@ def main():
         matcher = CommandeOFMatcher(loader, date_tolerance_days=10)
 
         results = agent.analyze_workshop_organization(
-            reference_date=date.today(),
+            reference_date=reference_date,
             matcher=matcher
         )
 

@@ -33,7 +33,7 @@ def main_s1(args, loader, include_previsions=False):
 
     console = Console()
     horizon = args.horizon
-    date_ref = date.today()
+    date_ref = getattr(args, "_resolved_reference_date", date.today())
 
     console.print(f"[bold cyan]🎯 MODE S+1 : Commandes des {horizon} prochains jours[/bold cyan]")
     console.print(f"   Date de référence : {date_ref.strftime('%d/%m/%Y')}")
