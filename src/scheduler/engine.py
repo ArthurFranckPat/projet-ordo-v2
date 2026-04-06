@@ -96,7 +96,7 @@ def run_schedule(
     target_lines = _build_target_line_articles(loader)
     checker = RecursiveChecker(loader, use_receptions=True)
 
-    candidates, matching_alerts = _select_candidates_from_matching(
+    candidates, matching_alerts, matching_results = _select_candidates_from_matching(
         loader=loader,
         workdays=workdays,
         target_lines=target_lines,
@@ -163,7 +163,8 @@ def run_schedule(
     planning_pp153 = [assignment for plan in day_plans[PP_153] for assignment in plan.assignments]
     _mark_unscheduled_candidates(by_line, alerts)
 
-    taux_service, on_time, total_candidates = _compute_service_rate(candidates)
+    planned_by_of = {assignment.num_of: assignment.scheduled_day for assignment in planning_pp830 + planning_pp153}
+    taux_service, on_time, total_candidates = _compute_service_rate_from_matching(matching_results, planned_by_of)
     taux_ouverture = _compute_open_rate(day_plans)
     nb_deviations = sum(candidate.deviations for candidate in candidates)
     deviation_penalty = min(
@@ -212,7 +213,7 @@ def _is_target_scope_order(besoin, loader, target_lines) -> bool:
     return False
 
 
-def _select_candidates_from_matching(loader, workdays, target_lines) -> tuple[list[CandidateOF], list[str]]:
+def _select_candidates_from_matching(loader, workdays, target_lines) -> tuple[list[CandidateOF], list[str], list]:
     """Construit les candidats à partir du matching existant commande->OF.
 
     On réutilise le matcher du repo pour éviter de reconstruire la logique
@@ -306,7 +307,7 @@ def _select_candidates_from_matching(loader, workdays, target_lines) -> tuple[li
         )
 
     candidates.sort(key=lambda item: (item.due_date, 0 if item.is_buffer_bdh else 1, item.charge_hours, item.num_of))
-    return candidates, alerts
+    return candidates, alerts, matching_results
 
 
 def _schedule_line(line, day, candidates, loader, checker, projected_buffer, alerts) -> DaySchedule:
@@ -475,6 +476,24 @@ def _mark_unscheduled_candidates(by_line, alerts) -> None:
                 reason = candidate.reason or "capacité insuffisante ou hors horizon"
                 alerts.append(f"{line} {candidate.num_of} ({candidate.article}) non planifiable : {reason}")
 
+
+
+
+def _compute_service_rate_from_matching(matching_results, planned_by_of: dict[str, date]) -> tuple[float, int, int]:
+    """Calcule le service au niveau commande a partir du matching existant."""
+    total = len(matching_results)
+    served = 0
+    for result in matching_results:
+        if result.of is None:
+            if "stock complet" in result.matching_method.lower():
+                served += 1
+            continue
+
+        scheduled_day = planned_by_of.get(result.of.num_of)
+        if scheduled_day and scheduled_day <= result.commande.date_expedition_demandee:
+            served += 1
+
+    return ((served / total) if total else 0.0), served, total
 
 def _compute_service_rate(candidates: list[CandidateOF]) -> tuple[float, int, int]:
     total = len(candidates)
