@@ -104,6 +104,12 @@ class StockState:
                 self.allocated_stock[article] = 0
             self.allocated_stock[article] += quantity
 
+    def add_supply(self, article: str, quantity: int):
+        """Ajoute un approvisionnement à l'état de stock virtuel."""
+        if article not in self.initial_stock:
+            self.initial_stock[article] = 0
+        self.initial_stock[article] += quantity
+
 
 class AllocationManager:
     """Gestionnaire de l'allocation de stock avec gestion de la concurrence.

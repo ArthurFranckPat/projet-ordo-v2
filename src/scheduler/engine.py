@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Optional
 
 from ..algorithms.charge_calculator import calculate_article_charge
+from ..algorithms.allocation import StockState
 from ..algorithms.matching import CommandeOFMatcher
 from ..checkers.recursive import RecursiveChecker
 from .calendar import build_workdays, next_workday, previous_workday
@@ -101,6 +102,8 @@ def run_schedule(
     demand_horizon_end = reference_date + timedelta(days=demand_calendar_days)
     target_lines = _build_target_line_articles(loader)
     checker = RecursiveChecker(loader, use_receptions=True)
+    material_state = _build_material_stock_state(loader)
+    receptions_by_day = _build_receptions_by_day(loader)
 
     candidates, matching_alerts, matching_results = _select_candidates_from_matching(
         loader=loader,
@@ -128,6 +131,7 @@ def run_schedule(
     }
 
     for day in workdays:
+        _apply_receptions_for_day(material_state, receptions_by_day, day)
         for article, qty in incoming_buffer[day].items():
             projected_buffer[article] += qty
 
@@ -138,6 +142,7 @@ def run_schedule(
             loader=loader,
             checker=checker,
             projected_buffer=projected_buffer,
+            material_state=material_state,
             alerts=alerts,
         )
         day_plans[PP_830][workdays.index(day)] = pp830_day
@@ -153,6 +158,7 @@ def run_schedule(
             checker=checker,
             projected_buffer=projected_buffer,
             incoming_buffer=incoming_buffer,
+            material_state=material_state,
             alerts=alerts,
         )
         day_plans[PP_153][workdays.index(day)] = pp153_day
@@ -327,7 +333,7 @@ def _select_candidates_from_matching(loader, planning_workdays, demand_horizon_e
     return candidates, alerts, matching_results
 
 
-def _schedule_line(line, day, candidates, loader, checker, projected_buffer, alerts) -> DaySchedule:
+def _schedule_line(line, day, candidates, loader, checker, projected_buffer, material_state, alerts) -> DaySchedule:
     plan = DaySchedule(line=line, day=day)
     used_hours = 0.0
     earliest_blocked_due: Optional[date] = None
@@ -340,7 +346,7 @@ def _schedule_line(line, day, candidates, loader, checker, projected_buffer, ale
         if used_hours + candidate.charge_hours > LINE_CAPACITY_HOURS:
             continue
 
-        status, reason = _availability_status(checker, loader, candidate, day)
+        status, reason = _availability_status(checker, loader, candidate, day, material_state)
         if status == "blocked":
             candidate.reason = reason
             if earliest_blocked_due is None or candidate.due_date < earliest_blocked_due:
@@ -359,6 +365,7 @@ def _schedule_line(line, day, candidates, loader, checker, projected_buffer, ale
         used_hours += candidate.charge_hours
         candidate.end_hour = round(used_hours, 3)
         plan.assignments.append(candidate)
+        _reserve_candidate_components(loader, checker, candidate, day, material_state)
 
         if used_hours >= LINE_CAPACITY_HOURS:
             break
@@ -376,7 +383,7 @@ def _schedule_line(line, day, candidates, loader, checker, projected_buffer, ale
     return plan
 
 
-def _schedule_pp153(day, candidates, loader, checker, projected_buffer, incoming_buffer, alerts) -> DaySchedule:
+def _schedule_pp153(day, candidates, loader, checker, projected_buffer, incoming_buffer, material_state, alerts) -> DaySchedule:
     plan = DaySchedule(line=PP_153, day=day)
     used_hours = 0.0
 
@@ -406,7 +413,7 @@ def _schedule_pp153(day, candidates, loader, checker, projected_buffer, incoming
         if used_hours + candidate.charge_hours > LINE_CAPACITY_HOURS:
             continue
 
-        status, reason = _availability_status(checker, loader, candidate, day)
+        status, reason = _availability_status(checker, loader, candidate, day, material_state)
         if status == "blocked":
             candidate.reason = reason
             continue
@@ -417,6 +424,7 @@ def _schedule_pp153(day, candidates, loader, checker, projected_buffer, incoming
         used_hours += candidate.charge_hours
         candidate.end_hour = round(used_hours, 3)
         plan.assignments.append(candidate)
+        _reserve_candidate_components(loader, checker, candidate, day, material_state)
 
         if candidate.is_buffer_bdh:
             availability_day = next_workday(day)
@@ -494,17 +502,127 @@ def _build_unscheduled_rows(by_line: dict[str, list[CandidateOF]]) -> list[dict[
     return rows
 
 
-def _availability_status(checker, loader, candidate, day: date) -> tuple[str, str]:
+def _build_material_stock_state(loader) -> StockState:
+    """Initialise l'état de stock virtuel pour les composants."""
+    initial_stock = {}
+    for article, stock in loader.stocks.items():
+        initial_stock[article] = stock.disponible()
+    return StockState(initial_stock)
+
+
+def _build_receptions_by_day(loader) -> dict[date, list[tuple[str, int]]]:
+    """Indexe les réceptions fournisseurs par jour."""
+    receptions_by_day: dict[date, list[tuple[str, int]]] = defaultdict(list)
+    for reception in loader.receptions:
+        receptions_by_day[reception.date_reception_prevue].append(
+            (reception.article, reception.quantite_restante)
+        )
+    return receptions_by_day
+
+
+def _apply_receptions_for_day(material_state: StockState, receptions_by_day, day: date) -> None:
+    """Ajoute au stock virtuel les réceptions disponibles ce jour."""
+    for article, quantity in receptions_by_day.get(day, []):
+        material_state.add_supply(article, quantity)
+
+
+def _reserve_candidate_components(loader, checker, candidate, day: date, material_state: StockState) -> None:
+    """Réserve virtuellement les composants consommés par un OF planifié."""
+    allocations = _collect_component_reservations(
+        loader,
+        checker,
+        candidate.article,
+        candidate.quantity,
+        day,
+        material_state,
+    )
+    if allocations:
+        material_state.allocate(candidate.num_of, allocations)
+
+
+def _collect_component_reservations(
+    loader,
+    checker,
+    article: str,
+    quantity: int,
+    day: date,
+    material_state: StockState,
+    seen: Optional[set[str]] = None,
+) -> dict[str, int]:
+    """Collecte les réservations matière induites par un OF.
+
+    Réserve les achats directs, les AFANT résolus sur une seule variante,
+    et les sous-ensembles fabriqués effectivement consommés depuis le stock.
+    """
+    seen = seen or set()
+    if article in seen:
+        return {}
+    seen.add(article)
+
+    nomenclature = loader.get_nomenclature(article)
+    if nomenclature is None:
+        return {}
+
+    allocations: dict[str, int] = defaultdict(int)
+    for composant in nomenclature.composants:
+        qte_composant = int(composant.qte_lien * quantity)
+        article_code = composant.article_composant
+
+        if checker._is_component_treated_as_purchase(article_code, composant.is_achete(), composant.is_fabrique()):
+            if checker._is_phantom_article(article_code):
+                options = [(article_code, 1.0)] + [
+                    option for option in checker._get_phantom_variants(article_code)
+                    if option[0] != article_code
+                ]
+                for variant_article, qte_lien in options:
+                    variant_qty = int(qte_lien * qte_composant)
+                    if material_state.get_available(variant_article) >= variant_qty:
+                        allocations[variant_article] += variant_qty
+                        break
+            else:
+                allocations[article_code] += qte_composant
+            continue
+
+        if composant.is_fabrique():
+            if material_state.get_available(article_code) >= qte_composant:
+                allocations[article_code] += qte_composant
+            else:
+                nested = _collect_component_reservations(
+                    loader,
+                    checker,
+                    article_code,
+                    qte_composant,
+                    day,
+                    material_state,
+                    seen.copy(),
+                )
+                for nested_article, nested_qty in nested.items():
+                    allocations[nested_article] += nested_qty
+
+    return dict(allocations)
+
+
+def _availability_status(checker, loader, candidate, day: date, material_state: Optional[StockState] = None) -> tuple[str, str]:
     date_j2 = previous_workday(day, 2)
     date_j1 = previous_workday(day, 1)
     date_j0 = day
+    runtime_checker = (
+        RecursiveChecker(
+            loader,
+            use_receptions=False,
+            check_date=day,
+            stock_state=material_state,
+        )
+        if material_state is not None
+        else checker
+    )
 
     for status, need_date in (
         ("comfortable", date_j2),
         ("comfortable", date_j1),
         ("tight", date_j0),
     ):
-        result = checker._check_article_recursive(
+        result = runtime_checker._check_article_recursive(
             article=candidate.article,
             qte_besoin=candidate.quantity,
             date_besoin=need_date,

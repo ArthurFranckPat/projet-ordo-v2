@@ -238,8 +238,11 @@ class RecursiveChecker(BaseChecker):
 
             elif composant.is_fabrique():
                 # LOGIQUE : Vérifier le stock disponible d'abord
-                stock = self.data_loader.get_stock(composant.article_composant)
-                stock_dispo = stock.disponible() if stock else 0
+                if self.stock_state:
+                    stock_dispo = self.stock_state.get_available(composant.article_composant)
+                else:
+                    stock = self.data_loader.get_stock(composant.article_composant)
+                    stock_dispo = stock.disponible() if stock else 0
 
                 # Si stock suffisant OU OF parent FERME avec allocation → Pas de vérification d'OF
                 if of_parent_est_ferme and composant.article_composant in allocations_parent:
