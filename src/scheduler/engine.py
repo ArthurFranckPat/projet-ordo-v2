@@ -337,6 +337,7 @@ def _schedule_line(line, day, candidates, loader, checker, projected_buffer, mat
     plan = DaySchedule(line=line, day=day)
     used_hours = 0.0
     earliest_blocked_due: Optional[date] = None
+    deviation_marked = False
 
     for candidate in candidates:
         if candidate.scheduled_day is not None:
@@ -359,7 +360,14 @@ def _schedule_line(line, day, candidates, loader, checker, projected_buffer, mat
             continue
 
         candidate.reason = ""
-        candidate.deviations = 1 if earliest_blocked_due and candidate.due_date > earliest_blocked_due else 0
+        candidate.deviations = 0
+        if (
+            not deviation_marked
+            and earliest_blocked_due is not None
+            and candidate.due_date > earliest_blocked_due
+        ):
+            candidate.deviations = 1
+            deviation_marked = True
         candidate.scheduled_day = day
         candidate.start_hour = round(used_hours, 3)
         used_hours += candidate.charge_hours
@@ -386,6 +394,8 @@ def _schedule_line(line, day, candidates, loader, checker, projected_buffer, mat
 def _schedule_pp153(day, candidates, loader, checker, projected_buffer, incoming_buffer, material_state, alerts) -> DaySchedule:
     plan = DaySchedule(line=PP_153, day=day)
     used_hours = 0.0
+    earliest_blocked_due: Optional[date] = None
+    deviation_marked = False
 
     shortage_articles = {
         article
@@ -416,9 +426,19 @@ def _schedule_pp153(day, candidates, loader, checker, projected_buffer, incoming
         status, reason = _availability_status(checker, loader, candidate, day, material_state)
         if status == "blocked":
             candidate.reason = reason
+            if earliest_blocked_due is None or candidate.due_date < earliest_blocked_due:
+                earliest_blocked_due = candidate.due_date
             continue
 
         candidate.reason = ""
+        candidate.deviations = 0
+        if (
+            not deviation_marked
+            and earliest_blocked_due is not None
+            and candidate.due_date > earliest_blocked_due
+        ):
+            candidate.deviations = 1
+            deviation_marked = True
         candidate.scheduled_day = day
         candidate.start_hour = round(used_hours, 3)
         used_hours += candidate.charge_hours
@@ -571,8 +591,12 @@ def _collect_component_reservations(
     if nomenclature is None:
         return {}
 
+    phantom_variant_exclusions = checker._get_phantom_sibling_variant_exclusions(nomenclature)
     allocations: dict[str, int] = defaultdict(int)
     for composant in nomenclature.composants:
+        if composant.article_composant in phantom_variant_exclusions:
+            continue
+
         qte_composant = int(composant.qte_lien * quantity)
         article_code = composant.article_composant
 
