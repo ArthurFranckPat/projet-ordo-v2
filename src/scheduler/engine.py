@@ -239,6 +239,11 @@ def _select_candidates(loader, workdays, target_lines, due_dates_by_of, due_date
         if line is None:
             continue
 
+        has_firm_demand = of.num_of in due_dates_by_of or of.article in due_dates_by_article
+        is_buffer_bdh = of.article in BUFFER_THRESHOLDS and line == PP_153
+        if not has_firm_demand and not is_buffer_bdh:
+            continue
+
         due_date = due_dates_by_of.get(of.num_of) or due_dates_by_article.get(of.article) or of.date_fin
         if due_date > next_workday(horizon_end):
             continue
