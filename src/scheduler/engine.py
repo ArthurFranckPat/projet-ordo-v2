@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Optional
 
 from ..algorithms.charge_calculator import calculate_article_charge
+from ..algorithms.matching import CommandeOFMatcher
 from ..checkers.recursive import RecursiveChecker
 from .calendar import build_workdays, next_workday, previous_workday
 from .weights import load_weights
@@ -93,26 +94,19 @@ def run_schedule(
     weights = load_weights(weights_path)
     workdays = build_workdays(reference_date, horizon_workdays)
     target_lines = _build_target_line_articles(loader)
-    due_dates_by_of, article_demand_buckets = _build_due_date_indexes(
-        loader,
-        reference_date=reference_date,
-        horizon_end=next_workday(workdays[-1]),
-    )
     checker = RecursiveChecker(loader, use_receptions=True)
 
-    candidates = _select_candidates(
+    candidates, matching_alerts = _select_candidates_from_matching(
         loader=loader,
         workdays=workdays,
         target_lines=target_lines,
-        due_dates_by_of=due_dates_by_of,
-        article_demand_buckets=article_demand_buckets,
     )
 
     day_plans = {
         PP_830: [DaySchedule(line=PP_830, day=day) for day in workdays],
         PP_153: [DaySchedule(line=PP_153, day=day) for day in workdays],
     }
-    alerts: list[str] = []
+    alerts: list[str] = list(matching_alerts)
 
     projected_buffer = {
         article: float(loader.get_stock(article).disponible() if loader.get_stock(article) else 0)
@@ -206,38 +200,37 @@ def _build_target_line_articles(loader) -> dict[str, set[str]]:
     return target_lines
 
 
-def _build_due_date_indexes(
-    loader,
-    *,
-    reference_date: date,
-    horizon_end: date,
-) -> tuple[dict[str, date], dict[str, list[tuple[date, int]]]]:
-    due_by_of: dict[str, date] = {}
-    demand_buckets_by_article: dict[str, list[tuple[date, int]]] = defaultdict(list)
-    for besoin in loader.commandes_clients:
-        if not besoin.est_commande() or besoin.qte_restante <= 0:
-            continue
-        if not (reference_date <= besoin.date_expedition_demandee <= horizon_end):
-            continue
-        demand_buckets_by_article[besoin.article].append((besoin.date_expedition_demandee, besoin.qte_restante))
-        if besoin.of_contremarque:
-            current_of_due = due_by_of.get(besoin.of_contremarque)
-            if current_of_due is None or besoin.date_expedition_demandee < current_of_due:
-                due_by_of[besoin.of_contremarque] = besoin.date_expedition_demandee
+def _select_candidates_from_matching(loader, workdays, target_lines) -> tuple[list[CandidateOF], list[str]]:
+    """Construit les candidats à partir du matching existant commande->OF.
 
-    for article, buckets in demand_buckets_by_article.items():
-        buckets.sort(key=lambda item: item[0])
+    On réutilise le matcher du repo pour éviter de reconstruire la logique
+    métier MTS/NOR/MTO. Le scheduler ne décide ensuite que du placement
+    journalier et de la stratégie buffer BDH.
+    """
+    reference_date = workdays[0]
+    horizon_end = next_workday(workdays[-1])
+    commandes = [
+        besoin
+        for besoin in loader.commandes_clients
+        if besoin.est_commande()
+        and besoin.qte_restante > 0
+        and reference_date <= besoin.date_expedition_demandee <= horizon_end
+    ]
+    commandes.sort(key=lambda b: (b.date_expedition_demandee, b.date_commande or date.max, b.num_commande))
 
-    return due_by_of, demand_buckets_by_article
+    matcher = CommandeOFMatcher(loader, date_tolerance_days=30)
+    matching_results = matcher.match_commandes(commandes)
 
-
-def _select_candidates(loader, workdays, target_lines, due_dates_by_of, article_demand_buckets) -> list[CandidateOF]:
-    horizon_end = workdays[-1]
-    grouped_ofs: dict[tuple[str, str], list] = defaultdict(list)
-    for of in loader.ofs:
-        if of.qte_restante <= 0:
+    candidate_specs: dict[str, dict[str, object]] = {}
+    alerts: list[str] = []
+    for result in matching_results:
+        if result.of is None:
+            alerts.append(
+                f"COMMANDE {result.commande.num_commande} ({result.commande.article}) sans OF matché : {result.matching_method}"
+            )
             continue
 
+        of = result.of
         line = None
         if of.article in target_lines[PP_830]:
             line = PP_830
@@ -246,58 +239,61 @@ def _select_candidates(loader, workdays, target_lines, due_dates_by_of, article_
         if line is None:
             continue
 
-        has_firm_demand = of.num_of in due_dates_by_of or of.article in article_demand_buckets
-        is_buffer_bdh = of.article in BUFFER_THRESHOLDS and line == PP_153
-        if not has_firm_demand and not is_buffer_bdh:
-            continue
+        spec = candidate_specs.setdefault(
+            of.num_of,
+            {
+                'of': of,
+                'line': line,
+                'due_date': result.commande.date_expedition_demandee,
+                'orders': set(),
+            },
+        )
+        if result.commande.date_expedition_demandee < spec['due_date']:
+            spec['due_date'] = result.commande.date_expedition_demandee
+        spec['orders'].add(result.commande.num_commande)
 
-        grouped_ofs[(of.article, line)].append(of)
-
-    candidates: list[CandidateOF] = []
-    for (article, line), ofs in grouped_ofs.items():
-        ofs.sort(key=lambda item: (item.date_fin, 0 if item.is_ferme() else 1, item.num_of))
-        demand_buckets = article_demand_buckets.get(article, [])
-        covered_quantity = 0
-
-        for of in ofs:
-            if of.num_of in due_dates_by_of:
-                due_date = due_dates_by_of[of.num_of]
-            elif demand_buckets:
-                cumulative = 0
-                due_date = demand_buckets[-1][0]
-                target_quantity = covered_quantity + of.qte_restante
-                for bucket_due, bucket_qty in demand_buckets:
-                    cumulative += bucket_qty
-                    due_date = bucket_due
-                    if cumulative >= target_quantity:
-                        break
-                covered_quantity += of.qte_restante
-            else:
-                due_date = of.date_fin
-
-            if due_date > next_workday(horizon_end):
-                continue
-
-            charge_map = calculate_article_charge(of.article, of.qte_restante, loader)
-            charge_hours = round(charge_map.get(line, 0.0), 3)
-            if charge_hours <= 0:
-                continue
-
-            candidates.append(
-                CandidateOF(
-                    num_of=of.num_of,
-                    article=of.article,
-                    description=of.description,
-                    line=line,
-                    due_date=due_date,
-                    quantity=of.qte_restante,
-                    charge_hours=charge_hours,
-                    is_buffer_bdh=of.article in BUFFER_THRESHOLDS and line == PP_153,
-                )
+    # Ajouter les OF BDH comme levier de reconstitution tampon sur PP_153.
+    for tracked_article in BUFFER_THRESHOLDS:
+        buffer_ofs = [
+            of for of in loader.ofs
+            if of.article == tracked_article and of.qte_restante > 0 and of.statut_num in (1, 2, 3)
+        ]
+        buffer_ofs.sort(key=lambda item: (item.date_fin, 0 if item.is_ferme() else 1, item.num_of))
+        for of in buffer_ofs[:8]:
+            candidate_specs.setdefault(
+                of.num_of,
+                {
+                    'of': of,
+                    'line': PP_153,
+                    'due_date': of.date_fin,
+                    'orders': set(),
+                },
             )
 
-    candidates.sort(key=lambda item: (item.due_date, 0 if item.is_buffer_bdh else 1, item.charge_hours))
-    return candidates
+    candidates: list[CandidateOF] = []
+    for spec in candidate_specs.values():
+        of = spec['of']
+        line = spec['line']
+        due_date = spec['due_date']
+        charge_map = calculate_article_charge(of.article, of.qte_restante, loader)
+        charge_hours = round(charge_map.get(line, 0.0), 3)
+        if charge_hours <= 0:
+            continue
+        candidates.append(
+            CandidateOF(
+                num_of=of.num_of,
+                article=of.article,
+                description=of.description,
+                line=line,
+                due_date=due_date,
+                quantity=of.qte_restante,
+                charge_hours=charge_hours,
+                is_buffer_bdh=of.article in BUFFER_THRESHOLDS and line == PP_153,
+            )
+        )
+
+    candidates.sort(key=lambda item: (item.due_date, 0 if item.is_buffer_bdh else 1, item.charge_hours, item.num_of))
+    return candidates, alerts
 
 
 def _schedule_line(line, day, candidates, loader, checker, projected_buffer, alerts) -> DaySchedule:
