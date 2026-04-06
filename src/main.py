@@ -143,12 +143,16 @@ def main():
             f"✅ Planning genere : PP_830={len(result.planning_pp830)} taches, "
             f"PP_153={len(result.planning_pp153)} taches"
         )
+        taux_service = getattr(getattr(result, "kpis", result), "taux_service")
+        taux_ouverture = getattr(getattr(result, "kpis", result), "taux_ouverture")
+        nb_deviations = getattr(getattr(result, "kpis", result), "nb_deviations")
+        score = getattr(getattr(result, "kpis", result), "score")
         console.print(
-            f"✅ KPIs : taux_service={result.kpis.taux_service:.3f}, "
-            f"taux_ouverture={result.kpis.taux_ouverture:.3f}, "
-            f"deviations={result.kpis.nb_deviations}"
+            f"✅ KPIs : taux_service={taux_service:.3f}, "
+            f"taux_ouverture={taux_ouverture:.3f}, "
+            f"deviations={nb_deviations}"
         )
-        print(f"SCORE: {result.kpis.score:.3f}")
+        print(f"SCORE: {score:.3f}")
         return
 
     # Mode Heatmap de charge
