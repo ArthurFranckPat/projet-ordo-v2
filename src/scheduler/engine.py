@@ -168,8 +168,13 @@ def run_schedule(
 
     planned_by_of = {assignment.num_of: assignment.scheduled_day for assignment in planning_pp830 + planning_pp153}
     candidate_by_of = {candidate.num_of: candidate for candidate in candidates}
+    planning_horizon_end = next_workday(workdays[-1])
     order_rows = _build_order_rows(matching_results, planned_by_of, candidate_by_of, loader, checker)
-    taux_service, on_time, total_candidates = _compute_service_rate_from_matching(matching_results, planned_by_of)
+    taux_service, on_time, total_candidates = _compute_service_rate_from_matching(
+        matching_results,
+        planned_by_of,
+        evaluation_horizon_end=planning_horizon_end,
+    )
     taux_ouverture = _compute_open_rate(day_plans)
     nb_deviations = sum(candidate.deviations for candidate in candidates)
     deviation_penalty = min(
@@ -616,11 +621,24 @@ def _write_order_rows_csv(path: Path, rows: list[dict[str, object]]) -> None:
             ])
 
 
-def _compute_service_rate_from_matching(matching_results, planned_by_of: dict[str, date]) -> tuple[float, int, int]:
-    """Calcule le service au niveau commande a partir du matching existant."""
-    total = len(matching_results)
+def _compute_service_rate_from_matching(
+    matching_results,
+    planned_by_of: dict[str, date],
+    *,
+    evaluation_horizon_end: date | None = None,
+) -> tuple[float, int, int]:
+    """Calcule le service au niveau commande a partir du matching existant.
+
+    Si `evaluation_horizon_end` est fourni, seules les lignes de besoin dont
+    l'échéance tombe dans la fenêtre de pilotage sont prises dans le KPI.
+    """
+    relevant_results = [
+        result for result in matching_results
+        if evaluation_horizon_end is None or result.commande.date_expedition_demandee <= evaluation_horizon_end
+    ]
+    total = len(relevant_results)
     served = 0
-    for result in matching_results:
+    for result in relevant_results:
         if result.of is None:
             if "stock complet" in result.matching_method.lower():
                 served += 1
