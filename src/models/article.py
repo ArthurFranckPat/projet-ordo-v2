@@ -43,6 +43,10 @@ class Article:
         """Vérifie si l'article est fabriqué."""
         return self.type_appro == TypeApprovisionnement.FABRICATION
 
+    def is_fantome(self) -> bool:
+        """Vérifie si l'article est un article fantôme."""
+        return str(self.categorie or "").upper() == "AFANT"
+
     @classmethod
     def from_csv_row(cls, row: dict) -> "Article":
         """Crée un Article à partir d'une ligne CSV.

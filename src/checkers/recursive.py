@@ -223,9 +223,18 @@ class RecursiveChecker(BaseChecker):
                     # Composant déjà alloué à l'OF FERME → Pas de vérification
                     continue
                 else:
-                    # Pas alloué → Vérifier le stock disponible
-                    stock_result = self._check_stock(composant.article_composant, qte_composant, date_besoin)
-                    result.merge(stock_result)
+                    if self._is_phantom_article(composant.article_composant):
+                        phantom_result = self._check_phantom_component(
+                            article_code=composant.article_composant,
+                            qte_besoin=qte_composant,
+                            date_besoin=date_besoin,
+                            depth=depth + 1,
+                        )
+                        result.merge(phantom_result)
+                    else:
+                        # Pas alloué → Vérifier le stock disponible
+                        stock_result = self._check_stock(composant.article_composant, qte_composant, date_besoin)
+                        result.merge(stock_result)
 
             elif composant.is_fabrique():
                 # LOGIQUE : Vérifier le stock disponible d'abord
@@ -410,6 +419,49 @@ class RecursiveChecker(BaseChecker):
 
         return result
 
+    def _check_phantom_component(
+        self,
+        article_code: str,
+        qte_besoin: int,
+        date_besoin,
+        depth: int,
+    ) -> FeasibilityResult:
+        """Résout un article fantôme vers une seule variante réelle.
+
+        Règle métier : un même OF ne mélange jamais plusieurs variantes.
+        Une seule variante doit couvrir 100% du besoin.
+        """
+        variants = self._get_phantom_variants(article_code)
+        if not variants:
+            return self._check_stock(article_code, qte_besoin, date_besoin)
+
+        failed_variants: list[tuple[str, int, FeasibilityResult]] = []
+        for variant_article, qte_lien in variants:
+            variant_qty = int(qte_lien * qte_besoin)
+            variant_result = self._check_stock(variant_article, variant_qty, date_besoin)
+            if variant_result.feasible:
+                variant_result.add_alert(
+                    f"AFANT {article_code} résolu en variante unique {variant_article}"
+                )
+                return variant_result
+            failed_variants.append((variant_article, variant_qty, variant_result))
+
+        result = FeasibilityResult(feasible=False, depth=depth)
+        result.add_missing(article_code, qte_besoin)
+        details = []
+        for variant_article, variant_qty, variant_result in failed_variants:
+            shortage = variant_result.missing_components.get(variant_article, variant_qty)
+            details.append(f"{variant_article} manque {shortage}")
+        if details:
+            result.add_alert(
+                f"AFANT {article_code}: aucune variante complète disponible ({'; '.join(details)})"
+            )
+        else:
+            result.add_alert(
+                f"AFANT {article_code}: aucune variante complète disponible"
+            )
+        return result
+
     def _is_component_treated_as_purchase(
         self,
         article_code: str,
@@ -422,14 +474,18 @@ class RecursiveChecker(BaseChecker):
         sont traités comme des articles achetés, même si la nomenclature
         les marque comme fabriqués.
         """
+        article = self._get_article_metadata(article_code)
+        if article is not None and getattr(article, "is_achat", None):
+            if article.is_achat():
+                return True
         if is_achete:
             return True
         if not is_fabrique:
             return False
         return self._is_subcontracted_article(article_code)
 
-    def _is_subcontracted_article(self, article_code: str) -> bool:
-        """Retourne True si l'article relève de la sous-traitance."""
+    def _get_article_metadata(self, article_code: str):
+        """Retourne le référentiel article quand il est disponible."""
         article = None
         if hasattr(self.data_loader, "get_article"):
             try:
@@ -441,6 +497,25 @@ class RecursiveChecker(BaseChecker):
             articles = getattr(self.data_loader, "articles")
             if isinstance(articles, dict):
                 article = articles.get(article_code)
+        return article
 
+    def _is_phantom_article(self, article_code: str) -> bool:
+        """Retourne True si l'article est un fantôme AFANT."""
+        article = self._get_article_metadata(article_code)
+        return bool(article and getattr(article, "is_fantome", None) and article.is_fantome())
+
+    def _get_phantom_variants(self, article_code: str) -> list[tuple[str, float]]:
+        """Retourne les variantes réelles derrière un article fantôme."""
+        nomenclature = self.data_loader.get_nomenclature(article_code)
+        if nomenclature is None:
+            return []
+        return [
+            (component.article_composant, component.qte_lien)
+            for component in nomenclature.composants
+        ]
+
+    def _is_subcontracted_article(self, article_code: str) -> bool:
+        """Retourne True si l'article relève de la sous-traitance."""
+        article = self._get_article_metadata(article_code)
         categorie = getattr(article, "categorie", "") if article is not None else ""
         return str(categorie or "").upper().startswith("ST")
