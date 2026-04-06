@@ -372,9 +372,16 @@ def _schedule_pp153(day, candidates, loader, checker, projected_buffer, incoming
 
     def sort_key(candidate: CandidateOF) -> tuple:
         if buffer_first:
-            buffer_priority = 0 if (candidate.is_buffer_bdh and candidate.article in shortage_articles) else 1
-            return (buffer_priority, candidate.due_date, candidate.charge_hours, candidate.article)
-        return (0 if candidate.is_buffer_bdh else 1, candidate.due_date, candidate.charge_hours, candidate.article)
+            if candidate.is_buffer_bdh and candidate.article in shortage_articles:
+                priority = 0
+            elif not candidate.is_buffer_bdh:
+                priority = 1
+            else:
+                priority = 2
+            return (priority, candidate.due_date, candidate.charge_hours, candidate.article)
+
+        # Hors tension buffer, les commandes directes PP_153 passent avant la reconstitution.
+        return (0 if not candidate.is_buffer_bdh else 1, candidate.due_date, candidate.charge_hours, candidate.article)
 
     for candidate in sorted(candidates, key=sort_key):
         if candidate.scheduled_day is not None:
