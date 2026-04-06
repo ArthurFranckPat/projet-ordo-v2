@@ -385,3 +385,255 @@ class TestRecursiveChecker:
 
         assert result.feasible is True
         assert result.missing_components == {}
+
+    def test_fantom_article_is_resolved_to_single_real_variant(self):
+        """Un article AFANT est résolu vers une seule référence réelle."""
+        nomenclatures = {
+            "PF_PARENT": Nomenclature(
+                article="PF_PARENT",
+                designation="DESC_PARENT",
+                composants=[
+                    NomenclatureEntry(
+                        article_parent="PF_PARENT",
+                        designation_parent="DESC_PARENT",
+                        niveau=10,
+                        article_composant="PHANTOM",
+                        designation_composant="DESC_PHANTOM",
+                        qte_lien=1,
+                        type_article=TypeArticle.FABRIQUE,
+                    )
+                ],
+            ),
+            "PHANTOM": Nomenclature(
+                article="PHANTOM",
+                designation="DESC_PHANTOM",
+                composants=[
+                    NomenclatureEntry(
+                        article_parent="PHANTOM",
+                        designation_parent="DESC_PHANTOM",
+                        niveau=5,
+                        article_composant="REAL_A",
+                        designation_composant="DESC_REAL_A",
+                        qte_lien=1,
+                        type_article=TypeArticle.ACHETE,
+                    )
+                ],
+            ),
+        }
+        stocks = {
+            "REAL_A": Stock("REAL_A", stock_physique=10, stock_alloue=0, stock_bloque=0),
+        }
+        articles = {
+            "PHANTOM": Article(
+                code="PHANTOM",
+                description="Article fantôme",
+                categorie="AFANT",
+                type_appro=TypeApprovisionnement.ACHAT,
+                delai_reappro=0,
+            ),
+            "REAL_A": Article(
+                code="REAL_A",
+                description="Référence réelle",
+                categorie="AP",
+                type_appro=TypeApprovisionnement.ACHAT,
+                delai_reappro=0,
+            ),
+        }
+
+        loader = SimpleNamespace(
+            commandes_clients=[],
+            articles=articles,
+            get_article=lambda article: articles.get(article),
+            get_nomenclature=lambda article: nomenclatures.get(article),
+            get_stock=lambda article: stocks.get(article),
+            get_allocations_of=lambda _num_doc: [],
+            get_ofs_by_article=lambda *_args, **_kwargs: [],
+            get_receptions=lambda article: [],
+        )
+
+        checker = RecursiveChecker(loader)
+
+        result = checker._check_article_recursive(
+            article="PF_PARENT",
+            qte_besoin=2,
+            date_besoin=date(2026, 4, 1),
+            depth=0,
+        )
+
+        assert result.feasible is True
+        assert result.missing_components == {}
+        assert any("PHANTOM" in alert and "REAL_A" in alert for alert in result.alerts)
+
+    def test_fantom_article_can_use_legacy_reference_without_forcing_new_variant(self):
+        """Si l'ancienne référence fantôme couvre seule le besoin, l'OF reste faisable."""
+        nomenclatures = {
+            "PF_PARENT": Nomenclature(
+                article="PF_PARENT",
+                designation="DESC_PARENT",
+                composants=[
+                    NomenclatureEntry(
+                        article_parent="PF_PARENT",
+                        designation_parent="DESC_PARENT",
+                        niveau=10,
+                        article_composant="PHANTOM",
+                        designation_composant="DESC_PHANTOM",
+                        qte_lien=1,
+                        type_article=TypeArticle.FABRIQUE,
+                    )
+                ],
+            ),
+            "PHANTOM": Nomenclature(
+                article="PHANTOM",
+                designation="DESC_PHANTOM",
+                composants=[
+                    NomenclatureEntry(
+                        article_parent="PHANTOM",
+                        designation_parent="DESC_PHANTOM",
+                        niveau=5,
+                        article_composant="NEW_REF",
+                        designation_composant="DESC_NEW",
+                        qte_lien=1,
+                        type_article=TypeArticle.ACHETE,
+                    )
+                ],
+            ),
+        }
+        stocks = {
+            "PHANTOM": Stock("PHANTOM", stock_physique=10, stock_alloue=0, stock_bloque=0),
+            "NEW_REF": Stock("NEW_REF", stock_physique=0, stock_alloue=0, stock_bloque=0),
+        }
+        articles = {
+            "PHANTOM": Article(
+                code="PHANTOM",
+                description="Article fantôme",
+                categorie="AFANT",
+                type_appro=TypeApprovisionnement.ACHAT,
+                delai_reappro=0,
+            ),
+            "NEW_REF": Article(
+                code="NEW_REF",
+                description="Nouvelle référence",
+                categorie="AP",
+                type_appro=TypeApprovisionnement.ACHAT,
+                delai_reappro=0,
+            ),
+        }
+
+        loader = SimpleNamespace(
+            commandes_clients=[],
+            articles=articles,
+            get_article=lambda article: articles.get(article),
+            get_nomenclature=lambda article: nomenclatures.get(article),
+            get_stock=lambda article: stocks.get(article),
+            get_allocations_of=lambda _num_doc: [],
+            get_ofs_by_article=lambda *_args, **_kwargs: [],
+            get_receptions=lambda article: [],
+        )
+
+        checker = RecursiveChecker(loader)
+
+        result = checker._check_article_recursive(
+            article="PF_PARENT",
+            qte_besoin=5,
+            date_besoin=date(2026, 4, 1),
+            depth=0,
+        )
+
+        assert result.feasible is True
+        assert result.missing_components == {}
+        assert any("PHANTOM" in alert for alert in result.alerts)
+
+    def test_fantom_article_does_not_mix_variants_inside_same_of(self):
+        """Un AFANT avec deux variantes partielles reste bloqué si aucune ne couvre seule le besoin."""
+        nomenclatures = {
+            "PF_PARENT": Nomenclature(
+                article="PF_PARENT",
+                designation="DESC_PARENT",
+                composants=[
+                    NomenclatureEntry(
+                        article_parent="PF_PARENT",
+                        designation_parent="DESC_PARENT",
+                        niveau=10,
+                        article_composant="PHANTOM",
+                        designation_composant="DESC_PHANTOM",
+                        qte_lien=1,
+                        type_article=TypeArticle.FABRIQUE,
+                    )
+                ],
+            ),
+            "PHANTOM": Nomenclature(
+                article="PHANTOM",
+                designation="DESC_PHANTOM",
+                composants=[
+                    NomenclatureEntry(
+                        article_parent="PHANTOM",
+                        designation_parent="DESC_PHANTOM",
+                        niveau=5,
+                        article_composant="OLD_REF",
+                        designation_composant="DESC_OLD",
+                        qte_lien=1,
+                        type_article=TypeArticle.ACHETE,
+                    ),
+                    NomenclatureEntry(
+                        article_parent="PHANTOM",
+                        designation_parent="DESC_PHANTOM",
+                        niveau=10,
+                        article_composant="NEW_REF",
+                        designation_composant="DESC_NEW",
+                        qte_lien=1,
+                        type_article=TypeArticle.ACHETE,
+                    ),
+                ],
+            ),
+        }
+        stocks = {
+            "OLD_REF": Stock("OLD_REF", stock_physique=3, stock_alloue=0, stock_bloque=0),
+            "NEW_REF": Stock("NEW_REF", stock_physique=3, stock_alloue=0, stock_bloque=0),
+        }
+        articles = {
+            "PHANTOM": Article(
+                code="PHANTOM",
+                description="Article fantôme",
+                categorie="AFANT",
+                type_appro=TypeApprovisionnement.ACHAT,
+                delai_reappro=0,
+            ),
+            "OLD_REF": Article(
+                code="OLD_REF",
+                description="Ancienne référence",
+                categorie="AP",
+                type_appro=TypeApprovisionnement.ACHAT,
+                delai_reappro=0,
+            ),
+            "NEW_REF": Article(
+                code="NEW_REF",
+                description="Nouvelle référence",
+                categorie="AP",
+                type_appro=TypeApprovisionnement.ACHAT,
+                delai_reappro=0,
+            ),
+        }
+
+        loader = SimpleNamespace(
+            commandes_clients=[],
+            articles=articles,
+            get_article=lambda article: articles.get(article),
+            get_nomenclature=lambda article: nomenclatures.get(article),
+            get_stock=lambda article: stocks.get(article),
+            get_allocations_of=lambda _num_doc: [],
+            get_ofs_by_article=lambda *_args, **_kwargs: [],
+            get_receptions=lambda article: [],
+        )
+
+        checker = RecursiveChecker(loader)
+
+        result = checker._check_article_recursive(
+            article="PF_PARENT",
+            qte_besoin=5,
+            date_besoin=date(2026, 4, 1),
+            depth=0,
+        )
+
+        assert result.feasible is False
+        assert result.missing_components["PHANTOM"] == 5
+        assert any("aucune variante complète disponible" in alert for alert in result.alerts)

@@ -13,7 +13,7 @@ import csv
 import json
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -26,7 +26,7 @@ from .weights import load_weights
 PP_830 = "PP_830"
 PP_153 = "PP_153"
 PLANNING_WORKDAYS = 5
-DEMAND_WORKDAYS = 20
+DEMAND_CALENDAR_DAYS = 15
 LINE_CAPACITY_HOURS = 14.0
 LINE_MIN_OPEN_HOURS = 7.0
 BUFFER_THRESHOLDS = {
@@ -90,7 +90,7 @@ def run_schedule(
     *,
     reference_date: Optional[date] = None,
     planning_workdays: int = PLANNING_WORKDAYS,
-    demand_workdays: int = DEMAND_WORKDAYS,
+    demand_calendar_days: int = DEMAND_CALENDAR_DAYS,
     output_dir: str = "outputs",
     weights_path: str = "config/weights.json",
 ) -> SchedulerResult:
@@ -98,14 +98,14 @@ def run_schedule(
     reference_date = reference_date or date.today()
     weights = load_weights(weights_path)
     workdays = build_workdays(reference_date, planning_workdays)
-    demand_workdays_list = build_workdays(reference_date, demand_workdays)
+    demand_horizon_end = reference_date + timedelta(days=demand_calendar_days)
     target_lines = _build_target_line_articles(loader)
     checker = RecursiveChecker(loader, use_receptions=True)
 
     candidates, matching_alerts, matching_results = _select_candidates_from_matching(
         loader=loader,
         planning_workdays=workdays,
-        demand_workdays=demand_workdays_list,
+        demand_horizon_end=demand_horizon_end,
         target_lines=target_lines,
     )
 
@@ -230,7 +230,7 @@ def _is_target_scope_order(besoin, loader, target_lines) -> bool:
     return False
 
 
-def _select_candidates_from_matching(loader, planning_workdays, demand_workdays, target_lines) -> tuple[list[CandidateOF], list[str], list]:
+def _select_candidates_from_matching(loader, planning_workdays, demand_horizon_end, target_lines) -> tuple[list[CandidateOF], list[str], list]:
     """Construit les candidats à partir du matching existant commande->OF.
 
     On réutilise le matcher du repo pour éviter de reconstruire la logique
@@ -238,7 +238,6 @@ def _select_candidates_from_matching(loader, planning_workdays, demand_workdays,
     journalier et de la stratégie buffer BDH.
     """
     reference_date = planning_workdays[0]
-    demand_horizon_end = next_workday(demand_workdays[-1])
     planning_horizon_end = next_workday(planning_workdays[-1])
     commandes = [
         besoin

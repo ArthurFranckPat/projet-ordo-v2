@@ -430,13 +430,18 @@ class RecursiveChecker(BaseChecker):
 
         Règle métier : un même OF ne mélange jamais plusieurs variantes.
         Une seule variante doit couvrir 100% du besoin.
+        La référence fantôme elle-même représente l'ancienne variante à
+        épuiser avant la bascule vers une nouvelle référence.
         """
         variants = self._get_phantom_variants(article_code)
-        if not variants:
-            return self._check_stock(article_code, qte_besoin, date_besoin)
+        options: list[tuple[str, float]] = [(article_code, 1.0)]
+        for variant_article, qte_lien in variants:
+            if variant_article == article_code:
+                continue
+            options.append((variant_article, qte_lien))
 
         failed_variants: list[tuple[str, int, FeasibilityResult]] = []
-        for variant_article, qte_lien in variants:
+        for variant_article, qte_lien in options:
             variant_qty = int(qte_lien * qte_besoin)
             variant_result = self._check_stock(variant_article, variant_qty, date_besoin)
             if variant_result.feasible:
