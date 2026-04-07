@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 from .capacity import MAX_DAY_HOURS, TARGET_LINES, is_line_open
-from .models import CandidateOF, PlanningKPIs, ScheduledTask
+from .models import CandidateOF
 
 DEFAULT_WEIGHTS = {
     "w1": 0.7,
@@ -67,7 +67,7 @@ def compute_kpis(scheduled_ofs: List[Any], loader: Any = None) -> Dict[str, floa
         total_heures += of.charge_hours
         
         # Déviations
-        if of.is_deviation:
+        if of.deviations > 0:
             nb_deviations += 1
             
         # Conso Kanban

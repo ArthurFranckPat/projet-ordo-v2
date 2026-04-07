@@ -12,22 +12,20 @@ from .material import (
     format_buffer_shortage_reason,
     reserve_candidate_components,
 )
-from .heuristics import pp830_sort_key, pp153_sort_key
+from .heuristics import generic_sort_key
 
 LINE_CAPACITY_HOURS = 14.0
 LINE_MIN_OPEN_HOURS = 7.0
 SETUP_TIME_HOURS = 0.25
 
 
-class LineScheduler(ABC):
-    """Classe abstraite pour la planification d'une ligne."""
+class GenericLineScheduler:
+    """Planificateur générique pour n'importe quelle ligne."""
     
-    def __init__(self, line_name: str):
+    def __init__(self, line_name: str, capacity_hours: float = 14.0, min_open_hours: float = 7.0):
         self.line_name = line_name
-
-    @abstractmethod
-    def schedule_day(self, day: date, candidates: list[CandidateOF], loader, checker, projected_buffer: dict[str, float], incoming_buffer: dict[date, dict[str, int]], material_state, alerts: list[str]) -> DaySchedule:
-        pass
+        self.capacity_hours = capacity_hours
+        self.min_open_hours = min_open_hours
 
     def _mark_candidate_deviation(self, candidate: CandidateOF, earliest_blocked_due: Optional[date], deviation_marked: bool) -> bool:
         candidate.deviations = 0
@@ -51,7 +49,7 @@ class LineScheduler(ABC):
         return used_hours
 
     def _handle_under_capacity(self, plan: DaySchedule, day: date, incoming_buffer: dict[date, dict[str, int]], alerts: list[str]) -> None:
-        if plan.total_hours < LINE_MIN_OPEN_HOURS:
+        if plan.total_hours < self.min_open_hours:
             for assignment in plan.assignments:
                 if assignment.is_buffer_bdh:
                     availability_day = next_workday(day)
@@ -59,15 +57,10 @@ class LineScheduler(ABC):
                 assignment.scheduled_day = None
                 assignment.start_hour = None
                 assignment.end_hour = None
-                assignment.reason = "ligne non ouverte (<7h)"
+                assignment.reason = f"ligne non ouverte (<{self.min_open_hours}h)"
             if plan.assignments:
-                alerts.append(f"{self.line_name} {day.isoformat()} : ligne fermée car charge < 7h")
+                alerts.append(f"{self.line_name} {day.isoformat()} : ligne fermée car charge < {self.min_open_hours}h")
             plan.assignments = []
-
-
-class PP830Scheduler(LineScheduler):
-    def __init__(self):
-        super().__init__("PP_830")
 
     def schedule_day(self, day: date, candidates: list[CandidateOF], loader, checker, projected_buffer: dict[str, float], incoming_buffer: dict[date, dict[str, int]], material_state, alerts: list[str]) -> DaySchedule:
         plan = DaySchedule(line=self.line_name, day=day)
@@ -82,16 +75,23 @@ class PP830Scheduler(LineScheduler):
         kanban_articles = {"11028877", "11033880", "11033919"}
         kanban_conso = {a: 0.0 for a in kanban_articles}
 
-        while unscheduled and used_hours < LINE_CAPACITY_HOURS:
+        shortage_articles = {
+            article
+            for article, threshold in BUFFER_THRESHOLDS.items()
+            if projected_buffer.get(article, 0.0) < threshold
+        }
+
+        while unscheduled and used_hours < self.capacity_hours:
             def sort_key(candidate: CandidateOF) -> tuple:
-                return pp830_sort_key(
+                return generic_sort_key(
                     candidate,
                     last_article,
                     loader,
                     family_counts,
                     kanban_conso,
                     kanban_articles,
-                    tracked_kanban_requirements
+                    tracked_kanban_requirements,
+                    shortage_articles
                 )
 
             unscheduled.sort(key=sort_key)
@@ -99,7 +99,7 @@ class PP830Scheduler(LineScheduler):
             candidate_idx = -1
             for i, c in enumerate(unscheduled):
                 setup_time = SETUP_TIME_HOURS if last_article and c.article != last_article else 0.0
-                if used_hours + c.charge_hours + setup_time <= LINE_CAPACITY_HOURS:
+                if used_hours + c.charge_hours + setup_time <= self.capacity_hours + 1.5: # Marge de tolérance très large
                     status, reason = availability_status(checker, loader, c, day, material_state)
                     if status != "blocked":
                         requirements = tracked_bdh_requirements(loader, c.article, c.quantity)
@@ -148,69 +148,6 @@ class PP830Scheduler(LineScheduler):
             for article, qty in requirements.items():
                 projected_buffer[article] -= qty
 
-        self._handle_under_capacity(plan, day, incoming_buffer, alerts)
-
-        return plan
-
-
-class PP153Scheduler(LineScheduler):
-    def __init__(self):
-        super().__init__("PP_153")
-
-    def schedule_day(self, day: date, candidates: list[CandidateOF], loader, checker, projected_buffer: dict[str, float], incoming_buffer: dict[date, dict[str, int]], material_state, alerts: list[str]) -> DaySchedule:
-        plan = DaySchedule(line=self.line_name, day=day)
-        used_hours = 0.0
-        earliest_blocked_due: Optional[date] = None
-        deviation_marked = False
-
-        shortage_articles = {
-            article
-            for article, threshold in BUFFER_THRESHOLDS.items()
-            if projected_buffer.get(article, 0.0) < threshold
-        }
-
-        unscheduled = [c for c in candidates if c.scheduled_day is None]
-        last_article = None
-
-        while unscheduled and used_hours < LINE_CAPACITY_HOURS:
-            def sort_key(candidate: CandidateOF) -> tuple:
-                return pp153_sort_key(
-                    candidate,
-                    last_article,
-                    shortage_articles,
-                    loader
-                )
-
-            unscheduled.sort(key=sort_key)
-            
-            candidate_idx = -1
-            for i, c in enumerate(unscheduled):
-                setup_time = SETUP_TIME_HOURS if last_article and c.article != last_article else 0.0
-                if used_hours + c.charge_hours + setup_time <= LINE_CAPACITY_HOURS:
-                    status, _ = availability_status(checker, loader, c, day, material_state)
-                    if status != "blocked":
-                        candidate_idx = i
-                        break
-                    else:
-                        if earliest_blocked_due is None or c.due_date < earliest_blocked_due:
-                            earliest_blocked_due = c.due_date
-                    
-            if candidate_idx == -1:
-                break 
-                
-            candidate = unscheduled.pop(candidate_idx)
-
-            status, reason = availability_status(checker, loader, candidate, day, material_state)
-            
-            candidate.reason = ""
-            deviation_marked = self._mark_candidate_deviation(candidate, earliest_blocked_due, deviation_marked)
-                
-            used_hours = self._assign_candidate_time(candidate, last_article, used_hours, day)
-            
-            plan.assignments.append(candidate)
-            last_article = candidate.article
-            reserve_candidate_components(loader, checker, candidate, day, material_state)
-            
             if candidate.is_buffer_bdh:
                 availability_day = next_workday(day)
                 incoming_buffer[availability_day][candidate.article] += candidate.quantity

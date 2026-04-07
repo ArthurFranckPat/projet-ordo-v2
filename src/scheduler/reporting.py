@@ -85,8 +85,8 @@ def write_outputs(output_dir: str, result: SchedulerResult) -> None:
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    _write_planning_csv(output_path / "planning_PP830.csv", result.planning_pp830)
-    _write_planning_csv(output_path / "planning_PP153.csv", result.planning_pp153)
+    for line, planning in result.plannings.items():
+        _write_planning_csv(output_path / f"planning_{line}.csv", planning)
     _write_stock_projection_csv(output_path / "stock_BDH_projete.csv", result.stock_projection)
 
     _write_unscheduled_csv(output_path / "ofs_non_faisables.csv", result.unscheduled_rows)

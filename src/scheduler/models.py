@@ -47,8 +47,7 @@ class SchedulerResult:
     nb_deviations: int
     nb_jit: int
     nb_changements_serie: int
-    planning_pp830: list[CandidateOF]
-    planning_pp153: list[CandidateOF]
+    plannings: dict[str, list[CandidateOF]]
     stock_projection: list[dict[str, object]]
     alerts: list[str]
     weights: dict[str, float]

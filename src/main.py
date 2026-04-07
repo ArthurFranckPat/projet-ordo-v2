@@ -161,10 +161,9 @@ def main():
     if args.schedule and not args.s1:
         console.print("[bold cyan]🗓️  Scheduler AUTORESEARCH...[/bold cyan]")
         result = run_schedule(loader, reference_date=reference_date, output_dir="outputs", weights_path="config/weights.json")
-        console.print(
-            f"✅ Planning genere : PP_830={len(result.planning_pp830)} taches, "
-            f"PP_153={len(result.planning_pp153)} taches"
-        )
+        total_tasks = sum(len(p) for p in result.plannings.values())
+        lines_summary = ", ".join(f"{line}={len(p)}" for line, p in result.plannings.items())
+        console.print(f"✅ Planning genere : {total_tasks} taches réparties sur les lignes ({lines_summary})")
         taux_service = getattr(getattr(result, "kpis", result), "taux_service")
         taux_ouverture = getattr(getattr(result, "kpis", result), "taux_ouverture")
         nb_deviations = getattr(getattr(result, "kpis", result), "nb_deviations")
@@ -174,22 +173,19 @@ def main():
         # Calculer le cumul de charge par jour et nombre d'OFs
         console.print("\n[bold cyan]📊 Cumul de charge par jour :[/bold cyan]")
         from collections import defaultdict
-        charge_jour = defaultdict(lambda: {"PP_830": {"h": 0.0, "ofs": 0}, "PP_153": {"h": 0.0, "ofs": 0}})
-        for item in result.planning_pp830:
-            if item.scheduled_day:
-                charge_jour[item.scheduled_day]["PP_830"]["h"] += item.charge_hours
-                charge_jour[item.scheduled_day]["PP_830"]["ofs"] += 1
-        for item in result.planning_pp153:
-            if item.scheduled_day:
-                charge_jour[item.scheduled_day]["PP_153"]["h"] += item.charge_hours
-                charge_jour[item.scheduled_day]["PP_153"]["ofs"] += 1
         
-        for jour in sorted(charge_jour.keys()):
-            h830 = charge_jour[jour]["PP_830"]["h"]
-            ofs830 = charge_jour[jour]["PP_830"]["ofs"]
-            h153 = charge_jour[jour]["PP_153"]["h"]
-            ofs153 = charge_jour[jour]["PP_153"]["ofs"]
-            console.print(f"  📅 {jour.isoformat()} : PP_830 = {h830:5.2f}h ({ofs830:2d} OFs) | PP_153 = {h153:5.2f}h ({ofs153:2d} OFs)")
+        charge_by_day_and_line = defaultdict(lambda: defaultdict(float))
+        for line, planning in result.plannings.items():
+            for item in planning:
+                if item.scheduled_day:
+                    charge_by_day_and_line[item.scheduled_day.isoformat()][line] += item.charge_hours
+
+        for day in sorted(charge_by_day_and_line.keys()):
+            charges = charge_by_day_and_line[day]
+            # Show only lines that have charge
+            details = " | ".join(f"{l}: {h:.1f}h" for l, h in charges.items() if h > 0)
+            if details:
+                console.print(f"  📅 {day} -> {details}")
         
         console.print(
             f"\n✅ KPIs : taux_service={taux_service:.3f}, "

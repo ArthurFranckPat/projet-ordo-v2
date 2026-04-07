@@ -25,7 +25,7 @@ from .calendar import build_workdays, next_workday, previous_workday
 from .weights import load_weights
 from .models import CandidateOF, DaySchedule, SchedulerResult
 from .reporting import build_unscheduled_rows, build_order_rows, write_outputs
-from .lines import PP830Scheduler, PP153Scheduler
+from .lines import GenericLineScheduler
 
 from .material import (
     BUFFER_THRESHOLDS,
@@ -50,6 +50,7 @@ SETUP_TIME_HOURS = 0.25  # 15 minutes de changement de série par défaut
 
 def run_schedule(
     loader,
+    lines_config: Optional[list[str]] = None,
     *,
     reference_date: Optional[date] = None,
     planning_workdays: int = PLANNING_WORKDAYS,
@@ -62,7 +63,8 @@ def run_schedule(
     weights = load_weights(weights_path)
     workdays = build_workdays(reference_date, planning_workdays)
     demand_horizon_end = reference_date + timedelta(days=demand_calendar_days)
-    target_lines = _build_target_line_articles(loader)
+    target_lines = _build_target_line_articles(loader, lines_config)
+    
     checker = RecursiveChecker(loader, use_receptions=True)
     material_state = build_material_stock_state(loader)
     receptions_by_day = build_receptions_by_day(loader)
@@ -74,9 +76,49 @@ def run_schedule(
         target_lines=target_lines,
     )
 
+    # Calcul de la charge brute cible par ligne en se basant sur les candidats réels
+    # Cela inclut les commandes fermes, prévisions (si NOR) et les tampons BDH
+    hours_per_poste = {}
+    max_of_per_poste = {}
+    for c in candidates:
+        hours_per_poste[c.line] = hours_per_poste.get(c.line, 0.0) + c.charge_hours
+        max_of_per_poste[c.line] = max(max_of_per_poste.get(c.line, 0.0), c.charge_hours)
+
+    line_capacities = {}
+    line_min_open = {}
+    for line in target_lines.keys():
+        target_hours = hours_per_poste.get(line, 0.0)
+        max_of = max_of_per_poste.get(line, 0.0)
+        
+        if target_hours == 0:
+            line_capacities[line] = 7.0
+            line_min_open[line] = 0.0
+            continue
+            
+        # Lissage de la charge :
+        # On détermine le nombre de jours actifs nécessaires (base 1 shift = 7h)
+        import math
+        active_days = max(1, round(target_hours / 7.0))
+        active_days = min(len(workdays), active_days)
+        
+        # Charge journalière lissée sur les jours actifs
+        smoothed_daily = target_hours / active_days
+        
+        # Marge très fine (1%) pour éviter de surcharger les premiers jours et lisser parfaitement
+        capacity = smoothed_daily * 1.01
+        
+        # On garantit au moins un shift (7h) ou la taille du plus gros OF
+        capacity = max(7.0, capacity, max_of)
+        
+        # Capacité physique maximale : 2 shifts (14h)
+        capacity = min(14.0, capacity)
+        
+        line_capacities[line] = capacity
+        line_min_open[line] = 0.0
+
     day_plans = {
-        PP_830: [DaySchedule(line=PP_830, day=day) for day in workdays],
-        PP_153: [DaySchedule(line=PP_153, day=day) for day in workdays],
+        line: [DaySchedule(line=line, day=day) for day in workdays]
+        for line in target_lines.keys()
     }
     alerts: list[str] = list(matching_alerts)
 
@@ -88,45 +130,33 @@ def run_schedule(
     stock_projection: list[dict[str, object]] = []
 
     by_line = {
-        PP_830: [candidate for candidate in candidates if candidate.line == PP_830],
-        PP_153: [candidate for candidate in candidates if candidate.line == PP_153],
+        line: [candidate for candidate in candidates if candidate.line == line]
+        for line in target_lines.keys()
     }
 
-    pp830_scheduler = PP830Scheduler()
-    pp153_scheduler = PP153Scheduler()
+    schedulers = {line: GenericLineScheduler(line, capacity_hours=line_capacities[line], min_open_hours=line_min_open[line]) for line in target_lines.keys()}
 
     for day in workdays:
         apply_receptions_for_day(material_state, receptions_by_day, day)
         for article, qty in incoming_buffer[day].items():
             projected_buffer[article] += qty
 
-        pp830_day = pp830_scheduler.schedule_day(
-            day=day,
-            candidates=by_line[PP_830],
-            loader=loader,
-            checker=checker,
-            projected_buffer=projected_buffer,
-            incoming_buffer=incoming_buffer,
-            material_state=material_state,
-            alerts=alerts,
-        )
-        day_plans[PP_830][workdays.index(day)] = pp830_day
-
-        for assignment in pp830_day.assignments:
-            for article, qty in tracked_bdh_requirements(loader, assignment.article, assignment.quantity).items():
-                projected_buffer[article] -= qty
-
-        pp153_day = pp153_scheduler.schedule_day(
-            day=day,
-            candidates=by_line[PP_153],
-            loader=loader,
-            checker=checker,
-            projected_buffer=projected_buffer,
-            incoming_buffer=incoming_buffer,
-            material_state=material_state,
-            alerts=alerts,
-        )
-        day_plans[PP_153][workdays.index(day)] = pp153_day
+        for line, scheduler in schedulers.items():
+            day_plan = scheduler.schedule_day(
+                day=day,
+                candidates=by_line[line],
+                loader=loader,
+                checker=checker,
+                projected_buffer=projected_buffer,
+                incoming_buffer=incoming_buffer,
+                material_state=material_state,
+                alerts=alerts,
+            )
+            day_plans[line][workdays.index(day)] = day_plan
+            
+            for assignment in day_plan.assignments:
+                for article, qty in tracked_bdh_requirements(loader, assignment.article, assignment.quantity).items():
+                    projected_buffer[article] -= qty
 
         for article in BUFFER_THRESHOLDS:
             stock_projection.append(
@@ -137,12 +167,15 @@ def run_schedule(
                 }
             )
 
-    planning_pp830 = [assignment for plan in day_plans[PP_830] for assignment in plan.assignments]
-    planning_pp153 = [assignment for plan in day_plans[PP_153] for assignment in plan.assignments]
+    plannings = {
+        line: [assignment for plan in day_plans[line] for assignment in plan.assignments]
+        for line in target_lines.keys()
+    }
     _mark_unscheduled_candidates(by_line, alerts)
     unscheduled_rows = build_unscheduled_rows(by_line)
 
-    planned_by_of = {assignment.num_of: assignment.scheduled_day for assignment in (planning_pp830 + planning_pp153)}
+    all_assignments = [a for p in plannings.values() for a in p]
+    planned_by_of = {assignment.num_of: assignment.scheduled_day for assignment in all_assignments}
     candidate_by_of = {candidate.num_of: candidate for candidate in candidates}
     planning_horizon_end = next_workday(workdays[-1])
     order_rows = build_order_rows(matching_results, planned_by_of, candidate_by_of, loader, checker, availability_status)
@@ -151,17 +184,17 @@ def run_schedule(
         planned_by_of,
         evaluation_horizon_end=planning_horizon_end,
     )
-    taux_ouverture = _compute_open_rate(day_plans)
+    taux_ouverture = _compute_open_rate(day_plans, line_capacities)
     nb_deviations = sum(candidate.deviations for candidate in candidates)
     deviation_penalty = min(
         1.0,
-        nb_deviations / max(1, len(planning_pp830) + len(planning_pp153)),
+        nb_deviations / max(1, len(all_assignments)),
     )
 
-    nb_jit = sum(1 for c in planning_pp830 + planning_pp153 if c.scheduled_day == c.due_date)
+    nb_jit = sum(1 for c in all_assignments if c.scheduled_day == c.due_date)
     jit_penalty = min(
         1.0,
-        nb_jit / max(1, len(planning_pp830) + len(planning_pp153)),
+        nb_jit / max(1, len(all_assignments)),
     )
 
     score = (
@@ -172,7 +205,7 @@ def run_schedule(
     )
 
     nb_changements_serie = sum(
-        1 for plan in day_plans[PP_830] + day_plans[PP_153]
+        1 for plans in day_plans.values() for plan in plans
         for i in range(1, len(plan.assignments))
         if plan.assignments[i].article != plan.assignments[i-1].article
     )
@@ -184,8 +217,7 @@ def run_schedule(
         nb_deviations=nb_deviations,
         nb_jit=nb_jit,
         nb_changements_serie=nb_changements_serie,
-        planning_pp830=planning_pp830,
-        planning_pp153=planning_pp153,
+        plannings=plannings,
         stock_projection=stock_projection,
         alerts=alerts,
         weights=weights,
@@ -196,8 +228,14 @@ def run_schedule(
     return result
 
 
-def _build_target_line_articles(loader) -> dict[str, set[str]]:
-    target_lines = {PP_830: set(), PP_153: set()}
+def _build_target_line_articles(loader, lines_config=None) -> dict[str, set[str]]:
+    target_lines = {}
+    if lines_config is None:
+        lines_config = {op.poste_charge for gamme in loader.gammes.values() for op in gamme.operations}
+    
+    for line in lines_config:
+        target_lines[line] = set()
+
     for article, gamme in loader.gammes.items():
         for op in gamme.operations:
             if op.poste_charge in target_lines:
@@ -206,13 +244,12 @@ def _build_target_line_articles(loader) -> dict[str, set[str]]:
 
 
 def _is_target_scope_order(besoin, loader, target_lines) -> bool:
-    """Retourne True si le besoin appartient reellement au scope 830/153."""
-    if besoin.article in target_lines[PP_830] or besoin.article in target_lines[PP_153]:
+    if any(besoin.article in articles for articles in target_lines.values()):
         return True
     if besoin.of_contremarque:
         linked_of = loader.get_of_by_num(besoin.of_contremarque)
         if linked_of is not None:
-            if linked_of.article in target_lines[PP_830] or linked_of.article in target_lines[PP_153]:
+            if any(linked_of.article in articles for articles in target_lines.values()):
                 return True
     return False
 
@@ -226,14 +263,28 @@ def _select_candidates_from_matching(loader, planning_workdays, demand_horizon_e
     """
     reference_date = planning_workdays[0]
     planning_horizon_end = next_workday(planning_workdays[-1])
-    commandes = [
-        besoin
-        for besoin in loader.commandes_clients
-        if besoin.est_commande()
-        and besoin.qte_restante > 0
-        and reference_date <= besoin.date_expedition_demandee <= demand_horizon_end
-        and _is_target_scope_order(besoin, loader, target_lines)
-    ]
+    commandes = []
+    for besoin in loader.commandes_clients:
+        if besoin.qte_restante <= 0:
+            continue
+        if not (reference_date <= besoin.date_expedition_demandee <= demand_horizon_end):
+            continue
+        if not _is_target_scope_order(besoin, loader, target_lines):
+            continue
+            
+        # Filtrage selon le type de commande
+        # MTS et MTO : uniquement les commandes fermes
+        # NOR : commandes fermes et prévisions
+        from ..models.besoin_client import TypeCommande
+        if besoin.type_commande in (TypeCommande.MTS, TypeCommande.MTO):
+            if not besoin.est_commande():
+                continue
+        elif besoin.type_commande == TypeCommande.NOR:
+            if not (besoin.est_commande() or besoin.est_prevision()):
+                continue
+                
+        commandes.append(besoin)
+
     commandes.sort(key=lambda b: (b.date_expedition_demandee, b.date_commande or date.max, b.num_commande))
 
     matcher = CommandeOFMatcher(loader, date_tolerance_days=30)
@@ -250,10 +301,10 @@ def _select_candidates_from_matching(loader, planning_workdays, demand_horizon_e
 
         of = result.of
         line = None
-        if of.article in target_lines[PP_830]:
-            line = PP_830
-        elif of.article in target_lines[PP_153]:
-            line = PP_153
+        for l, articles in target_lines.items():
+            if of.article in articles:
+                line = l
+                break
         if line is None:
             continue
 
@@ -278,15 +329,21 @@ def _select_candidates_from_matching(loader, planning_workdays, demand_horizon_e
         ]
         buffer_ofs.sort(key=lambda item: (item.date_fin, 0 if item.is_ferme() else 1, item.num_of))
         for of in buffer_ofs[:25]:
-            candidate_specs.setdefault(
-                of.num_of,
-                {
-                    'of': of,
-                    'line': PP_153,
-                    'due_date': of.date_fin,
-                    'orders': set(),
-                },
-            )
+            line = None
+            for l, articles in target_lines.items():
+                if tracked_article in articles:
+                    line = l
+                    break
+            if line:
+                candidate_specs.setdefault(
+                    of.num_of,
+                    {
+                        'of': of,
+                        'line': line,
+                        'due_date': of.date_fin,
+                        'orders': set(),
+                    },
+                )
 
     candidates: list[CandidateOF] = []
     for spec in candidate_specs.values():
@@ -306,7 +363,7 @@ def _select_candidates_from_matching(loader, planning_workdays, demand_horizon_e
                 due_date=due_date,
                 quantity=of.qte_restante,
                 charge_hours=charge_hours,
-                is_buffer_bdh=of.article in BUFFER_THRESHOLDS and line == PP_153,
+                is_buffer_bdh=of.article in BUFFER_THRESHOLDS,
             )
         )
 
@@ -359,7 +416,11 @@ def _compute_service_rate(candidates: list[CandidateOF]) -> tuple[float, int, in
     return ((on_time / total) if total else 0.0), on_time, total
 
 
-def _compute_open_rate(day_plans: dict[str, list[DaySchedule]]) -> float:
-    available_hours = len(day_plans) * len(next(iter(day_plans.values()))) * LINE_CAPACITY_HOURS
+def _compute_open_rate(day_plans: dict[str, list[DaySchedule]], line_capacities: dict[str, float]) -> float:
+    available_hours = sum(
+        line_capacities[line]
+        for line, plans in day_plans.items()
+        for plan in plans if plan.total_hours > 0
+    )
     planned_hours = sum(plan.total_hours for plans in day_plans.values() for plan in plans)
     return (planned_hours / available_hours) if available_hours else 0.0

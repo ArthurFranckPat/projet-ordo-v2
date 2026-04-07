@@ -1,7 +1,7 @@
 from datetime import date
 
 from src.scheduler.kpi import compute_kpis, load_weights
-from src.scheduler.models import CandidateOF, ScheduledTask
+from src.scheduler.models import CandidateOF
 
 
 def test_load_weights_renormalizes_values(tmp_path):
@@ -14,21 +14,11 @@ def test_load_weights_renormalizes_values(tmp_path):
 
 
 def test_compute_kpis_returns_normalized_score():
-    candidates = [
+    tasks = [
         CandidateOF(
             num_of="OF1",
             article="ART1",
             description="Test",
-            line="PP_830",
-            due_date=date(2026, 4, 6),
-            charge_hours=7.0,
-            quantity=10,
-        )
-    ]
-    tasks = [
-        ScheduledTask(
-            num_of="OF1",
-            article="ART1",
             line="PP_830",
             scheduled_day=date(2026, 4, 6),
             start_hour=0.0,
@@ -36,12 +26,11 @@ def test_compute_kpis_returns_normalized_score():
             charge_hours=7.0,
             due_date=date(2026, 4, 6),
             quantity=10,
-            comfortable=True,
-            kind="direct",
         )
     ]
 
-    kpis = compute_kpis(candidates, tasks, [date(2026, 4, 6)], deviations=0, weights={"w1": 0.7, "w2": 0.2, "w3": 0.1})
+    kpis = compute_kpis(tasks)
 
-    assert kpis.taux_service == 1.0
-    assert kpis.score == 0.75
+    assert kpis["taux_service"] == 1.0
+    assert kpis["taux_ouverture"] > 0
+
