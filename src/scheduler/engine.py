@@ -253,7 +253,7 @@ def run_schedule(
         taux_service * weights["w1"]
         + taux_ouverture * weights["w2"]
         - deviation_penalty * weights["w3"]
-        + jit_penalty * weights.get("w4", 0.1)
+        + jit_penalty * weights.get("w4", 0.15)
     )
 
     nb_changements_serie = sum(
