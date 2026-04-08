@@ -170,10 +170,10 @@ def run_schedule(
                     c.target_day = target
                     continue
             unassigned.append(c)
-        # Fallback: assign target_day = workday closest to due_date.
-        # Aligns heuristic sorting with the JIT goal rather than arbitrary round-robin.
-        for c in unassigned:
-            c.target_day = min(workdays, key=lambda wd: abs((wd - c.due_date).days))
+        # Round-robin fallback for articles without reality data
+        n_days = len(workdays)
+        for i, c in enumerate(unassigned):
+            c.target_day = workdays[i % n_days]
 
     schedulers = {line: GenericLineScheduler(line, capacity_hours=line_capacities[line], min_open_hours=line_min_open[line]) for line in target_lines.keys()}
 
