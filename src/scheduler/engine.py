@@ -219,6 +219,15 @@ def run_schedule(
 
     all_assignments = [a for p in plannings.values() for a in p]
     planned_by_of = {assignment.num_of: assignment.scheduled_day for assignment in all_assignments}
+    # OFs matchés mais sans charge machine (charge_hours=0) sont traités comme
+    # disponibles dès le premier jour — ils ne chargent pas nos lignes.
+    for spec in {c.num_of for c in candidates}:
+        pass  # already in planned_by_of via assignments
+    for result in matching_results:
+        if result.of is not None and result.of.num_of not in planned_by_of:
+            charge_map = calculate_article_charge(result.of.article, result.of.qte_restante, loader)
+            if not any(charge_map.get(l, 0.0) > 0 for l in target_lines):
+                planned_by_of[result.of.num_of] = workdays[0]
     candidate_by_of = {candidate.num_of: candidate for candidate in candidates}
     planning_horizon_end = next_workday(workdays[-1])
     order_rows = build_order_rows(matching_results, planned_by_of, candidate_by_of, loader, checker, availability_status)
