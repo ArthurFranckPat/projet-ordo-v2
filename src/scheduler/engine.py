@@ -122,8 +122,8 @@ def run_schedule(
         # Garantir au moins la taille du plus gros OF (sinon impossible à planifier)
         capacity = max(capacity, max_of)
 
-        # Capacité physique maximale : 3 shifts (16h) pour absorber les pics
-        capacity = min(16.0, capacity)
+        # Capacité physique maximale : 2 shifts (14h)
+        capacity = min(14.0, capacity)
 
         line_capacities[line] = capacity
         line_min_open[line] = 0.0
