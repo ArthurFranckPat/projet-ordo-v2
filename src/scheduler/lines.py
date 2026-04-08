@@ -27,13 +27,14 @@ class GenericLineScheduler:
         self.capacity_hours = capacity_hours
         self.min_open_hours = min_open_hours
 
-    def _mark_candidate_deviation(self, candidate: CandidateOF, earliest_blocked_due: Optional[date], deviation_marked: bool) -> bool:
+    def _mark_candidate_deviation(self, candidate: CandidateOF, earliest_blocked_due: Optional[date], deviation_marked: bool, current_day: Optional[date] = None) -> bool:
         candidate.deviations = 0
         if (
             not deviation_marked
             and earliest_blocked_due is not None
             and not candidate.is_buffer_bdh
             and candidate.due_date > earliest_blocked_due
+            and (current_day is None or earliest_blocked_due <= current_day)
         ):
             candidate.deviations = 1
             return True
@@ -157,7 +158,7 @@ class GenericLineScheduler:
             requirements = tracked_bdh_requirements(loader, candidate.article, candidate.quantity)
             
             candidate.reason = ""
-            deviation_marked = self._mark_candidate_deviation(candidate, earliest_blocked_due, deviation_marked)
+            deviation_marked = self._mark_candidate_deviation(candidate, earliest_blocked_due, deviation_marked, current_day=day)
                 
             used_hours = self._assign_candidate_time(candidate, last_article, used_hours, day)
             
