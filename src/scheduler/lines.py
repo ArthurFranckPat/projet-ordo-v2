@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from datetime import date
+from datetime import date, timedelta
 from typing import Optional
 
 from .models import CandidateOF, DaySchedule
@@ -34,7 +34,7 @@ class GenericLineScheduler:
             and earliest_blocked_due is not None
             and not candidate.is_buffer_bdh
             and candidate.due_date > earliest_blocked_due
-            and (current_day is None or earliest_blocked_due < current_day)
+            and (current_day is None or earliest_blocked_due < current_day - timedelta(days=1))
         ):
             candidate.deviations = 1
             return True
