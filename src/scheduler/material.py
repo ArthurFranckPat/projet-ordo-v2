@@ -43,7 +43,12 @@ def apply_receptions_for_day(material_state: StockState, receptions_by_day, day:
 
 
 def reserve_candidate_components(loader, checker, candidate, day: date, material_state: StockState) -> None:
-    """Réserve virtuellement les composants consommés par un OF planifié."""
+    """Réserve virtuellement les composants consommés par un OF planifié.
+
+    La réservation est limitée aux composants真正ement sous tension :
+    uniquement les composants ACHAT dont le stock est inférieur à 2× le besoin.
+    Les composants FABRICATION sont exclus (l'atelier peut les produire).
+    """
     if _candidate_has_existing_allocations(loader, candidate):
         return
 
@@ -56,7 +61,13 @@ def reserve_candidate_components(loader, checker, candidate, day: date, material
         material_state,
     )
     if allocations:
-        material_state.allocate(candidate.num_of, allocations)
+        # Ne réserver que les composants critiques : stock < 2× besoin
+        scarce = {
+            art: qty for art, qty in allocations.items()
+            if material_state.get_available(art) < qty * 2
+        }
+        if scarce:
+            material_state.allocate(candidate.num_of, scarce)
 
 
 def availability_status(checker, loader, candidate, day: date, material_state: Optional[StockState] = None) -> tuple[str, str]:
@@ -67,7 +78,7 @@ def availability_status(checker, loader, candidate, day: date, material_state: O
     runtime_checker = (
         RecursiveChecker(
             loader,
-            use_receptions=False,
+            use_receptions=True,
             check_date=day,
             stock_state=material_state,
         )

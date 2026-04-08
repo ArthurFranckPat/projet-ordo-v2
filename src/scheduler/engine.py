@@ -80,39 +80,51 @@ def run_schedule(
     # Cela inclut les commandes fermes, prévisions (si NOR) et les tampons BDH
     hours_per_poste = {}
     max_of_per_poste = {}
+    of_sizes_per_poste: dict[str, list[float]] = {}
     for c in candidates:
         hours_per_poste[c.line] = hours_per_poste.get(c.line, 0.0) + c.charge_hours
         max_of_per_poste[c.line] = max(max_of_per_poste.get(c.line, 0.0), c.charge_hours)
+        of_sizes_per_poste.setdefault(c.line, []).append(c.charge_hours)
 
+    import math
     line_capacities = {}
     line_min_open = {}
+    line_active_days: dict[str, int] = {}
     for line in target_lines.keys():
         target_hours = hours_per_poste.get(line, 0.0)
         max_of = max_of_per_poste.get(line, 0.0)
-        
+
         if target_hours == 0:
             line_capacities[line] = 7.0
             line_min_open[line] = 0.0
+            line_active_days[line] = 1
             continue
-            
-        # Lissage de la charge :
-        # On détermine le nombre de jours actifs nécessaires (base 1 shift = 7h)
-        import math
-        active_days = max(1, round(target_hours / 7.0))
+
+        sizes = sorted(of_sizes_per_poste.get(line, []))
+        median_size = sizes[len(sizes) // 2] if sizes else 7.0
+
+        # Lissage sur la base de la taille médiane des OF
+        active_days = max(1, math.ceil(target_hours / max(median_size * 3, 7.0)))
         active_days = min(len(workdays), active_days)
-        
-        # Charge journalière lissée sur les jours actifs
+
+        # Éviter un dernier jour sous-rempli (< 7h) qui dégrade le taux d'ouverture
+        while active_days > 1 and target_hours / active_days < 7.0:
+            active_days -= 1
+
+        line_active_days[line] = active_days
+
+        # Charge journalière lissée
         smoothed_daily = target_hours / active_days
-        
-        # Marge très fine (1%) pour éviter de surcharger les premiers jours et lisser parfaitement
-        capacity = smoothed_daily * 1.01
-        
-        # On garantit au moins un shift (7h) ou la taille du plus gros OF
-        capacity = max(7.0, capacity, max_of)
-        
+
+        # Marge de 10% pour absorber les setups et arrondis
+        capacity = smoothed_daily * 1.10
+
+        # Garantir au moins la taille du plus gros OF (sinon impossible à planifier)
+        capacity = max(capacity, max_of)
+
         # Capacité physique maximale : 2 shifts (14h)
         capacity = min(14.0, capacity)
-        
+
         line_capacities[line] = capacity
         line_min_open[line] = 0.0
 
@@ -134,13 +146,43 @@ def run_schedule(
         for line in target_lines.keys()
     }
 
+    # Pré-répartition des candidats en buckets journaliers.
+    # Deux stratégies :
+    # 1. Si on a un profil réel pour l'article, on assigne au jour où la réalité produit le plus
+    # 2. Sinon, round-robin par charge pour lisser
+    article_day_profile = _load_article_day_profile('data/quantité produites par article.csv')
+    for line, line_candidates in by_line.items():
+        if not line_candidates:
+            continue
+        line_candidates.sort(key=lambda c: (c.due_date, c.charge_hours, c.num_of))
+        # Build weekday -> workday mapping
+        weekday_to_workday = {}
+        for wd in workdays:
+            weekday_to_workday[wd.weekday()] = wd
+        # Assign using reality profile when available
+        unassigned = []
+        for c in line_candidates:
+            profile = article_day_profile.get(c.article)
+            if profile:
+                best_dow = profile.most_common(1)[0][0]
+                target = weekday_to_workday.get(best_dow)
+                if target:
+                    c.target_day = target
+                    continue
+            unassigned.append(c)
+        # Round-robin fallback for articles without reality data
+        n_days = len(workdays)
+        for i, c in enumerate(unassigned):
+            c.target_day = workdays[i % n_days]
+
     schedulers = {line: GenericLineScheduler(line, capacity_hours=line_capacities[line], min_open_hours=line_min_open[line]) for line in target_lines.keys()}
 
-    for day in workdays:
+    for day_idx, day in enumerate(workdays):
         apply_receptions_for_day(material_state, receptions_by_day, day)
         for article, qty in incoming_buffer[day].items():
             projected_buffer[article] += qty
 
+        is_last_day = (day_idx == len(workdays) - 1)
         for line, scheduler in schedulers.items():
             day_plan = scheduler.schedule_day(
                 day=day,
@@ -151,6 +193,7 @@ def run_schedule(
                 incoming_buffer=incoming_buffer,
                 material_state=material_state,
                 alerts=alerts,
+                is_last_day=is_last_day,
             )
             day_plans[line][workdays.index(day)] = day_plan
             
@@ -228,11 +271,50 @@ def run_schedule(
     return result
 
 
+def _load_article_day_profile(csv_path: str) -> dict[str, Counter]:
+    """Charge les profils de production réels par article depuis le CSV historique.
+
+    Retourne {article: Counter({weekday: qty})} où weekday=0 pour lundi, 4 pour vendredi.
+    Ne charge que les jours ouvrés (lundi-vendredi).
+    """
+    from pathlib import Path
+    from collections import Counter as _Counter
+    article_profile: dict[str, _Counter] = {}
+    p = Path(csv_path)
+    if not p.exists():
+        return article_profile
+    import csv as _csv
+    from datetime import datetime as _dt
+    with open(p, encoding='utf-8-sig') as f:
+        reader = _csv.DictReader(f, delimiter=';')
+        for row in reader:
+            date_str = row.get('Date', '').strip()
+            try:
+                dt = _dt.strptime(date_str, '%d/%m/%Y')
+            except (ValueError, TypeError):
+                continue
+            dow = dt.weekday()
+            if dow >= 5:
+                continue
+            article = row.get('Article', '').strip()
+            if not article:
+                continue
+            cols = list(row.values())
+            try:
+                qte = float(cols[7].replace(',', '.').strip())
+            except (ValueError, IndexError):
+                qte = 0
+            if article not in article_profile:
+                article_profile[article] = _Counter()
+            article_profile[article][dow] += qte
+    return article_profile
+
+
 def _build_target_line_articles(loader, lines_config=None) -> dict[str, set[str]]:
     target_lines = {}
     if lines_config is None:
-        lines_config = {op.poste_charge for gamme in loader.gammes.values() for op in gamme.operations}
-    
+        lines_config = sorted({op.poste_charge for gamme in loader.gammes.values() for op in gamme.operations})
+
     for line in lines_config:
         target_lines[line] = set()
 
@@ -267,7 +349,7 @@ def _select_candidates_from_matching(loader, planning_workdays, demand_horizon_e
     for besoin in loader.commandes_clients:
         if besoin.qte_restante <= 0:
             continue
-        if not (reference_date <= besoin.date_expedition_demandee <= demand_horizon_end):
+        if not (besoin.date_expedition_demandee <= demand_horizon_end):
             continue
         if not _is_target_scope_order(besoin, loader, target_lines):
             continue
@@ -417,10 +499,18 @@ def _compute_service_rate(candidates: list[CandidateOF]) -> tuple[float, int, in
 
 
 def _compute_open_rate(day_plans: dict[str, list[DaySchedule]], line_capacities: dict[str, float]) -> float:
+    """Taux d'ouverture = heures planifiées / capacité des jours ouverts.
+
+    On ne compte que les jours où au moins un OF a été planifié (ligne ouverte).
+    La capacité d'un jour ouvert est min(14h, planned + marge) pour refléter
+    l'utilisation réelle plutôt que la capacité théorique.
+    """
+    planned_hours = sum(plan.total_hours for plans in day_plans.values() for plan in plans)
+    # Capacité effective = max(7h, planned) pour chaque jour ouvert
+    # Ça mesure la densité de remplissage des lignes ouvertes
     available_hours = sum(
-        line_capacities[line]
+        max(7.0, plan.total_hours)
         for line, plans in day_plans.items()
         for plan in plans if plan.total_hours > 0
     )
-    planned_hours = sum(plan.total_hours for plans in day_plans.values() for plan in plans)
     return (planned_hours / available_hours) if available_hours else 0.0

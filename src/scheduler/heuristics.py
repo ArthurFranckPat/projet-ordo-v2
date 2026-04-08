@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from typing import Optional
 from .models import CandidateOF
 
@@ -11,6 +12,7 @@ def generic_sort_key(
     kanban_articles: set[str],
     tracked_kanban_requirements_fn,
     shortage_articles: set[str],
+    current_day: Optional[date] = None,
 ) -> tuple:
     # Combine priority rules:
     # 1. BDH buffer and in shortage (PP153 logic)
@@ -22,6 +24,39 @@ def generic_sort_key(
         priority = 1
     else:
         priority = 2
+
+    # Urgence : due_date d'abord — un OF en retard ou dû demain doit passer
+    # avant un OF dont le target_day correspond mais qui est dû plus tard.
+    # L'urgence absolue prime sur le lissage.
+    due_urgency = 0
+    if current_day and candidate.due_date <= current_day:
+        due_urgency = 0  # En retard → priorité maximale
+    elif current_day and candidate.due_date <= current_day + timedelta(days=1):
+        due_urgency = 1  # Dû demain → haute priorité
+    elif current_day and candidate.due_date <= current_day + timedelta(days=2):
+        due_urgency = 2  # Dû dans 2 jours
+    else:
+        due_urgency = 3  # Pas urgent
+
+    # JIT bonus : la réalité montre 7/21 OF produits le jour de l'échéance.
+    # On favorise la planification le jour J pour maximiser le JIT.
+    jit_bonus = 0
+    if current_day and candidate.due_date == current_day:
+        jit_bonus = -2  # Très fort bonus pour planifier le jour de l'échéance
+
+    # Prematurity penalty : un OF dû dans >1 jour ne doit pas passer avant
+    # un OF dû plus tôt. La réalité montre que les OF sont produits le jour J,
+    # pas en avance. On pénalise d'autant plus que l'OF est prématuré.
+    prematurity = 0
+    if current_day and candidate.due_date > current_day + timedelta(days=1):
+        prematurity = (candidate.due_date - current_day).days  # 2, 3, 4...
+
+    # Temporal proximity: favoriser les OF dont le target_day correspond au jour courant.
+    # Pénalité linéaire — ne départage que les OF de même urgence.
+    if current_day and candidate.target_day:
+        target_day_delta = abs((candidate.target_day - current_day).days)
+    else:
+        target_day_delta = 5  # Pas de target_day → pénalité modérée
 
     # Serie grouping bonus
     serie_bonus = 1
@@ -69,10 +104,15 @@ def generic_sort_key(
 
     return (
         priority,
-        candidate.due_date,
+        due_urgency,  # Urgence absolue en premier
+        jit_bonus,    # Bonus JIT (négatif = favorisé)
+        prematurity,  # Pénalité de prématurité (0 si dû ≤ J+1)
+        target_day_delta,  # Puis lissage spatial
+        candidate.due_date,  # Puis date exacte
+        -candidate.charge_hours,  # Gros OF d'abord quand urgence égale
         serie_bonus,
         mix_penalty,
         kanban_penalty,
-        candidate.charge_hours,
         candidate.article,
+        candidate.num_of,
     )

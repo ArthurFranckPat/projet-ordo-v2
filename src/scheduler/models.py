@@ -22,6 +22,7 @@ class CandidateOF:
     end_hour: Optional[float] = None
     reason: str = ""
     deviations: int = 0
+    target_day: Optional[date] = None  # Jour cible idéal pour le lissage
 
 
 @dataclass

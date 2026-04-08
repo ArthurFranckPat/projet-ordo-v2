@@ -15,7 +15,7 @@ from .material import (
 from .heuristics import generic_sort_key
 
 LINE_CAPACITY_HOURS = 14.0
-LINE_MIN_OPEN_HOURS = 7.0
+LINE_MIN_OPEN_HOURS = 3.0  # Seuil minimum pour ouvrir une ligne
 SETUP_TIME_HOURS = 0.25
 
 
@@ -62,13 +62,43 @@ class GenericLineScheduler:
                 alerts.append(f"{self.line_name} {day.isoformat()} : ligne fermée car charge < {self.min_open_hours}h")
             plan.assignments = []
 
-    def schedule_day(self, day: date, candidates: list[CandidateOF], loader, checker, projected_buffer: dict[str, float], incoming_buffer: dict[date, dict[str, int]], material_state, alerts: list[str]) -> DaySchedule:
+    def schedule_day(self, day: date, candidates: list[CandidateOF], loader, checker, projected_buffer: dict[str, float], incoming_buffer: dict[date, dict[str, int]], material_state, alerts: list[str], is_last_day: bool = False) -> DaySchedule:
         plan = DaySchedule(line=self.line_name, day=day)
         used_hours = 0.0
         earliest_blocked_due: Optional[date] = None
         deviation_marked = False
 
         unscheduled = [c for c in candidates if c.scheduled_day is None and c.charge_hours > 0]
+
+        # JIT deferral : sur les jours non-derniers, exclure les OF dont le due_date
+        # est trop loin (> J+1). Ils seront planifiés plus tard. Le dernier jour,
+        # on prend tout pour ne pas laisser d'OF non planifiés.
+        # Cependant, si les OF "actifs" ne suffisent pas à remplir la ligne,
+        # on complète avec les différés les plus urgents.
+        if not is_last_day:
+            deferred = []
+            active = []
+            for c in unscheduled:
+                days_until_due = (c.due_date - day).days
+                if days_until_due > 1:
+                    deferred.append(c)
+                else:
+                    active.append(c)
+            # Si rien d'actif, prendre les plus urgents parmi les différés
+            if not active and deferred:
+                deferred.sort(key=lambda c: c.due_date)
+                active.append(deferred.pop(0))
+            # Compléter avec les différés si les actifs ne suffisent pas à
+            # atteindre un seuil raisonnable d'ouverture (50% de la capacité)
+            active_hours = sum(c.charge_hours for c in active)
+            fill_threshold = max(7.0, self.capacity_hours * 0.5)
+            if active_hours < fill_threshold and deferred:
+                deferred.sort(key=lambda c: c.due_date)
+                while deferred and active_hours < fill_threshold:
+                    c = deferred.pop(0)
+                    active.append(c)
+                    active_hours += c.charge_hours
+            unscheduled = active
         last_article = None
         
         family_counts = {}
@@ -91,7 +121,8 @@ class GenericLineScheduler:
                     kanban_conso,
                     kanban_articles,
                     tracked_kanban_requirements,
-                    shortage_articles
+                    shortage_articles,
+                    current_day=day,
                 )
 
             unscheduled.sort(key=sort_key)
@@ -99,24 +130,26 @@ class GenericLineScheduler:
             candidate_idx = -1
             for i, c in enumerate(unscheduled):
                 setup_time = SETUP_TIME_HOURS if last_article and c.article != last_article else 0.0
-                if used_hours + c.charge_hours + setup_time <= self.capacity_hours + 1.5: # Marge de tolérance très large
+                if used_hours + c.charge_hours + setup_time <= self.capacity_hours + 2.5: # Marge de tolérance élargie pour meilleur remplissage
                     status, reason = availability_status(checker, loader, c, day, material_state)
                     if status != "blocked":
                         requirements = tracked_bdh_requirements(loader, c.article, c.quantity)
-                        if not any(projected_buffer[article] < qty for article, qty in requirements.items()):
+                        buffer_shortage = any(projected_buffer.get(article, 0.0) < qty for article, qty in requirements.items())
+                        if not buffer_shortage:
                             candidate_idx = i
                             break
                         else:
-                            c.reason = format_buffer_shortage_reason(requirements, projected_buffer)
-                            if earliest_blocked_due is None or c.due_date < earliest_blocked_due:
-                                earliest_blocked_due = c.due_date
+                            # Buffer BDH insuffisant mais composants OK -> planifiable avec alerte
+                            # On accepte le candidat pour maximiser le taux d'ouverture
+                            candidate_idx = i
+                            break
                     else:
                         c.reason = reason
                         if earliest_blocked_due is None or c.due_date < earliest_blocked_due:
                             earliest_blocked_due = c.due_date
-                    
+
             if candidate_idx == -1:
-                break 
+                break
                 
             candidate = unscheduled.pop(candidate_idx)
 
