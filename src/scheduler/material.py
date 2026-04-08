@@ -61,10 +61,10 @@ def reserve_candidate_components(loader, checker, candidate, day: date, material
         material_state,
     )
     if allocations:
-        # Ne réserver que les composants critiques : stock < 2× besoin
+        # Ne réserver que les composants en rupture réelle : stock < 1× besoin
         scarce = {
             art: qty for art, qty in allocations.items()
-            if material_state.get_available(art) < qty * 2
+            if material_state.get_available(art) < qty
         }
         if scarce:
             material_state.allocate(candidate.num_of, scarce)
