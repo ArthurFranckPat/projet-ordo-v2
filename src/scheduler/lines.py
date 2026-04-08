@@ -131,7 +131,7 @@ class GenericLineScheduler:
             candidate_idx = -1
             for i, c in enumerate(unscheduled):
                 setup_time = SETUP_TIME_HOURS if last_article and c.article != last_article else 0.0
-                if used_hours + c.charge_hours + setup_time <= self.capacity_hours + 2.5: # Marge de tolérance élargie pour meilleur remplissage
+                if used_hours + c.charge_hours + setup_time <= self.capacity_hours:
                     status, reason = availability_status(checker, loader, c, day, material_state)
                     if status != "blocked":
                         requirements = tracked_bdh_requirements(loader, c.article, c.quantity)

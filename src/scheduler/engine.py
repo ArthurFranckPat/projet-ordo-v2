@@ -122,8 +122,9 @@ def run_schedule(
         # Garantir au moins la taille du plus gros OF (sinon impossible à planifier)
         capacity = max(capacity, max_of)
 
-        # Capacité physique maximale : 2 shifts (14h)
-        capacity = min(14.0, capacity)
+        # Capacité physique maximale : 2 shifts (14h) avec réserve de 10%
+        # → jamais plus de 12.6h planifiées par jour et par poste
+        capacity = min(14.0 * 0.90, capacity)
 
         line_capacities[line] = capacity
         line_min_open[line] = 0.0
