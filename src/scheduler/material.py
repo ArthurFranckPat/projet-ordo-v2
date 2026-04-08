@@ -61,8 +61,11 @@ def reserve_candidate_components(loader, checker, candidate, day: date, material
         material_state,
     )
     if allocations:
-        # Aucune réservation virtuelle : le stock brut est utilisé par availability_status
-        scarce = {}
+        # Ne réserver que les composants en rupture réelle : stock < 1× besoin
+        scarce = {
+            art: qty for art, qty in allocations.items()
+            if material_state.get_available(art) < qty
+        }
         if scarce:
             material_state.allocate(candidate.num_of, scarce)
 
