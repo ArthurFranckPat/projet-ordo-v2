@@ -1,0 +1,35 @@
+# Configuration de l'Agent Ordonnanceur
+# ──────────────────────────────────────
+# Ce fichier est optionnel. Si absent, les valeurs par défaut sont utilisées.
+
+scheduler:
+  planning_workdays: 5          # Nombre de jours ouvrés à planifier
+  demand_calendar_days: 15      # Horizon de visibilité des commandes
+  weights_path: "config/weights.json"
+  output_dir: "outputs"
+  # lines_config: null          # null = auto-detect toutes les lignes
+  # lines_config:               # Décommenter pour forcer les lignes
+  #   - "PP_830"
+  #   - "PP_153"
+
+analysis:
+  num_weeks_heatmap: 4
+  capacite_nominale_poste: 35.0     # heures/semaine
+  seuil_taux_service_alerte: 0.85   # < 85% = alerte critique
+  seuil_taux_ouverture_min: 0.50    # < 50% = sous-charge
+  seuil_taux_ouverture_max: 0.90    # > 90% = saturation
+  seuil_deviations_alerte: 3        # > 3 déviations = alerte
+  max_ofs_non_planifies_report: 15
+  max_commandes_retard_report: 10
+  max_alertes_report: 20
+
+heartbeat:
+  cron_quotidien: "0 7 * * 1-5"    # 7h00 jours ouvrés
+  cron_hebdo_vendredi: "0 17 * * 5" # 17h00 vendredi
+
+notification:
+  notify_on_critical: true
+  notify_on_warning: true
+  notify_on_info: false
+  use_emoji: true
+  max_message_length: 4000          # Limite Telegram
