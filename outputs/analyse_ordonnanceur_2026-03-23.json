@@ -1,0 +1,964 @@
+{
+  "date_analyse": "2026-03-23",
+  "mode": "quotidien",
+  "kpis": {
+    "score": 0.844,
+    "taux_service": 0.889,
+    "taux_ouverture": 0.728,
+    "nb_deviations": 0,
+    "nb_jit": 19,
+    "nb_changements_serie": 110,
+    "nb_ofs_non_planifies": 203
+  },
+  "lignes": [
+    {
+      "line": "PE_PRO",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_005",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_006",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_007",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_009",
+      "total_ofs": 8,
+      "total_hours": 35.1,
+      "changements_serie": 6,
+      "charge_by_day": {
+        "2026-03-23": 10.02,
+        "2026-03-24": 10.667,
+        "2026-03-25": 4.114,
+        "2026-03-27": 10.318999999999999
+      }
+    },
+    {
+      "line": "PP_010",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_011",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_013",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_014",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_015",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_016",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_017",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_018",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_019",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_020",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_021",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_022",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_023",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_026",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_027",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_028",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_029",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_030",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_053",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_057",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_059",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_060",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_063",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_068",
+      "total_ofs": 2,
+      "total_hours": 7.4,
+      "changements_serie": 0,
+      "charge_by_day": {
+        "2026-03-23": 7.368
+      }
+    },
+    {
+      "line": "PP_071",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_072",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_073",
+      "total_ofs": 2,
+      "total_hours": 2.0,
+      "changements_serie": 0,
+      "charge_by_day": {
+        "2026-03-23": 2.0
+      }
+    },
+    {
+      "line": "PP_074",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_076",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_077",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_079",
+      "total_ofs": 4,
+      "total_hours": 15.0,
+      "changements_serie": 2,
+      "charge_by_day": {
+        "2026-03-23": 2.6500000000000004,
+        "2026-03-24": 12.0,
+        "2026-03-27": 0.353
+      }
+    },
+    {
+      "line": "PP_080",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_081",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_082",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_085",
+      "total_ofs": 4,
+      "total_hours": 6.7,
+      "changements_serie": 3,
+      "charge_by_day": {
+        "2026-03-23": 5.596,
+        "2026-03-24": 1.071
+      }
+    },
+    {
+      "line": "PP_086",
+      "total_ofs": 15,
+      "total_hours": 20.3,
+      "changements_serie": 14,
+      "charge_by_day": {
+        "2026-03-23": 5.247,
+        "2026-03-24": 4.73,
+        "2026-03-27": 10.350000000000001
+      }
+    },
+    {
+      "line": "PP_088",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_089",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_090",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_091",
+      "total_ofs": 11,
+      "total_hours": 16.4,
+      "changements_serie": 10,
+      "charge_by_day": {
+        "2026-03-23": 7.431999999999999,
+        "2026-03-24": 2.331,
+        "2026-03-27": 6.624
+      }
+    },
+    {
+      "line": "PP_092",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_093",
+      "total_ofs": 22,
+      "total_hours": 24.0,
+      "changements_serie": 21,
+      "charge_by_day": {
+        "2026-03-23": 6.317,
+        "2026-03-24": 3.003,
+        "2026-03-25": 3.429,
+        "2026-03-27": 11.206999999999999
+      }
+    },
+    {
+      "line": "PP_094",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_095",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_096",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_098",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_099",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_100",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_101",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_102",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_103",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_104",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_105",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_107",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_108",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_109",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_110",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_111",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_112",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_113",
+      "total_ofs": 4,
+      "total_hours": 10.4,
+      "changements_serie": 3,
+      "charge_by_day": {
+        "2026-03-23": 10.019,
+        "2026-03-27": 0.429
+      }
+    },
+    {
+      "line": "PP_115",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_116",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_117",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_118",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_119",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_120",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_121",
+      "total_ofs": 1,
+      "total_hours": 9.1,
+      "changements_serie": 0,
+      "charge_by_day": {
+        "2026-03-23": 9.091
+      }
+    },
+    {
+      "line": "PP_122",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_123",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_124",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_125",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_126",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_127",
+      "total_ofs": 9,
+      "total_hours": 30.1,
+      "changements_serie": 7,
+      "charge_by_day": {
+        "2026-03-23": 8.100000000000001,
+        "2026-03-24": 9.699,
+        "2026-03-25": 2.67,
+        "2026-03-26": 1.862,
+        "2026-03-27": 7.735
+      }
+    },
+    {
+      "line": "PP_128",
+      "total_ofs": 7,
+      "total_hours": 21.8,
+      "changements_serie": 6,
+      "charge_by_day": {
+        "2026-03-23": 1.44,
+        "2026-03-24": 8.8,
+        "2026-03-27": 11.561
+      }
+    },
+    {
+      "line": "PP_132",
+      "total_ofs": 1,
+      "total_hours": 0.4,
+      "changements_serie": 0,
+      "charge_by_day": {
+        "2026-03-23": 0.411
+      }
+    },
+    {
+      "line": "PP_133",
+      "total_ofs": 3,
+      "total_hours": 1.7,
+      "changements_serie": 2,
+      "charge_by_day": {
+        "2026-03-23": 1.666
+      }
+    },
+    {
+      "line": "PP_136",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_137",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_138",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_139",
+      "total_ofs": 2,
+      "total_hours": 8.5,
+      "changements_serie": 1,
+      "charge_by_day": {
+        "2026-03-23": 5.66,
+        "2026-03-25": 2.83
+      }
+    },
+    {
+      "line": "PP_141",
+      "total_ofs": 2,
+      "total_hours": 9.5,
+      "changements_serie": 0,
+      "charge_by_day": {
+        "2026-03-23": 9.543
+      }
+    },
+    {
+      "line": "PP_142",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_143",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_144",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_145",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_146",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_147",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_148",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_150",
+      "total_ofs": 2,
+      "total_hours": 2.0,
+      "changements_serie": 0,
+      "charge_by_day": {
+        "2026-03-23": 2.0
+      }
+    },
+    {
+      "line": "PP_152",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_153",
+      "total_ofs": 27,
+      "total_hours": 40.2,
+      "changements_serie": 20,
+      "charge_by_day": {
+        "2026-03-23": 8.978,
+        "2026-03-24": 1.067,
+        "2026-03-25": 11.211,
+        "2026-03-26": 9.689,
+        "2026-03-27": 9.287
+      }
+    },
+    {
+      "line": "PP_154",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_763",
+      "total_ofs": 23,
+      "total_hours": 30.9,
+      "changements_serie": 21,
+      "charge_by_day": {
+        "2026-03-23": 8.307,
+        "2026-03-24": 9.2,
+        "2026-03-25": 4.632,
+        "2026-03-26": 8.8,
+        "2026-03-27": 0.008
+      }
+    },
+    {
+      "line": "PP_783",
+      "total_ofs": 1,
+      "total_hours": 1.1,
+      "changements_serie": 0,
+      "charge_by_day": {
+        "2026-03-23": 1.071
+      }
+    },
+    {
+      "line": "PP_830",
+      "total_ofs": 18,
+      "total_hours": 48.7,
+      "changements_serie": 17,
+      "charge_by_day": {
+        "2026-03-23": 8.0,
+        "2026-03-24": 9.120000000000001,
+        "2026-03-25": 11.055000000000001,
+        "2026-03-26": 9.263,
+        "2026-03-27": 11.258
+      }
+    },
+    {
+      "line": "PP_840",
+      "total_ofs": 3,
+      "total_hours": 4.6,
+      "changements_serie": 2,
+      "charge_by_day": {
+        "2026-03-23": 2.6,
+        "2026-03-24": 2.0
+      }
+    },
+    {
+      "line": "PP_845",
+      "total_ofs": 3,
+      "total_hours": 1.3,
+      "changements_serie": 2,
+      "charge_by_day": {
+        "2026-03-23": 0.864,
+        "2026-03-24": 0.432
+      }
+    },
+    {
+      "line": "PP_860",
+      "total_ofs": 1,
+      "total_hours": 0.1,
+      "changements_serie": 0,
+      "charge_by_day": {
+        "2026-03-26": 0.129
+      }
+    },
+    {
+      "line": "PP_861",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_880",
+      "total_ofs": 7,
+      "total_hours": 41.1,
+      "changements_serie": 6,
+      "charge_by_day": {
+        "2026-03-23": 5.616,
+        "2026-03-24": 10.799,
+        "2026-03-25": 11.231000000000002,
+        "2026-03-26": 7.776,
+        "2026-03-27": 5.647
+      }
+    },
+    {
+      "line": "PP_881",
+      "total_ofs": 8,
+      "total_hours": 12.9,
+      "changements_serie": 6,
+      "charge_by_day": {
+        "2026-03-23": 8.463999999999999,
+        "2026-03-24": 4.409
+      }
+    },
+    {
+      "line": "PP_882",
+      "total_ofs": 1,
+      "total_hours": 0.2,
+      "changements_serie": 0,
+      "charge_by_day": {
+        "2026-03-23": 0.17
+      }
+    },
+    {
+      "line": "PP_AE9",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_ELE",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_EXP",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_HEU",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_IMP",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_MC",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_MEC",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "PP_REC",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "ST1",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    },
+    {
+      "line": "ST2",
+      "total_ofs": 0,
+      "total_hours": 0,
+      "changements_serie": 0,
+      "charge_by_day": {}
+    }
+  ],
+  "alertes": [
+    {
+      "niveau": "CRITIQUE",
+      "categorie": "MATERIEL",
+      "message": "1331 OF(s) en retard ou retard imminent",
+      "action": "Consulter les messages de réordonnancement"
+    },
+    {
+      "niveau": "CRITIQUE",
+      "categorie": "MATERIEL",
+      "message": "105 réception(s) fournisseur en retard critique",
+      "action": "Relancer les fournisseurs ou revoir le planning"
+    },
+    {
+      "niveau": "ATTENTION",
+      "categorie": "GOULOT",
+      "message": "138 poste(s) en saturation",
+      "action": "Revoir la répartition de charge ou ajouter des ressources"
+    },
+    {
+      "niveau": "ATTENTION",
+      "categorie": "SERVICE",
+      "message": "8 commande(s) en retard (KPIs service)",
+      "action": "Prioriser les commandes dépassées"
+    }
+  ],
+  "kpis_service": {
+    "taux_service_global": 0.034,
+    "nb_commandes_en_retard": 8,
+    "nb_commandes_total": 734,
+    "ofs_affermis_actifs": 1471,
+    "ofs_suggeres_actifs": 13388
+  },
+  "nb_messages_critiques": 1331,
+  "nb_receptions_retard_critique": 105,
+  "nb_goulots_satures": 138
+}

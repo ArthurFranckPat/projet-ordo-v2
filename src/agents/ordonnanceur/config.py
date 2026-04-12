@@ -49,7 +49,7 @@ class NotificationConfig:
     notify_on_info: bool = False      # RAS, routine
     # Format de sortie
     use_emoji: bool = True
-    max_message_length: int = 4000  # Limite Telegram
+    max_message_length: int = 8000  # Limite Discord (Telegram = 4096)
 
 
 @dataclass

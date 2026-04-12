@@ -110,7 +110,7 @@ def analyze_scheduler_result(
     kpis = get_service_rate_kpis(loader, reference_date, capacite_par_poste=None)
 
     # 3. Alertes consolidées
-    alertes = _consolidate_alerts(
+    alertes = _consolidate_alertes(
         result=result,
         lignes=lignes,
         messages=messages,

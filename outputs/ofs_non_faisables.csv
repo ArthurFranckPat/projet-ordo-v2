@@ -1,0 +1,204 @@
+ligne,of,article,date_echeance,charge_h,cause
+PP_009,SGAE10625081468,EHT780EX,2026-03-31,3.6,composants indisponibles: E2348 x103
+PP_009,SGAE10625082702,EHT780PO,2026-03-31,7.2,"composants indisponibles: A1712E01 x143, E2348 x463"
+PP_009,F426-10197,TDA868AL,2026-04-01,2.917,capacité insuffisante ou hors horizon
+PP_009,F426-10245,GBP1806AE,2026-04-01,9.6,capacité insuffisante ou hors horizon
+PP_009,F426-10294,GBP1810AE,2026-04-02,3.84,capacité insuffisante ou hors horizon
+PP_009,F426-10295,GBP1809AE,2026-04-02,2.56,capacité insuffisante ou hors horizon
+PP_009,F426-10296,GBP1811AE,2026-04-07,1.92,capacité insuffisante ou hors horizon
+PP_009,SGAE10625065280,BXL888PO,2026-04-07,4.114,capacité insuffisante ou hors horizon
+PP_009,SGAE10625081469,EHT780EX,2026-04-07,3.6,capacité insuffisante ou hors horizon
+PP_079,F126-44892,V2A032EX,2026-04-02,15.0,capacité insuffisante ou hors horizon
+PP_080,F126-42717,V4A2164EX,2026-03-24,5.0,"composants indisponibles: E7211 x1299, V7233 x7"
+PP_080,F126-44869,V4A2164EX,2026-03-31,53.333,capacité insuffisante ou hors horizon
+PP_085,SGAE10625088947,G2H1064EX,2026-03-31,2.892,composants indisponibles: E7211 x1301
+PP_086,F426-10196,AEA1881AL,2026-03-26,2.2,composants indisponibles: E7211 x1519
+PP_086,SGAE10624992297,AEA1241XX,2026-03-31,3.23,composants indisponibles: E7211 x3108
+PP_086,SGAE10624998495,AEA827XX,2026-03-31,3.23,composants indisponibles: E7211 x3108
+PP_086,SGAE10624998702,AEA851XX,2026-03-31,5.4,composants indisponibles: E7211 x2163
+PP_086,SGAE10625086494,ETH1984EX,2026-03-31,42.973,capacité insuffisante ou hors horizon
+PP_086,SGAE10624994854,AEA1992XX,2026-04-02,1.225,capacité insuffisante ou hors horizon
+PP_086,F126-44832,AEA301XX,2026-04-07,1.162,capacité insuffisante ou hors horizon
+PP_086,SGAE10624992298,AEA1241XX,2026-04-07,3.23,capacité insuffisante ou hors horizon
+PP_086,SGAE10624994323,AEA1955XX,2026-04-07,0.233,composants indisponibles: E7211 x1313
+PP_086,SGAE10624998494,AEA827XX,2026-04-07,3.23,capacité insuffisante ou hors horizon
+PP_086,SGAE10624998586,AEA833XX,2026-04-07,0.262,capacité insuffisante ou hors horizon
+PP_091,F426-10233,11011539,2026-03-31,1.8,composants indisponibles: E7211 x2019
+PP_091,SGAE10625069701,EAR201GM,2026-03-31,4.662,composants indisponibles: E7211 x1304
+PP_091,SGAE10625071280,EAR206GM,2026-03-31,2.182,composants indisponibles: E7211 x1301
+PP_091,SGAE10625068553,EAR2018GM,2026-04-01,1.364,composants indisponibles: E7211 x1301
+PP_091,SGAE10625069110,EAR2019GM,2026-04-01,4.091,composants indisponibles: E7211 x1307
+PP_091,SGAE10625069111,EAR2019GM,2026-04-01,1.364,composants indisponibles: E7211 x1301
+PP_091,SGAE10625068218,EAR200GM,2026-04-07,1.832,capacité insuffisante ou hors horizon
+PP_091,SGAE10625069939,EAR201PO,2026-04-07,2.331,capacité insuffisante ou hors horizon
+PP_091,SGAE10625071455,EAR206PO,2026-04-07,2.182,capacité insuffisante ou hors horizon
+PP_091,SGAE10625072123,EAR282GM,2026-04-07,1.481,capacité insuffisante ou hors horizon
+PP_093,SGAE10625028004,BXC1903EX,2026-03-31,0.518,"composants indisponibles: CE4091 x44, E7211 x1299, ME4310 x44"
+PP_093,SGAE10625029560,BXC1903GM,2026-03-31,0.847,"composants indisponibles: CE4091 x72, E7211 x1299, ME4310 x72"
+PP_093,SGAE10625032263,BXC1907EX,2026-03-31,22.036,capacité insuffisante ou hors horizon
+PP_093,SGAE10625033351,BXC1908EX,2026-03-31,3.388,"composants indisponibles: CE4091 x288, E7211 x1299, ME4310 x288"
+PP_093,SGAE10625041632,BXC2139GM,2026-03-31,0.267,composants indisponibles: E7211 x1299 | AFANT E4272 résolu en variante unique E7147
+PP_093,SGAE10625042301,BXC2142GM,2026-03-31,0.282,"composants indisponibles: CE4091 x24, E7211 x1299, ME4310 x24 | AFANT E4272 résolu en variante unique E7147"
+PP_093,F126-44859,BXC1893GM,2026-04-01,5.236,capacité insuffisante ou hors horizon
+PP_093,F126-44862,BXE2055GM,2026-04-01,0.45,capacité insuffisante ou hors horizon
+PP_093,SGAE10625036825,BXC1922GM,2026-04-01,3.388,capacité insuffisante ou hors horizon
+PP_093,F126-44863,BFX1929EX,2026-04-02,0.436,capacité insuffisante ou hors horizon
+PP_093,F126-44865,BXC1900EX,2026-04-02,7.591,capacité insuffisante ou hors horizon
+PP_093,SGAE10625013826,BFE2068GM,2026-04-07,0.029,capacité insuffisante ou hors horizon
+PP_093,SGAE10625027511,BXC1902EX,2026-04-07,0.436,capacité insuffisante ou hors horizon
+PP_093,SGAE10625032265,BXC1907EX,2026-04-07,20.945,capacité insuffisante ou hors horizon
+PP_093,SGAE10625041633,BXC2139GM,2026-04-07,0.267,capacité insuffisante ou hors horizon
+PP_093,SGAE10625047339,BXE2065GM,2026-04-07,0.029,capacité insuffisante ou hors horizon
+PP_093,SGAE10625048826,BXE2066GM,2026-04-07,0.013,capacité insuffisante ou hors horizon
+PP_093,SGAE10625050737,BXE2069GM,2026-04-07,0.029,capacité insuffisante ou hors horizon
+PP_093,SGAE10625053073,BXE2077GM,2026-04-07,0.057,capacité insuffisante ou hors horizon
+PP_093,SGAE10625055505,BXE2078GM,2026-04-07,0.057,capacité insuffisante ou hors horizon
+PP_093,SGAE10625057804,BXE2080GM,2026-04-07,0.029,capacité insuffisante ou hors horizon
+PP_093,SGAE10625058912,BXE2189GM,2026-04-07,0.038,capacité insuffisante ou hors horizon
+PP_093,SGAE10625062892,BXE2202GM,2026-04-07,0.037,capacité insuffisante ou hors horizon
+PP_113,SGAE10624990238,AEA098XX,2026-03-31,1.667,composants indisponibles: E7211 x1799
+PP_113,SGAE10624990765,AEA1150XX,2026-03-31,8.571,composants indisponibles: E7211 x1302
+PP_113,F126-44839,AEA1151XX,2026-04-01,15.429,capacité insuffisante ou hors horizon
+PP_113,SGAE10624990239,AEA098XX,2026-04-07,0.667,composants indisponibles: E7211 x1499
+PP_113,SGAE10624990766,AEA1150XX,2026-04-07,7.714,composants indisponibles: E7211 x1301
+PP_113,SGAE10624991067,AEA1152XX,2026-04-07,12.343,capacité insuffisante ou hors horizon
+PP_116,F426-09439,VB42166AE,2026-04-02,14.545,capacité insuffisante ou hors horizon
+PP_127,SGAE10624993242,AEA1339EX,2026-03-31,0.46,composants indisponibles: E7211 x1303
+PP_127,SGAE10625081159,EHP1875GM,2026-03-31,2.916,composants indisponibles: E7211 x1303
+PP_127,SGAE10625085185,EMM717PO,2026-03-31,0.375,composants indisponibles: E7211 x1303
+PP_127,F426-10247,EHM1306AE,2026-04-01,2.52,composants indisponibles: E7211 x1303
+PP_127,SGAE10625083766,EMM1484EX,2026-04-07,3.0,capacité insuffisante ou hors horizon
+PP_127,SGAE10625085186,EMM717PO,2026-04-07,0.375,composants indisponibles: E7211 x1303
+PP_128,SGAE10624914071,11011516,2026-03-24,27.692,capacité insuffisante ou hors horizon
+PP_128,F126-44715,AEA317XX,2026-03-31,4.0,capacité insuffisante ou hors horizon
+PP_128,SGAE10625127728,AEA064XX,2026-03-31,10.0,capacité insuffisante ou hors horizon
+PP_128,SGAE10625130464,CAL261EX,2026-03-31,2.857,capacité insuffisante ou hors horizon
+PP_128,F126-44716,FBE1089GM,2026-04-01,14.667,capacité insuffisante ou hors horizon
+PP_128,F126-44718,CAL1228EX,2026-04-01,1.042,capacité insuffisante ou hors horizon
+PP_128,F426-09510,11033684,2026-04-01,5.0,capacité insuffisante ou hors horizon
+PP_128,F426-09511,11033694,2026-04-01,0.923,capacité insuffisante ou hors horizon
+PP_128,F426-09512,GRO272AL,2026-04-01,2.6,capacité insuffisante ou hors horizon
+PP_128,F426-10198,11033681,2026-04-01,5.0,capacité insuffisante ou hors horizon
+PP_128,SGAE10625087374,FBE1089GM,2026-04-01,11.0,capacité insuffisante ou hors horizon
+PP_128,F426-09602,11033682,2026-04-02,1.0,capacité insuffisante ou hors horizon
+PP_128,F426-10254,11033683,2026-04-02,2.0,capacité insuffisante ou hors horizon
+PP_128,F426-10278,11011508,2026-04-02,6.923,capacité insuffisante ou hors horizon
+PP_128,SGAE10624998174,AEA775XX,2026-04-07,2.2,capacité insuffisante ou hors horizon
+PP_128,SGAE10625171583,SE3203,2026-04-07,0.02,capacité insuffisante ou hors horizon
+PP_133,SGAE10624999500,AVE055XX,2026-04-07,13.333,capacité insuffisante ou hors horizon
+PP_141,SGAE10625127965,AEA100XX,2026-03-31,26.286,capacité insuffisante ou hors horizon
+PP_141,SGAE10624991391,AEA1202XX,2026-04-07,0.857,composants indisponibles: E7211 x1803
+PP_153,SGAE10625161498,BDH2231AL,2026-03-26,5.156,capacité insuffisante ou hors horizon
+PP_153,F426-10362,BDH2231AL,2026-03-30,2.133,capacité insuffisante ou hors horizon
+PP_153,F426-10363,BDH2251AL,2026-03-30,2.133,capacité insuffisante ou hors horizon
+PP_153,F426-10326,BDH2216AL,2026-04-01,0.6,capacité insuffisante ou hors horizon
+PP_153,F426-10252,BDH2214AL,2026-04-02,1.067,capacité insuffisante ou hors horizon
+PP_153,F426-10253,BDH2218AL,2026-04-02,0.6,capacité insuffisante ou hors horizon
+PP_153,F426-10316,BDH2237AL,2026-04-02,1.067,capacité insuffisante ou hors horizon
+PP_153,F426-10319,BDH2236AL,2026-04-02,1.067,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160562,BDH2216AL,2026-04-02,8.4,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161499,BDH2231AL,2026-04-02,13.1,capacité insuffisante ou hors horizon
+PP_153,SGAE10625162539,BDH2251AL,2026-04-02,12.767,capacité insuffisante ou hors horizon
+PP_153,F426-10242,BDH2245AL,2026-04-06,1.067,capacité insuffisante ou hors horizon
+PP_153,F426-10243,BDH2266AL,2026-04-06,1.067,capacité insuffisante ou hors horizon
+PP_153,F426-10244,BDH2229AL,2026-04-06,1.067,capacité insuffisante ou hors horizon
+PP_153,F426-10313,BDH2212AL,2026-04-07,1.067,capacité insuffisante ou hors horizon
+PP_153,F426-10317,BDH2214AL,2026-04-07,1.067,capacité insuffisante ou hors horizon
+PP_153,F426-10327,BDH2231AL,2026-04-07,1.067,capacité insuffisante ou hors horizon
+PP_153,F426-10329,BDH2216AL,2026-04-07,0.6,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160563,BDH2216AL,2026-04-09,6.491,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161500,BDH2231AL,2026-04-09,7.706,capacité insuffisante ou hors horizon
+PP_153,SGAE10625162540,BDH2251AL,2026-04-09,7.872,capacité insuffisante ou hors horizon
+PP_153,F426-10364,BDH2251AL,2026-04-10,2.133,capacité insuffisante ou hors horizon
+PP_153,F426-10365,BDH2231AL,2026-04-10,2.133,capacité insuffisante ou hors horizon
+PP_153,F426-10328,BDH2251AL,2026-04-13,1.067,capacité insuffisante ou hors horizon
+PP_153,F426-10366,BDH2216AL,2026-04-13,1.2,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160564,BDH2216AL,2026-04-18,4.991,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161501,BDH2231AL,2026-04-18,8.006,capacité insuffisante ou hors horizon
+PP_153,SGAE10625162541,BDH2251AL,2026-04-18,6.272,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160565,BDH2216AL,2026-04-23,4.202,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161502,BDH2231AL,2026-04-23,6.936,capacité insuffisante ou hors horizon
+PP_153,SGAE10625162542,BDH2251AL,2026-04-23,6.936,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160566,BDH2216AL,2026-04-30,4.916,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161503,BDH2231AL,2026-04-30,7.539,capacité insuffisante ou hors horizon
+PP_153,SGAE10625162543,BDH2251AL,2026-04-30,7.206,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160567,BDH2216AL,2026-05-09,4.152,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161504,BDH2231AL,2026-05-09,6.314,capacité insuffisante ou hors horizon
+PP_153,SGAE10625162544,BDH2251AL,2026-05-09,5.981,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160568,BDH2216AL,2026-05-14,4.672,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161505,BDH2231AL,2026-05-14,6.439,capacité insuffisante ou hors horizon
+PP_153,SGAE10625162545,BDH2251AL,2026-05-14,6.439,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160569,BDH2216AL,2026-05-23,3.811,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161506,BDH2231AL,2026-05-23,7.142,capacité insuffisante ou hors horizon
+PP_153,SGAE10625162546,BDH2251AL,2026-05-23,5.442,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160570,BDH2216AL,2026-05-28,4.609,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161507,BDH2231AL,2026-05-28,6.194,capacité insuffisante ou hors horizon
+PP_153,SGAE10625162547,BDH2251AL,2026-05-28,5.861,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160571,BDH2216AL,2026-06-04,2.797,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161508,BDH2231AL,2026-06-04,5.406,capacité insuffisante ou hors horizon
+PP_153,SGAE10625162548,BDH2251AL,2026-06-04,5.239,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160572,BDH2216AL,2026-06-11,5.02,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161509,BDH2231AL,2026-06-11,6.992,capacité insuffisante ou hors horizon
+PP_153,SGAE10625162549,BDH2251AL,2026-06-11,6.658,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160573,BDH2216AL,2026-06-18,4.809,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161510,BDH2231AL,2026-06-18,8.617,capacité insuffisante ou hors horizon
+PP_153,SGAE10625162550,BDH2251AL,2026-06-18,7.083,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160574,BDH2216AL,2026-06-25,4.761,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161511,BDH2231AL,2026-06-25,6.664,capacité insuffisante ou hors horizon
+PP_153,SGAE10625162551,BDH2251AL,2026-06-25,6.664,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160575,BDH2216AL,2026-07-02,4.497,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161512,BDH2231AL,2026-07-02,6.994,capacité insuffisante ou hors horizon
+PP_153,SGAE10625162552,BDH2251AL,2026-07-02,6.661,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160576,BDH2216AL,2026-07-09,5.2,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161513,BDH2231AL,2026-07-09,6.844,capacité insuffisante ou hors horizon
+PP_153,SGAE10625162553,BDH2251AL,2026-07-09,6.844,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160577,BDH2216AL,2026-07-18,3.255,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161514,BDH2231AL,2026-07-18,3.986,capacité insuffisante ou hors horizon
+PP_153,SGAE10625162554,BDH2251AL,2026-07-18,3.653,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160578,BDH2216AL,2026-07-23,4.666,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161515,BDH2231AL,2026-07-23,7.361,capacité insuffisante ou hors horizon
+PP_153,SGAE10625162555,BDH2251AL,2026-07-23,7.161,capacité insuffisante ou hors horizon
+PP_153,SGAE10625160579,BDH2216AL,2026-07-30,4.13,capacité insuffisante ou hors horizon
+PP_153,SGAE10625161516,BDH2231AL,2026-07-30,6.142,capacité insuffisante ou hors horizon
+PP_763,F426-10276,11016313,2026-03-30,1.4,composants indisponibles: E7211 x1912
+PP_763,SGAE10624920434,11016310,2026-03-31,14.4,capacité insuffisante ou hors horizon
+PP_763,F426-10248,11016312,2026-04-01,5.0,composants indisponibles: E7211 x2344
+PP_763,F426-10279,11016258,2026-04-02,0.4,composants indisponibles: E7211 x1792
+PP_763,F426-10280,11016295,2026-04-02,1.5,composants indisponibles: E7211 x1924
+PP_763,F426-10281,11016305,2026-04-02,0.8,composants indisponibles: E7211 x1840
+PP_763,F426-10282,11016308,2026-04-02,10.0,composants indisponibles: E7211 x2944
+PP_830,F426-10240,11035404,2026-03-25,10.56,capacité insuffisante ou hors horizon
+PP_830,F426-10299,11026032,2026-04-01,12.0,capacité insuffisante ou hors horizon
+PP_830,F426-10332,11026033,2026-04-01,4.32,capacité insuffisante ou hors horizon
+PP_830,F426-10333,11035401,2026-04-01,7.04,capacité insuffisante ou hors horizon
+PP_830,F426-10337,11033048,2026-04-01,8.0,capacité insuffisante ou hors horizon
+PP_830,F426-10338,11035404,2026-04-01,7.04,capacité insuffisante ou hors horizon
+PP_830,F426-10340,11035406,2026-04-01,1.888,capacité insuffisante ou hors horizon
+PP_830,F426-10341,11033053,2026-04-01,3.241,capacité insuffisante ou hors horizon
+PP_830,F426-10249,11026035,2026-04-02,4.8,capacité insuffisante ou hors horizon
+PP_830,F426-10324,11033030,2026-04-02,1.213,capacité insuffisante ou hors horizon
+PP_830,F426-10344,11033519,2026-04-02,1.2,capacité insuffisante ou hors horizon
+PP_830,F426-10334,11035403,2026-04-07,5.04,capacité insuffisante ou hors horizon
+PP_860,F426-09336,11018139,2026-03-26,14.127,capacité insuffisante ou hors horizon
+PP_860,F426-10235,11018175,2026-03-26,14.127,capacité insuffisante ou hors horizon
+PP_860,F326-01645,11018136,2026-03-27,0.153,composants indisponibles: E7211 x1744
+PP_860,SGAE10624926693,11018171,2026-03-27,0.767,composants indisponibles: E7211 x1749
+PP_860,SGAE10624926730,11018172,2026-03-27,0.153,composants indisponibles: E7211 x1744
+PP_860,SGAE10624926769,11018173,2026-03-27,0.46,composants indisponibles: E7211 x1747
+PP_860,F426-09412,11018140,2026-03-30,13.595,capacité insuffisante ou hors horizon
+PP_860,SGAE10624926768,11018173,2026-04-01,0.153,composants indisponibles: E7211 x1745
+PP_860,F426-10283,11018138,2026-04-02,8.073,composants indisponibles: E7211 x1804
+PP_860,F426-10284,11018139,2026-04-02,14.127,capacité insuffisante ou hors horizon
+PP_880,SGAE10624932029,11019114,2026-03-27,0.036,composants indisponibles: E7211 x1745 | AFANT E7855 résolu en variante unique E7855
+PP_880,F326-01662,11819091,2026-03-31,32.398,capacité insuffisante ou hors horizon
+PP_880,F326-01667,11819090,2026-03-31,10.799,capacité insuffisante ou hors horizon
+PP_880,F426-10285,11019004,2026-04-07,5.647,composants indisponibles: E7211 x2224 | AFANT E7855 résolu en variante unique E7855
+PP_880,F426-10286,11019005,2026-04-07,2.808,composants indisponibles: E7211 x1984 | AFANT E7855 résolu en variante unique E7855
+PP_880,F426-10287,11019090,2026-04-07,8.065,capacité insuffisante ou hors horizon
+PP_880,F426-10288,11019097,2026-04-07,8.639,capacité insuffisante ou hors horizon
+PP_880,F426-10298,11019015,2026-04-07,7.776,capacité insuffisante ou hors horizon
+PP_880,SGAE10624989293,11819090,2026-04-07,10.799,capacité insuffisante ou hors horizon
+PP_880,SGAE10624989591,11819091,2026-04-07,21.599,capacité insuffisante ou hors horizon
+PP_881,SGAE10624933153,11019149,2026-03-27,0.074,composants indisponibles: E7211 x1748
+PP_881,F426-10289,11019139,2026-04-02,3.055,composants indisponibles: E7211 x1874
+PP_881,F426-10290,11019215,2026-04-02,3.315,composants indisponibles: E7211 x1874

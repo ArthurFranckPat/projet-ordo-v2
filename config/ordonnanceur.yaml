@@ -32,4 +32,4 @@ notification:
   notify_on_warning: true
   notify_on_info: false
   use_emoji: true
-  max_message_length: 4000          # Limite Telegram
+  max_message_length: 8000          # Limite Discord (Telegram = 4096)

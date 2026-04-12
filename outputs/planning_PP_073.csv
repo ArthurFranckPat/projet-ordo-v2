@@ -1,0 +1,3 @@
+num_of,article,qte,jour,heure_debut,heure_fin,charge_h,cumul_jour_h,date_echeance
+SGAE10625000086,AVE1267EX,8,2026-03-23,07:00,08:00,1.0,1.0,2026-03-31
+SGAE10625000087,AVE1267EX,8,2026-03-23,08:00,09:00,1.0,2.0,2026-04-07

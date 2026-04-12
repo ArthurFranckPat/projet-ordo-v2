@@ -1,0 +1,542 @@
+commande,article_commande,date_demande,qte,of,article_of,jour_planifie,statut,cause,matching
+AR2600799,EFL1345AL,2026-03-04,720,,,,Non couverte,OF F426-06674 introuvable,MTS (OF introuvable)
+AR2601159,EFL1348AL,2026-03-16,155,SGAE10625074983,EFL1348AL,2026-03-23,Servie en retard,planifié le 2026-03-23 après l'échéance du 2026-03-16 | capacité ligne saturée avant son tour,NOR/MTO (Suggéré - stock: 0 + OF: 155)
+AR2600885,11033434,2026-03-18,192,F426-09822,11033434,2026-03-23,Servie en retard,planifié le 2026-03-23 après l'échéance du 2026-03-18 | capacité ligne saturée avant son tour,MTS
+AR2601307,11027589,2026-03-18,262,F426-10321,11027589,2026-03-23,Servie en retard,planifié le 2026-03-23 après l'échéance du 2026-03-18 | capacité ligne saturée avant son tour,MTS
+AR2600806,11016307,2026-03-19,63,F426-08784,11016307,2026-03-23,Servie en retard,planifié le 2026-03-23 après l'échéance du 2026-03-19 | capacité ligne saturée avant son tour,MTS
+AR2601338,11016283,2026-03-23,6,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601339,11016265,2026-03-23,4,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601339,11016283,2026-03-23,36,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601339,11016288,2026-03-23,2,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601340,11186149,2026-03-23,5,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601341,11016269,2026-03-23,2,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601474,BDH2251AL,2026-03-23,384,F426-10174,BDH2251AL,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+26030000150653,11011516,2026-03-24,280,SGAE10624914071,11011516,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 260 + OF: 20)
+26030000151947,AEA776XX,2026-03-24,4,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000154814,EAR282GM,2026-03-24,576,SGAE10625072122,EAR282GM,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 576)
+AR2504246,11819091,2026-03-24,720,F326-01661,11819091,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 720)
+AR2504246,AEA1243XX,2026-03-24,1440,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2504246,AEA775XX,2026-03-24,440,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2504246,BXC1907EX,2026-03-24,1152,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2504246,EAR201PO,2026-03-24,648,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2504246,EAR206PO,2026-03-24,720,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2504246,EHT780PO,2026-03-24,720,F126-44438,EHT780PO,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 678 + OF: 42)
+AR2504246,EMM707PO,2026-03-24,1728,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2504246,EMM716PO,2026-03-24,2160,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600207,BXC1907EX,2026-03-24,1152,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600808,11019006,2026-03-24,480,F426-10232,11019006,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600888,11016310,2026-03-24,1728,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600897,11011516,2026-03-24,460,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601039,BXC1893EX,2026-03-24,288,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601048,V4A2164EX,2026-03-24,5,F126-42717,V4A2164EX,,Non planifiée,"composants indisponibles: E7211 x1299, V7233 x7",NOR/MTO (Affermé - stock: 2 + OF: 3)
+AR2601106,EAR282EX,2026-03-24,320,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601130,BXC1890EX,2026-03-24,288,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601133,ETH1984EX,2026-03-24,3,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601134,BXE2077EX,2026-03-24,90,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601153,AVE056XX,2026-03-24,20,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601183,EAR2300EX,2026-03-24,216,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601187,11019411,2026-03-24,25,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601208,11019149,2026-03-24,15,F126-44925,11019149,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 15)
+AR2601227,11011116,2026-03-24,150,F426-09174,11011116,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601227,11033385,2026-03-24,16,F426-07665,11033385,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601236,11019411,2026-03-24,10,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601247,11019149,2026-03-24,30,F126-44925,11019149,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 30)
+AR2601261,11019411,2026-03-24,20,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601262,11019149,2026-03-24,100,F126-44925,11019149,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 100)
+AR2601267,11026032,2026-03-24,480,F426-10172,11026032,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601283,11033426,2026-03-24,256,F426-10101,11033426,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601347,11016306,2026-03-24,2,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601361,11019149,2026-03-24,1,SGAE10624933151,11019149,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 1)
+AR2601361,11019151,2026-03-24,1,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601362,11019411,2026-03-24,1,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601363,11016257,2026-03-24,2,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601364,11019142,2026-03-24,39,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601365,11016269,2026-03-24,15,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601366,11016261,2026-03-24,2,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601366,11016286,2026-03-24,2,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601366,11016297,2026-03-24,1,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601395,11035401,2026-03-24,352,F426-10132,11035401,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600390,BXC1901GM,2026-03-25,288,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600539,BXC1890GM,2026-03-25,288,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600585,BXC1901GM,2026-03-25,288,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600818,BXC1905GM,2026-03-25,24,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600818,BXC1923GM,2026-03-25,24,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600837,G2H1238AE,2026-03-25,160,F426-10025,G2H1238AE,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600851,BDH2283AL,2026-03-25,384,F426-10029,BDH2283AL,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600866,11026052,2026-03-25,192,F426-09580,11026052,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600875,11035404,2026-03-25,1056,F426-10240,11035404,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2600915,AEA1429XX,2026-03-25,360,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600915,AEA2118XX,2026-03-25,64,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600915,BXE2053GM,2026-03-25,60,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600929,EMM716HU,2026-03-25,2160,F126-44769,EMM716HU,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 2160)
+AR2600929,EMM916HU,2026-03-25,1080,F126-44770,EMM916HU,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 1080)
+AR2600956,GBP1810AE,2026-03-25,384,F426-09137,GBP1810AE,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601021,AEA1151XX,2026-03-25,3240,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601021,AEA1152XX,2026-03-25,2160,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601025,VAM813GM,2026-03-25,84,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601033,FBE1089GM,2026-03-25,264,F126-44626,FBE1089GM,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 106 + OF: 158)
+AR2601065,BFX1931GM,2026-03-25,576,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601086,BXE2056GM,2026-03-25,216,F126-44740,BXE2056GM,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 216)
+AR2601109,AVE052EX,2026-03-25,8,F126-44891,AVE052EX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 5 + OF: 3)
+AR2601109,EAR201EX,2026-03-25,648,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601132,ETH1853EX,2026-03-25,30,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601154,ADX1428EX,2026-03-25,1,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601154,AEA317XX,2026-03-25,36,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601154,AEA731XX,2026-03-25,99,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601154,EAF309HU,2026-03-25,40,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601154,EAR201EX,2026-03-25,1296,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601154,EFR174XX,2026-03-25,40,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601154,ETH1853EX,2026-03-25,30,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601154,VAM767HU,2026-03-25,5,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601158,AVE052EX,2026-03-25,5,F126-44891,AVE052EX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 5)
+AR2601190,AVE052EX,2026-03-25,5,F126-44891,AVE052EX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 5)
+AR2601191,AEA317XX,2026-03-25,144,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601199,EAR201EX,2026-03-25,648,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601199,EAR308EX,2026-03-25,36,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601272,BXE1999GM,2026-03-25,60,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601282,11033421,2026-03-25,432,F426-10300,11033421,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601285,11033451,2026-03-25,336,F426-10302,11033451,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601374,11016261,2026-03-25,2,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601374,11016274,2026-03-25,1,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601374,11016286,2026-03-25,2,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601374,11016297,2026-03-25,13,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601374,11016302,2026-03-25,4,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601374,11016306,2026-03-25,1,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601375,11019233,2026-03-25,3,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601376,11016265,2026-03-25,1,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601376,11016267,2026-03-25,1,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601377,11016261,2026-03-25,55,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601377,11016283,2026-03-25,10,F326-01653,11016283,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 4 + OF: 6)
+AR2601473,BDH2231AL,2026-03-25,768,F426-10367,BDH2231AL,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2503855,11019421,2026-03-26,30,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600780,AEA1881AL,2026-03-26,220,F426-10196,AEA1881AL,,Non planifiée,composants indisponibles: E7211 x1519,MTS
+AR2600782,AEA570AL,2026-03-26,480,F426-08718,AEA570AL,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600809,11011171,2026-03-26,60,F426-09069,11011171,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600809,11016262,2026-03-26,384,F426-10011,11016262,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600809,11016270,2026-03-26,48,F426-10012,11016270,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600809,11016284,2026-03-26,112,F426-10013,11016284,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600809,11016287,2026-03-26,112,F426-10014,11016287,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600809,11016291,2026-03-26,112,F426-10015,11016291,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600809,11016309,2026-03-26,720,F426-10016,11016309,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600809,11016312,2026-03-26,300,F426-10017,11016312,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600809,11016313,2026-03-26,168,F426-10018,11016313,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600809,11016314,2026-03-26,72,F426-10234,11016314,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600809,11018139,2026-03-26,105,F426-09336,11018139,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2600809,11018175,2026-03-26,105,F426-10235,11018175,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2600809,11019003,2026-03-26,480,F426-10236,11019003,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600809,11019004,2026-03-26,480,F426-10237,11019004,2026-03-27,Servie en retard,planifié le 2026-03-27 après l'échéance du 2026-03-26 | capacité ligne saturée avant son tour,MTS
+AR2600809,11019014,2026-03-26,240,F426-10238,11019014,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600809,11019017,2026-03-26,30,F426-09344,11019017,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600809,11019020,2026-03-26,480,F426-09345,11019020,2026-03-26,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600809,11019130,2026-03-26,520,F426-09805,11019130,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600809,11019132,2026-03-26,260,F426-09806,11019132,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600809,EBH1360AL,2026-03-26,3744,F426-09791,EBH1360AL,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600826,G2H1060AE,2026-03-26,150,F426-10024,G2H1060AE,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600829,GBP1810AE,2026-03-26,384,F426-09104,GBP1810AE,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600831,GBP1811AE,2026-03-26,192,F426-09105,GBP1811AE,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600958,GBP443AE,2026-03-26,640,F426-10246,GBP443AE,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601069,AVE2131CH,2026-03-26,15,SGAE10625000330,AVE2131CH,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 15)
+AR2601070,AVE2131CH,2026-03-26,20,SGAE10625000330,AVE2131CH,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 20)
+AR2601228,BDH2228AL,2026-03-26,384,F426-10069,BDH2228AL,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601228,BDH2276AL,2026-03-26,384,F426-10070,BDH2276AL,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601244,AEA2136XX,2026-03-26,100,F126-44837,AEA2136XX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 100)
+AR2601244,EAR201EX,2026-03-26,108,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601284,11033436,2026-03-26,72,F426-10380,11033436,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601287,11033531,2026-03-26,336,F426-10303,11033531,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601288,11033549,2026-03-26,160,F426-10304,11033549,2026-03-26,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601289,11035406,2026-03-26,504,F426-10305,11035406,2026-03-26,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601329,11033205,2026-03-26,160,F426-10325,11033205,2026-03-26,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601380,11186150,2026-03-27,5,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601386,11016302,2026-03-27,2,F326-01650,11016302,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 2)
+AR2601387,11016286,2026-03-27,6,F326-01651,11016286,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 1 + OF: 5)
+AR2601388,11018176,2026-03-27,1,F126-44754,11018176,2026-03-26,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 1)
+AR2601389,11019411,2026-03-27,40,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601391,11019411,2026-03-27,10,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601392,11016282,2026-03-27,1,F326-01652,11016282,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 1)
+AR2601392,11016283,2026-03-27,1,F326-01653,11016283,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 1)
+AR2601392,11016297,2026-03-27,4,F326-01654,11016297,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 4)
+AR2601393,11018173,2026-03-27,1,SGAE10624926769,11018173,,Non planifiée,composants indisponibles: E7211 x1747,NOR/MTO (Suggéré - stock: 0 + OF: 1)
+AR2601394,11016261,2026-03-27,1,F326-01655,11016261,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 1)
+AR2601394,11016267,2026-03-27,3,F326-01656,11016267,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 3)
+AR2601397,11016265,2026-03-27,1,F326-01657,11016265,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 1)
+AR2601397,11016265,2026-03-27,1,F326-01657,11016265,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 1)
+AR2601397,11016265,2026-03-27,1,F326-01657,11016265,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 1)
+AR2601397,11016265,2026-03-27,1,F326-01657,11016265,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 1)
+AR2601398,11019149,2026-03-27,1,SGAE10624933153,11019149,,Non planifiée,composants indisponibles: E7211 x1748,NOR/MTO (Suggéré - stock: 0 + OF: 1)
+AR2601399,BXG353AL,2026-03-27,4,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601400,11018136,2026-03-27,1,F326-01645,11018136,,Non planifiée,composants indisponibles: E7211 x1744,NOR/MTO (Affermé - stock: 0 + OF: 1)
+AR2601401,11019142,2026-03-27,1,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601402,11035402,2026-03-27,352,F426-10330,11035402,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601403,11026031,2026-03-27,324,F426-10331,11026031,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601433,11019142,2026-03-27,1,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601433,11019144,2026-03-27,1,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601433,11019151,2026-03-27,1,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601434,11019142,2026-03-27,10,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601435,11018172,2026-03-27,1,SGAE10624926730,11018172,,Non planifiée,composants indisponibles: E7211 x1744,NOR/MTO (Suggéré - stock: 0 + OF: 1)
+AR2601435,11019114,2026-03-27,1,SGAE10624932029,11019114,,Non planifiée,composants indisponibles: E7211 x1745 | AFANT E7855 résolu en variante unique E7855,NOR/MTO (Suggéré - stock: 0 + OF: 1)
+AR2601436,11016306,2026-03-27,10,F326-01658,11016306,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 10)
+AR2601437,11018171,2026-03-27,5,SGAE10624926693,11018171,,Non planifiée,composants indisponibles: E7211 x1749,NOR/MTO (Suggéré - stock: 0 + OF: 5)
+AR2601444,11019154,2026-03-27,1,F326-01663,11019154,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 1)
+AR2601444,11019421,2026-03-27,10,SGAE10624934741,11019421,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 10)
+AR2601445,11016269,2026-03-27,1,F326-01659,11016269,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 1)
+AR2601446,11019411,2026-03-27,10,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601447,11016467,2026-03-27,1,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601448,BDH2216AL,2026-03-27,784,F426-10361,BDH2216AL,2026-03-26,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600783,11033680,2026-03-30,540,F426-09503,11033680,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600838,G2H1238AE,2026-03-30,160,F426-10026,G2H1238AE,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600952,EFL1345AL,2026-03-30,1440,F426-09374,EFL1345AL,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601224,AEA877AL,2026-03-30,200,F426-09619,AEA877AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601228,11016310,2026-03-30,480,F426-10071,11016310,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601228,11018140,2026-03-30,105,F426-09412,11018140,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601229,11016313,2026-03-30,168,F426-10276,11016313,,Non planifiée,composants indisponibles: E7211 x1912,MTS
+AR2601290,BDH2263AL,2026-03-30,384,F426-10306,BDH2263AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601291,BDH2224AL,2026-03-30,339,F426-10307,BDH2224AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601294,BDH2241AL,2026-03-30,50,F426-10308,BDH2241AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601296,BDH2306AL,2026-03-30,50,F426-10310,BDH2306AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601297,BDH2248AL,2026-03-30,50,F426-10311,BDH2248AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601454,BDH2231AL,2026-03-30,768,F426-10362,BDH2231AL,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601455,BDH2251AL,2026-03-30,768,F426-10363,BDH2251AL,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601471,EAW1678VE,2026-03-30,150,F126-44729,EAW1678VE,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 150)
+AR2601472,EAW1679VE,2026-03-30,50,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000150663,11016310,2026-03-31,576,SGAE10624920435,11016310,2026-03-26,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 576)
+26030000150680,11819090,2026-03-31,720,,,,Non couverte,"Stock alloué: 0, Besoin net: 720, Aucun OF trouvé (affermi ou suggéré) pour 11819090",Aucun
+26030000150900,AEA064XX,2026-03-31,1066,SGAE10625127728,AEA064XX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 100 + OF: 966)
+26030000150930,AEA098XX,2026-03-31,600,SGAE10624990238,AEA098XX,,Non planifiée,composants indisponibles: E7211 x1799,NOR/MTO (Suggéré - stock: 100 + OF: 500)
+26030000150970,AEA100XX,2026-03-31,1688,SGAE10625127965,AEA100XX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 168 + OF: 1520)
+26030000150991,AEA1150XX,2026-03-31,1200,SGAE10624990765,AEA1150XX,,Non planifiée,composants indisponibles: E7211 x1302,NOR/MTO (Suggéré - stock: 0 + OF: 1200)
+26030000150998,AEA1151XX,2026-03-31,3240,,,,Non couverte,"Stock alloué: 0, Besoin net: 3240, Aucun OF trouvé (affermi ou suggéré) pour AEA1151XX",Aucun
+26030000151015,AEA1152XX,2026-03-31,2400,,,,Non couverte,"Stock alloué: 0, Besoin net: 2400, Aucun OF trouvé (affermi ou suggéré) pour AEA1152XX",Aucun
+26030000151047,AEA1202XX,2026-03-31,60,SGAE10624991390,AEA1202XX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 60)
+26030000151086,AEA1217GM,2026-03-31,864,,,,Non couverte,"Stock alloué: 0, Besoin net: 864, Aucun OF trouvé (affermi ou suggéré) pour AEA1217GM",Aucun
+26030000151153,AEA1241XX,2026-03-31,1809,SGAE10624992297,AEA1241XX,,Non planifiée,composants indisponibles: E7211 x3108,NOR/MTO (Suggéré - stock: 0 + OF: 1809)
+26030000151179,AEA1242XX,2026-03-31,148,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000151235,AEA1335EX,2026-03-31,1,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000151275,AEA1339EX,2026-03-31,38,SGAE10624993242,AEA1339EX,,Non planifiée,composants indisponibles: E7211 x1303,NOR/MTO (Suggéré - stock: 0 + OF: 38)
+26030000151345,AEA1429XX,2026-03-31,1,SGAE10624993421,AEA1429XX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 1)
+26030000151462,AEA1955XX,2026-03-31,65,SGAE10624994322,AEA1955XX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 7 + OF: 58)
+26030000151538,AEA1992XX,2026-03-31,1200,,,,Non couverte,"Stock alloué: 0, Besoin net: 1200, Aucun OF trouvé (affermi ou suggéré) pour AEA1992XX",Aucun
+26030000151645,AEA2115XX,2026-03-31,52,SGAE10624995543,AEA2115XX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 24 + OF: 28)
+26030000151685,AEA301XX,2026-03-31,616,F126-44834,AEA301XX,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 616)
+26030000151725,AEA317XX,2026-03-31,1336,F126-44715,AEA317XX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Affermé - stock: 1120 + OF: 216)
+26030000151777,AEA453XX,2026-03-31,12,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000151876,AEA733XX,2026-03-31,368,SGAE10624998110,AEA733XX,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 368)
+26030000151907,AEA775XX,2026-03-31,88,SGAE10624998173,AEA775XX,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 88)
+26030000151976,AEA778XX,2026-03-31,283,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000152016,AEA808XX,2026-03-31,13,SGAE10624998431,AEA808XX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 13)
+26030000152046,AEA809XX,2026-03-31,19,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000152085,AEA827XX,2026-03-31,1782,SGAE10624998495,AEA827XX,,Non planifiée,composants indisponibles: E7211 x3108,NOR/MTO (Suggéré - stock: 0 + OF: 1782)
+26030000152134,AEA851XX,2026-03-31,872,SGAE10624998702,AEA851XX,,Non planifiée,composants indisponibles: E7211 x2163,NOR/MTO (Suggéré - stock: 794 + OF: 78)
+26030000152213,AEA967XX,2026-03-31,159,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000152253,AEA968XX,2026-03-31,35,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000152293,AVE052EX,2026-03-31,2,SGAE10624999273,AVE052EX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 2)
+26030000152310,AVE056XX,2026-03-31,14,SGAE10624999611,AVE056XX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 14)
+26030000152350,AVE057EX,2026-03-31,1,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000152362,AVE1267EX,2026-03-31,8,SGAE10625000086,AVE1267EX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 8)
+26030000152540,BFE2068GM,2026-03-31,3,SGAE10625013825,BFE2068GM,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 3)
+26030000152638,BXC1889EX,2026-03-31,15,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000152868,BXC1899EX,2026-03-31,38,SGAE10625022127,BXC1899EX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 38)
+26030000152901,BXC1900EX,2026-03-31,864,,,,Non couverte,"Stock alloué: 0, Besoin net: 864, Aucun OF trouvé (affermi ou suggéré) pour BXC1900EX",Aucun
+26030000153017,BXC1902EX,2026-03-31,57,SGAE10625027510,BXC1902EX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 57)
+26030000153054,BXC1903EX,2026-03-31,44,SGAE10625028004,BXC1903EX,,Non planifiée,"composants indisponibles: CE4091 x44, E7211 x1299, ME4310 x44",NOR/MTO (Suggéré - stock: 0 + OF: 44)
+26030000153092,BXC1903GM,2026-03-31,57,SGAE10625029560,BXC1903GM,,Non planifiée,"composants indisponibles: CE4091 x72, E7211 x1299, ME4310 x72",NOR/MTO (Suggéré - stock: 2 + OF: 55)
+26030000153195,BXC1907EX,2026-03-31,1152,SGAE10625032263,BXC1907EX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 1152)
+26030000153228,BXC1908EX,2026-03-31,284,SGAE10625033351,BXC1908EX,,Non planifiée,"composants indisponibles: CE4091 x288, E7211 x1299, ME4310 x288",NOR/MTO (Suggéré - stock: 1 + OF: 283)
+26030000153531,BXC2139GM,2026-03-31,9,SGAE10625041632,BXC2139GM,,Non planifiée,composants indisponibles: E7211 x1299 | AFANT E4272 résolu en variante unique E7147,NOR/MTO (Suggéré - stock: 1 + OF: 8)
+26030000153568,BXC2142GM,2026-03-31,4,SGAE10625042301,BXC2142GM,,Non planifiée,"composants indisponibles: CE4091 x24, E7211 x1299, ME4310 x24 | AFANT E4272 résolu en variante unique E7147",NOR/MTO (Suggéré - stock: 0 + OF: 4)
+26030000153741,BXE2065GM,2026-03-31,3,SGAE10625047338,BXE2065GM,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 3)
+26030000153786,BXE2066GM,2026-03-31,1,SGAE10625048825,BXE2066GM,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 1)
+26030000153862,BXE2069GM,2026-03-31,3,SGAE10625050736,BXE2069GM,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 3)
+26030000153872,BXE2073GM,2026-03-31,3,SGAE10625051114,BXE2073GM,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 3)
+26030000153925,BXE2077GM,2026-03-31,6,SGAE10625053072,BXE2077GM,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 6)
+26030000154001,BXE2078GM,2026-03-31,6,SGAE10625055504,BXE2078GM,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 1 + OF: 5)
+26030000154072,BXE2080GM,2026-03-31,3,SGAE10625057803,BXE2080GM,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 3)
+26030000154108,BXE2189GM,2026-03-31,3,SGAE10625058911,BXE2189GM,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 3)
+26030000154131,BXE2191GM,2026-03-31,3,SGAE10625059834,BXE2191GM,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 3)
+26030000154204,BXE2202GM,2026-03-31,3,SGAE10625062891,BXE2202GM,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 3)
+26030000154285,CAL261EX,2026-03-31,400,SGAE10625130464,CAL261EX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 330 + OF: 70)
+26030000154295,EAF309EX,2026-03-31,127,SGAE10625065808,EAF309EX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 84 + OF: 43)
+26030000154425,EAF323EX,2026-03-31,263,SGAE10625067248,EAF323EX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 224 + OF: 39)
+26030000154541,EAR200GM,2026-03-31,1440,,,,Non couverte,"Stock alloué: 0, Besoin net: 1440, Aucun OF trouvé (affermi ou suggéré) pour EAR200GM",Aucun
+26030000154592,EAR2019GM,2026-03-31,1080,,,,Non couverte,"Stock alloué: 0, Besoin net: 1080, Aucun OF trouvé (affermi ou suggéré) pour EAR2019GM",Aucun
+26030000154605,EAR201EX,2026-03-31,648,F126-44822,EAR201EX,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 32 + OF: 616)
+26030000154630,EAR201GM,2026-03-31,1296,SGAE10625069701,EAR201GM,,Non planifiée,composants indisponibles: E7211 x1304,NOR/MTO (Suggéré - stock: 3 + OF: 1293)
+26030000154642,EAR201PO,2026-03-31,1944,,,,Non couverte,"Stock alloué: 31, Besoin net: 1913, Aucun OF trouvé (affermi ou suggéré) pour EAR201PO",Aucun
+26030000154767,EAR206GM,2026-03-31,576,SGAE10625071280,EAR206GM,,Non planifiée,composants indisponibles: E7211 x1301,NOR/MTO (Suggéré - stock: 0 + OF: 576)
+26030000154775,EAR206PO,2026-03-31,4176,,,,Non couverte,"Stock alloué: 576, Besoin net: 3600, Aucun OF trouvé (affermi ou suggéré) pour EAR206PO",Aucun
+26030000154815,EAR282GM,2026-03-31,1728,,,,Non couverte,"Stock alloué: 0, Besoin net: 1728, Aucun OF trouvé (affermi ou suggéré) pour EAR282GM",Aucun
+26030000154909,EFR174XX,2026-03-31,9,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000154987,EHM1275GM,2026-03-31,44,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000155026,EHM1276EX,2026-03-31,224,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000155184,EHP1198GM,2026-03-31,60,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000155338,EHP1875GM,2026-03-31,1080,SGAE10625081159,EHP1875GM,,Non planifiée,composants indisponibles: E7211 x1303,NOR/MTO (Suggéré - stock: 1 + OF: 1079)
+26030000155353,EHT780EX,2026-03-31,258,SGAE10625081468,EHT780EX,,Non planifiée,composants indisponibles: E2348 x103,NOR/MTO (Suggéré - stock: 0 + OF: 258)
+26030000155423,EHT780PO,2026-03-31,720,SGAE10625082702,EHT780PO,,Non planifiée,"composants indisponibles: A1712E01 x143, E2348 x463",NOR/MTO (Suggéré - stock: 0 + OF: 720)
+26030000155492,EMM707PO,2026-03-31,864,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000155535,EMM716PO,2026-03-31,2160,,,,Non couverte,"Stock alloué: 0, Besoin net: 2160, Aucun OF trouvé (affermi ou suggéré) pour EMM716PO",Aucun
+26030000155585,EMM717PO,2026-03-31,150,SGAE10625085185,EMM717PO,,Non planifiée,composants indisponibles: E7211 x1303,NOR/MTO (Suggéré - stock: 0 + OF: 150)
+26030000155608,ETF1864EX,2026-03-31,6,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000155653,ETH1853EX,2026-03-31,276,F126-44857,ETH1853EX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 182 + OF: 94)
+26030000155701,ETH1984EX,2026-03-31,945,SGAE10625086494,ETH1984EX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 11 + OF: 934)
+26030000155753,ETH2104GM,2026-03-31,675,SGAE10625086785,ETH2104GM,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 429 + OF: 246)
+26030000155865,G2H1064EX,2026-03-31,6,SGAE10625088947,G2H1064EX,,Non planifiée,composants indisponibles: E7211 x1301,NOR/MTO (Suggéré - stock: 0 + OF: 6)
+26030000155984,SE3203,2026-03-31,4,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000156024,V2A032EX,2026-03-31,39,SGAE10625094145,V2A032EX,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 39)
+26030000156171,VAM767EX,2026-03-31,4,SGAE10625097646,VAM767EX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 4)
+26030000156236,VBP2173PO,2026-03-31,180,,,,Non couverte,"Stock alloué: 1, Besoin net: 179, Aucun OF trouvé (affermi ou suggéré) pour VBP2173PO",Aucun
+AR2503137,DP2389,2026-03-31,285,,,,Non couverte,"Stock alloué: 0, Besoin net: 285, Aucun OF trouvé (affermi ou suggéré) pour DP2389",Aucun
+AR2600208,11016310,2026-03-31,1152,SGAE10624920434,11016310,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 1152)
+AR2600208,11819090,2026-03-31,720,F326-01667,11819090,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Affermé - stock: 0 + OF: 720)
+AR2600208,AEA1152XX,2026-03-31,1080,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600208,AEA1202XX,2026-03-31,304,F126-44732,AEA1202XX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 304)
+AR2600208,AEA1242XX,2026-03-31,1608,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600208,AEA1243XX,2026-03-31,1440,SGAE10624993039,AEA1243XX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 682 + OF: 758)
+AR2600208,AEA733XX,2026-03-31,1809,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600208,AEA833XX,2026-03-31,1440,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600208,AEA852XX,2026-03-31,1440,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600208,BXC1907EX,2026-03-31,864,SGAE10625032263,BXC1907EX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 4 + OF: 860)
+AR2600474,DP2409,2026-03-31,111,SGAE10625065758,DP2409,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 111)
+AR2600809,11011539,2026-03-31,720,F426-10233,11011539,,Non planifiée,composants indisponibles: E7211 x2019,MTS
+AR2600891,11819091,2026-03-31,2160,F326-01662,11819091,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Affermé - stock: 0 + OF: 2160)
+AR2600935,BXE2078EX,2026-03-31,360,SGAE10625054317,BXE2078EX,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 360)
+AR2601152,V4A2164EX,2026-03-31,5,F126-44869,V4A2164EX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Affermé - stock: 0 + OF: 5)
+AR2601201,AEA1151XX,2026-03-31,120,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601201,AEA1152XX,2026-03-31,240,F126-44838,AEA1152XX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 16 + OF: 224)
+AR2601201,EAR200EX,2026-03-31,80,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601201,EAR282EX,2026-03-31,64,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601295,BDH2305AL,2026-03-31,50,F426-10381,BDH2305AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601321,11016310,2026-03-31,576,SGAE10624920434,11016310,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 576)
+AR2601321,EAR201PO,2026-03-31,1296,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601321,EAR206PO,2026-03-31,1152,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601321,EHT780PO,2026-03-31,780,F126-44899,EHT780PO,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 780)
+AR2601321,EMM716PO,2026-03-31,1080,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601321,VBP2173PO,2026-03-31,90,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601322,BXL888PO,2026-03-31,576,F126-44901,BXL888PO,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 576)
+AR2601328,BXC1893EX,2026-03-31,288,F126-44698,BXC1893EX,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 1 + OF: 287)
+AR2601328,EAR201EX,2026-03-31,324,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601336,EAR200EX,2026-03-31,120,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601336,EAR282EX,2026-03-31,64,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601349,AEA851XX,2026-03-31,12,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601349,EAF312EX,2026-03-31,40,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601349,EAR308EX,2026-03-31,36,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601461,11019142,2026-03-31,1,F326-01664,11019142,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 1)
+AR2601462,11016282,2026-03-31,1,F326-01652,11016282,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 1)
+AR2601463,11019142,2026-03-31,1,F326-01664,11019142,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 1)
+AR2601464,11019142,2026-03-31,23,F326-01664,11019142,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 23)
+AR2601464,11019147,2026-03-31,20,F326-01665,11019147,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 20)
+AR2601465,11019411,2026-03-31,5,F326-01666,11019411,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 5)
+AR2601466,11018173,2026-03-31,1,SGAE10624926769,11018173,,Non planifiée,composants indisponibles: E7211 x1747,NOR/MTO (Suggéré - stock: 0 + OF: 1)
+AR2601467,11016286,2026-03-31,1,F326-01651,11016286,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 1)
+AR2601468,11019149,2026-03-31,2,SGAE10624933153,11019149,,Non planifiée,composants indisponibles: E7211 x1748,NOR/MTO (Suggéré - stock: 0 + OF: 2)
+AR2600390,EHM1275GM,2026-04-01,224,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600390,EHP1874GM,2026-04-01,1080,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600410,EAR2019GM,2026-04-01,360,SGAE10625069111,EAR2019GM,,Non planifiée,composants indisponibles: E7211 x1301,NOR/MTO (Suggéré - stock: 0 + OF: 360)
+AR2600411,EAR2019GM,2026-04-01,360,SGAE10625069110,EAR2019GM,,Non planifiée,composants indisponibles: E7211 x1307,NOR/MTO (Suggéré - stock: 0 + OF: 360)
+AR2600586,BXC1901GM,2026-04-01,288,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600706,BXC1922GM,2026-04-01,288,SGAE10625036825,BXC1922GM,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 2 + OF: 286)
+AR2600706,EAR200GM,2026-04-01,720,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600784,11033681,2026-04-01,300,F426-10198,11033681,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2600784,11033684,2026-04-01,300,F426-09510,11033684,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2600784,11033694,2026-04-01,48,F426-09511,11033694,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2600784,AEA1217AL,2026-04-01,72,F426-09506,AEA1217AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600784,AEA1218AL,2026-04-01,72,F426-09973,AEA1218AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600784,AEA362AL,2026-04-01,48,F426-09971,AEA362AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600784,AEA389AL,2026-04-01,60,F426-09972,AEA389AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600784,BXG271AL,2026-04-01,120,F426-09279,BXG271AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600784,BXG352AL,2026-04-01,20,F426-09278,BXG352AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600784,GRO272AL,2026-04-01,260,F426-09512,GRO272AL,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2600784,TDA868AL,2026-04-01,210,F426-10197,TDA868AL,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2600821,AEA1217GM,2026-04-01,720,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600822,AEA317XX,2026-04-01,108,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600822,SE3520,2026-04-01,10,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600840,EHM1305AE,2026-04-01,1008,F426-09813,EHM1305AE,2026-03-25,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600915,BXC1900GM,2026-04-01,288,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600916,BXC1890GM,2026-04-01,576,F126-44858,BXC1890GM,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 2 + OF: 574)
+AR2600916,BXC1893GM,2026-04-01,576,F126-44859,BXC1893GM,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Affermé - stock: 2 + OF: 574)
+AR2600916,BXE2051GM,2026-04-01,60,F126-44860,BXE2051GM,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 60)
+AR2600916,BXE2055GM,2026-04-01,36,F126-44862,BXE2055GM,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Affermé - stock: 2 + OF: 34)
+AR2600941,BDH2264AL,2026-04-01,384,F426-10241,BDH2264AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600955,GBP1806AE,2026-04-01,960,F426-10245,GBP1806AE,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2600959,EHM1306AE,2026-04-01,1008,F426-10247,EHM1306AE,,Non planifiée,composants indisponibles: E7211 x1303,MTS
+AR2600961,EHL1395AL,2026-04-01,120,F426-09830,EHL1395AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2600962,11016312,2026-04-01,600,F426-10248,11016312,,Non planifiée,composants indisponibles: E7211 x2344,MTS
+AR2601022,AEA1151XX,2026-04-01,1080,F126-44839,AEA1151XX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Affermé - stock: 191 + OF: 889)
+AR2601032,AEA1992XX,2026-04-01,35,SGAE10624994855,AEA1992XX,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 35)
+AR2601033,EAR2018GM,2026-04-01,360,SGAE10625068553,EAR2018GM,,Non planifiée,composants indisponibles: E7211 x1301,NOR/MTO (Suggéré - stock: 0 + OF: 360)
+AR2601033,EAR282GM,2026-04-01,1152,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601181,VTZ2086CH,2026-04-01,8,SGAE10625107220,VTZ2086CH,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 8)
+AR2601191,BXE2080GM,2026-04-01,30,F126-44861,BXE2080GM,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 30)
+AR2601192,TDA873GM,2026-04-01,48,SGAE10625094059,TDA873GM,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 48)
+AR2601200,AEA1429XX,2026-04-01,300,SGAE10624993421,AEA1429XX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 2 + OF: 298)
+AR2601204,VCZ2094EX,2026-04-01,8,SGAE10625107207,VCZ2094EX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 8)
+AR2601211,11016286,2026-04-01,1,SGAE10624918449,11016286,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 1)
+AR2601230,AVE209AE,2026-04-01,6,F426-09634,AVE209AE,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601230,BDH2212AL,2026-04-01,384,F426-10277,BDH2212AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601232,AVE2131CH,2026-04-01,50,SGAE10625000331,AVE2131CH,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 50)
+AR2601268,11026032,2026-04-01,1200,F426-10299,11026032,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601276,FBE1089GM,2026-04-01,264,F126-44716,FBE1089GM,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Affermé - stock: 0 + OF: 264)
+AR2601298,BDH2186AL,2026-04-01,384,F426-10312,BDH2186AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601300,BDH2219AL,2026-04-01,384,F426-10314,BDH2219AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601301,BDH2228AL,2026-04-01,768,F426-10315,BDH2228AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601304,BDH2221AL,2026-04-01,768,F426-10318,BDH2221AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601319,AEA301XX,2026-04-01,464,F126-44834,AEA301XX,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 191 + OF: 273)
+AR2601320,AEA733XX,2026-04-01,18,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601320,AEA774XX,2026-04-01,30,F126-44717,AEA774XX,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 10 + OF: 20)
+AR2601320,AEA827XX,2026-04-01,18,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601320,EAF309HU,2026-04-01,40,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601320,VAM767HU,2026-04-01,5,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601343,FBE1089GM,2026-04-01,264,SGAE10625087374,FBE1089GM,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 264)
+AR2601367,EAR203HU,2026-04-01,40,F126-44820,EAR203HU,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 40)
+AR2601371,BDH2216AL,2026-04-01,384,F426-10326,BDH2216AL,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601381,CAL1228EX,2026-04-01,125,F126-44718,CAL1228EX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Affermé - stock: 0 + OF: 125)
+AR2601382,TDA873GM,2026-04-01,48,,,,Non couverte,"Stock alloué: 0, Besoin net: 48, Aucun OF trouvé (affermi ou suggéré) pour TDA873GM",Aucun
+AR2601404,11026033,2026-04-01,432,F426-10332,11026033,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601405,11035401,2026-04-01,704,F426-10333,11035401,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601407,11033020,2026-04-01,108,F426-10335,11033020,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601408,11033025,2026-04-01,56,F426-10336,11033025,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601409,11033048,2026-04-01,800,F426-10337,11033048,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601410,11035404,2026-04-01,704,F426-10338,11035404,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601412,11035406,2026-04-01,168,F426-10340,11035406,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601414,11033053,2026-04-01,256,F426-10341,11033053,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601422,11033205,2026-04-01,160,F426-10349,11033205,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601479,11019149,2026-04-01,2,,,,Non couverte,"Stock alloué: 0, Besoin net: 2, Aucun OF trouvé (affermi ou suggéré) pour 11019149",Aucun
+AR2601480,11018173,2026-04-01,1,SGAE10624926769,11018173,,Non planifiée,composants indisponibles: E7211 x1747,NOR/MTO (Suggéré - stock: 0 + OF: 1)
+AR2601480,11018173,2026-04-01,1,SGAE10624926768,11018173,,Non planifiée,composants indisponibles: E7211 x1745,NOR/MTO (Suggéré - stock: 0 + OF: 1)
+AR2601481,11019142,2026-04-01,1,F326-01664,11019142,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 1)
+AR2601489,AEA579XX,2026-04-01,2,,,,Non couverte,"Stock alloué: 0, Besoin net: 2, Aucun OF trouvé (affermi ou suggéré) pour AEA579XX",Aucun
+AR2504302,11033501,2026-04-02,48,,,,Non couverte,OF F425-04438 introuvable,MTS (OF introuvable)
+AR2600582,AEA1992XX,2026-04-02,530,SGAE10624994854,AEA1992XX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 530)
+AR2601144,11026035,2026-04-02,480,F426-10249,11026035,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601202,AVE056XX,2026-04-02,20,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601202,BFX1929EX,2026-04-02,48,F126-44863,BFX1929EX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Affermé - stock: 0 + OF: 48)
+AR2601202,BXE1999EX,2026-04-02,30,F126-44864,BXE1999EX,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 14 + OF: 16)
+AR2601202,V2A032EX,2026-04-02,25,F126-44892,V2A032EX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Affermé - stock: 0 + OF: 25)
+AR2601202,V4A2164EX,2026-04-02,3,F126-44869,V4A2164EX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Affermé - stock: 0 + OF: 3)
+AR2601203,AEA731XX,2026-04-02,225,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601203,BXC1900EX,2026-04-02,144,F126-44865,BXC1900EX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Affermé - stock: 29 + OF: 115)
+AR2601203,EAR201EX,2026-04-02,540,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601221,11033682,2026-04-02,60,F426-09602,11033682,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601221,11033683,2026-04-02,120,F426-10254,11033683,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601221,BDH2214AL,2026-04-02,384,F426-10252,BDH2214AL,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601221,BDH2218AL,2026-04-02,384,F426-10253,BDH2218AL,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601231,11011508,2026-04-02,180,F426-10278,11011508,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601231,11016258,2026-04-02,48,F426-10279,11016258,,Non planifiée,composants indisponibles: E7211 x1792,MTS
+AR2601231,11016295,2026-04-02,180,F426-10280,11016295,,Non planifiée,composants indisponibles: E7211 x1924,MTS
+AR2601231,11016305,2026-04-02,96,F426-10281,11016305,,Non planifiée,composants indisponibles: E7211 x1840,MTS
+AR2601231,11016308,2026-04-02,1200,F426-10282,11016308,,Non planifiée,composants indisponibles: E7211 x2944,MTS
+AR2601231,11018138,2026-04-02,60,F426-10283,11018138,,Non planifiée,composants indisponibles: E7211 x1804,MTS
+AR2601231,11018139,2026-04-02,105,F426-10284,11018139,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601231,11019139,2026-04-02,130,F426-10289,11019139,,Non planifiée,composants indisponibles: E7211 x1874,MTS
+AR2601231,11019215,2026-04-02,130,F426-10290,11019215,,Non planifiée,composants indisponibles: E7211 x1874,MTS
+AR2601231,11026042,2026-04-02,60,F426-10291,11026042,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601231,11033360,2026-04-02,16,F426-09650,11033360,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601231,11033361,2026-04-02,16,F426-09651,11033361,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601231,11033362,2026-04-02,16,F426-09652,11033362,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601231,11033391,2026-04-02,16,F426-09653,11033391,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601231,11033400,2026-04-02,24,F426-09654,11033400,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601231,EHL1386AL,2026-04-02,1440,F426-09868,EHL1386AL,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601250,VB42166AE,2026-04-02,16,F426-09439,VB42166AE,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601253,GBP1810AE,2026-04-02,384,F426-10294,GBP1810AE,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601254,GBP1809AE,2026-04-02,256,F426-10295,GBP1809AE,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601302,BDH2237AL,2026-04-02,384,F426-10316,BDH2237AL,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601305,BDH2236AL,2026-04-02,384,F426-10319,BDH2236AL,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601308,AEA1216EX,2026-04-02,100,F126-44835,AEA1216EX,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 100)
+AR2601308,AEA1217EX,2026-04-02,100,F126-44836,AEA1217EX,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 100)
+AR2601327,11033030,2026-04-02,108,F426-10324,11033030,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601417,11033519,2026-04-02,120,F426-10344,11033519,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601424,11033532,2026-04-02,48,F426-10351,11033532,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601440,SE3520,2026-04-02,6,F126-44893,SE3520,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 2 + OF: 4)
+AR2600943,BDH2245AL,2026-04-06,384,F426-10242,BDH2245AL,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2600945,BDH2266AL,2026-04-06,384,F426-10243,BDH2266AL,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2600950,BDH2229AL,2026-04-06,384,F426-10244,BDH2229AL,,Non planifiée,OF matché mais non injecté au planning,MTS
+26030000150931,AEA098XX,2026-04-07,121,SGAE10624990239,AEA098XX,,Non planifiée,composants indisponibles: E7211 x1499,NOR/MTO (Suggéré - stock: 0 + OF: 121)
+26030000151016,AEA1152XX,2026-04-07,2160,SGAE10624991067,AEA1152XX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 2160)
+26030000151048,AEA1202XX,2026-04-07,60,SGAE10624991391,AEA1202XX,,Non planifiée,composants indisponibles: E7211 x1803,NOR/MTO (Suggéré - stock: 0 + OF: 60)
+26030000151180,AEA1242XX,2026-04-07,1756,,,,Non couverte,"Stock alloué: 0, Besoin net: 1756, Aucun OF trouvé (affermi ou suggéré) pour AEA1242XX",Aucun
+26030000151236,AEA1335EX,2026-04-07,1,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000151276,AEA1339EX,2026-04-07,38,SGAE10624993242,AEA1339EX,,Non planifiée,composants indisponibles: E7211 x1303,NOR/MTO (Suggéré - stock: 0 + OF: 38)
+26030000151346,AEA1429XX,2026-04-07,1,SGAE10624993421,AEA1429XX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 1)
+26030000151463,AEA1955XX,2026-04-07,13,SGAE10624994323,AEA1955XX,,Non planifiée,composants indisponibles: E7211 x1313,NOR/MTO (Suggéré - stock: 0 + OF: 13)
+26030000151539,AEA1992XX,2026-04-07,200,SGAE10624994854,AEA1992XX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 200)
+26030000151646,AEA2115XX,2026-04-07,52,SGAE10624995544,AEA2115XX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 52)
+26030000151686,AEA301XX,2026-04-07,134,F126-44832,AEA301XX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Affermé - stock: 0 + OF: 134)
+26030000151726,AEA317XX,2026-04-07,1015,,,,Non couverte,"Stock alloué: 0, Besoin net: 1015, Aucun OF trouvé (affermi ou suggéré) pour AEA317XX",Aucun
+26030000151778,AEA453XX,2026-04-07,12,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000151908,AEA775XX,2026-04-07,88,SGAE10624998174,AEA775XX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 88)
+26030000151977,AEA778XX,2026-04-07,73,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000152017,AEA808XX,2026-04-07,13,SGAE10624998431,AEA808XX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 13)
+26030000152047,AEA809XX,2026-04-07,19,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000152214,AEA967XX,2026-04-07,31,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000152254,AEA968XX,2026-04-07,7,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000152294,AVE052EX,2026-04-07,2,SGAE10624999274,AVE052EX,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 2)
+26030000152302,AVE055XX,2026-04-07,800,SGAE10624999500,AVE055XX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 800)
+26030000152311,AVE056XX,2026-04-07,14,SGAE10624999613,AVE056XX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 14)
+26030000152351,AVE057EX,2026-04-07,1,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000152363,AVE1267EX,2026-04-07,8,SGAE10625000087,AVE1267EX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 8)
+26030000152541,BFE2068GM,2026-04-07,3,SGAE10625013826,BFE2068GM,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 3)
+26030000152639,BXC1889EX,2026-04-07,3,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000152869,BXC1899EX,2026-04-07,192,,,,Non couverte,"Stock alloué: 0, Besoin net: 192, Aucun OF trouvé (affermi ou suggéré) pour BXC1899EX",Aucun
+26030000153018,BXC1902EX,2026-04-07,48,SGAE10625027511,BXC1902EX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 48)
+26030000153532,BXC2139GM,2026-04-07,9,SGAE10625041633,BXC2139GM,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 9)
+26030000153569,BXC2142GM,2026-04-07,4,SGAE10625042301,BXC2142GM,,Non planifiée,"composants indisponibles: CE4091 x24, E7211 x1299, ME4310 x24 | AFANT E4272 résolu en variante unique E7147",NOR/MTO (Suggéré - stock: 0 + OF: 4)
+26030000153742,BXE2065GM,2026-04-07,3,SGAE10625047339,BXE2065GM,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 3)
+26030000153787,BXE2066GM,2026-04-07,1,SGAE10625048826,BXE2066GM,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 1)
+26030000153863,BXE2069GM,2026-04-07,3,SGAE10625050737,BXE2069GM,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 3)
+26030000153873,BXE2073GM,2026-04-07,3,SGAE10625051114,BXE2073GM,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 3)
+26030000153926,BXE2077GM,2026-04-07,6,SGAE10625053073,BXE2077GM,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 6)
+26030000154002,BXE2078GM,2026-04-07,6,SGAE10625055505,BXE2078GM,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 6)
+26030000154073,BXE2080GM,2026-04-07,3,SGAE10625057804,BXE2080GM,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 3)
+26030000154109,BXE2189GM,2026-04-07,3,SGAE10625058912,BXE2189GM,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 3)
+26030000154132,BXE2191GM,2026-04-07,3,SGAE10625059834,BXE2191GM,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 3)
+26030000154205,BXE2202GM,2026-04-07,3,SGAE10625062892,BXE2202GM,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 3)
+26030000154241,BXL888PO,2026-04-07,576,SGAE10625065280,BXL888PO,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 576)
+26030000154296,EAF309EX,2026-04-07,60,SGAE10625065810,EAF309EX,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 60)
+26030000154426,EAF323EX,2026-04-07,51,SGAE10625067248,EAF323EX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 51)
+26030000154542,EAR200GM,2026-04-07,720,SGAE10625068218,EAR200GM,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 720)
+26030000154593,EAR2019GM,2026-04-07,360,SGAE10625069110,EAR2019GM,,Non planifiée,composants indisponibles: E7211 x1307,NOR/MTO (Suggéré - stock: 0 + OF: 360)
+26030000154606,EAR201EX,2026-04-07,648,F126-44866,EAR201EX,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 648)
+26030000154643,EAR201PO,2026-04-07,648,SGAE10625069939,EAR201PO,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 648)
+26030000154776,EAR206PO,2026-04-07,576,SGAE10625071455,EAR206PO,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 576)
+26030000154816,EAR282GM,2026-04-07,576,SGAE10625072123,EAR282GM,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 576)
+26030000154910,EFR174XX,2026-04-07,9,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000154988,EHM1275GM,2026-04-07,44,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000155027,EHM1276EX,2026-04-07,58,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000155185,EHP1198GM,2026-04-07,60,F126-44389,EHP1198GM,2026-03-26,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 31 + OF: 29)
+26030000155354,EHT780EX,2026-04-07,50,SGAE10625081469,EHT780EX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 50)
+26030000155479,EMM1484EX,2026-04-07,1200,,,,Non couverte,"Stock alloué: 0, Besoin net: 1200, Aucun OF trouvé (affermi ou suggéré) pour EMM1484EX",Aucun
+26030000155493,EMM707PO,2026-04-07,864,SGAE10625084010,EMM707PO,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 4 + OF: 860)
+26030000155536,EMM716PO,2026-04-07,1080,SGAE10625084665,EMM716PO,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 1080)
+26030000155586,EMM717PO,2026-04-07,150,SGAE10625085186,EMM717PO,,Non planifiée,composants indisponibles: E7211 x1303,NOR/MTO (Suggéré - stock: 0 + OF: 150)
+26030000155609,ETF1864EX,2026-04-07,6,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+26030000155866,G2H1064EX,2026-04-07,6,SGAE10625088947,G2H1064EX,,Non planifiée,composants indisponibles: E7211 x1301,NOR/MTO (Suggéré - stock: 0 + OF: 6)
+26030000155985,SE3203,2026-04-07,4,SGAE10625171583,SE3203,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 4)
+26030000156172,VAM767EX,2026-04-07,4,SGAE10625097647,VAM767EX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 4)
+AR2600209,11819091,2026-04-07,1440,SGAE10624989591,11819091,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 1440)
+AR2600209,AEA100XX,2026-04-07,1608,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600209,AEA1150XX,2026-04-07,1080,SGAE10624990766,AEA1150XX,,Non planifiée,composants indisponibles: E7211 x1301,NOR/MTO (Suggéré - stock: 0 + OF: 1080)
+AR2600209,AEA1241XX,2026-04-07,1809,SGAE10624992298,AEA1241XX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 1 + OF: 1808)
+AR2600209,AEA1243XX,2026-04-07,1440,SGAE10624993040,AEA1243XX,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 1440)
+AR2600209,AEA731XX,2026-04-07,3618,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2600209,AEA775XX,2026-04-07,440,SGAE10624998173,AEA775XX,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 148 + OF: 292)
+AR2600209,AEA827XX,2026-04-07,1809,SGAE10624998494,AEA827XX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 1765 + OF: 44)
+AR2600209,AEA833XX,2026-04-07,1440,SGAE10624998586,AEA833XX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 4 + OF: 1436)
+AR2600209,AEA852XX,2026-04-07,1440,SGAE10624998831,AEA852XX,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 0 + OF: 1440)
+AR2600209,BXC1907EX,2026-04-07,2304,SGAE10625032265,BXC1907EX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 2304)
+AR2601231,11019004,2026-04-07,480,F426-10285,11019004,,Non planifiée,composants indisponibles: E7211 x2224 | AFANT E7855 résolu en variante unique E7855,MTS
+AR2601231,11019005,2026-04-07,240,F426-10286,11019005,,Non planifiée,composants indisponibles: E7211 x1984 | AFANT E7855 résolu en variante unique E7855,MTS
+AR2601231,11019090,2026-04-07,480,F426-10287,11019090,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601231,11019097,2026-04-07,480,F426-10288,11019097,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601255,GBP1811AE,2026-04-07,192,F426-10296,GBP1811AE,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601256,G2H1060AE,2026-04-07,90,F426-10093,G2H1060AE,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,MTS
+AR2601265,11019015,2026-04-07,480,F426-10298,11019015,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601299,BDH2212AL,2026-04-07,384,F426-10313,BDH2212AL,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601303,BDH2214AL,2026-04-07,384,F426-10317,BDH2214AL,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601322,11819090,2026-04-07,720,SGAE10624989293,11819090,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 0 + OF: 720)
+AR2601322,AEA1152XX,2026-04-07,1080,F126-44838,AEA1152XX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 1080)
+AR2601322,AEA1202XX,2026-04-07,304,F126-44732,AEA1202XX,2026-03-23,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 0 + OF: 304)
+AR2601322,AEA733XX,2026-04-07,1809,SGAE10624998110,AEA733XX,2026-03-24,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Suggéré - stock: 1737 + OF: 72)
+AR2601322,AVE1267EX,2026-04-07,45,,,,Servie sur stock,stock complet,NOR/MTO (stock complet)
+AR2601322,EMM1484EX,2026-04-07,1080,SGAE10625083766,EMM1484EX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Suggéré - stock: 8 + OF: 1072)
+AR2601322,EMM716PO,2026-04-07,1080,F126-44827,EMM716PO,2026-03-27,Servie par OF planifié à temps,OF planifié à temps,NOR/MTO (Affermé - stock: 1 + OF: 1079)
+AR2601406,11035403,2026-04-07,504,F426-10334,11035403,,Non planifiée,OF matché mais non injecté au planning,MTS
+AR2601443,BDH2245AL,2026-04-07,384,F426-10242,BDH2245AL,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Planifié - stock: 2 + OF: 382)
+AR2601450,V2A032EX,2026-04-07,18,F126-44892,V2A032EX,,Non planifiée,OF matché mais non injecté au planning,NOR/MTO (Affermé - stock: 0 + OF: 18)

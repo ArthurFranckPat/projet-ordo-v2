@@ -1,0 +1,12 @@
+{
+  "taux_service": 0.889,
+  "taux_ouverture": 0.728,
+  "nb_deviations": 0,
+  "nb_jit": 19,
+  "weights": {
+    "w1": 0.85,
+    "w2": 0.1,
+    "w3": 0.05
+  },
+  "score": 0.844
+}
