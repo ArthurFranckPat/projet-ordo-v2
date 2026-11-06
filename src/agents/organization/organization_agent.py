@@ -19,7 +19,7 @@ class OrganizationAgent:
     - OrganizationEvaluator : Sélection et évaluation des organisations
     """
 
-    def __init__(self, loader):
+    def __init__(self, loader, llm_client=None):
         """
         Initialize agent with dependencies.
 
@@ -27,11 +27,19 @@ class OrganizationAgent:
         ----------
         loader : DataLoader
             Loader pour accéder aux données
+        llm_client : BaseLLMClient, optional
+            Client LLM pour la sélection d'organisation (défaut: algorithme)
         """
         self.loader = loader
         self.charge_calculator = ChargeCalculator(loader)
         self.trend_analyzer = TrendAnalyzer()
         self.org_evaluator = OrganizationEvaluator()
+
+        if llm_client is not None:
+            from .llm_org_advisor import LLMOrganizationAdvisor
+            self._org_selector = LLMOrganizationAdvisor(llm_client)
+        else:
+            self._org_selector = self.org_evaluator
 
     def analyze_workshop_organization(
         self,
@@ -67,7 +75,7 @@ class OrganizationAgent:
 
         # 3. Évaluer et sélectionner les organisations
         for result in results.values():
-            org = self.org_evaluator.select_optimal_organization(result)
+            org = self._org_selector.select_optimal_organization(result)
             result.recommended_org = org
 
             charge_treated, coverage_pct = self.org_evaluator.evaluate_organization(

@@ -41,6 +41,29 @@ def test_candidate_of_score():
     assert candidate.composite_score > 0
 
 
+def test_composite_score_differentiates_on_hours():
+    """Candidates with more hours score higher when urgence and overlap are equal."""
+    from unittest.mock import MagicMock
+
+    low_hours = CandidateOF(
+        of=MagicMock(), commande=MagicMock(),
+        hours_per_poste={"PP_830": 5.0},
+        component_overlap_score=0.5,
+        urgence_score=0.5,
+        feasible=True
+    )
+    high_hours = CandidateOF(
+        of=MagicMock(), commande=MagicMock(),
+        hours_per_poste={"PP_830": 30.0},
+        component_overlap_score=0.5,
+        urgence_score=0.5,
+        feasible=True
+    )
+    assert high_hours.composite_score > low_hours.composite_score, (
+        "Higher hours should yield higher composite score when urgence and overlap are equal"
+    )
+
+
 def test_poste_schedule_charge_rate():
     """PosteSchedule doit calculer le taux de charge."""
     config = SchedulingConfig()

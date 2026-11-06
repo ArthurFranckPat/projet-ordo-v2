@@ -1,7 +1,15 @@
 """Charge calculator for workshop load analysis."""
 
+import re
 from datetime import date, timedelta
 from typing import Dict, List, Set, Optional
+
+_POSTE_CHARGE_REGEX = re.compile(r"^PP_\d+$")
+
+
+def _is_valid_poste(poste: str) -> bool:
+    """Vérifie si un poste suit le pattern PP_xxx (ex: PP_830, PP_128)."""
+    return bool(_POSTE_CHARGE_REGEX.match(poste))
 
 
 class ChargeCalculator:
@@ -67,7 +75,12 @@ class ChargeCalculator:
         gamme = self.loader.get_gamme(article)
         if gamme:
             for operation in gamme.operations:
-                if operation.poste_charge == target_poste and operation.cadence and operation.cadence > 0:
+                if (
+                    _is_valid_poste(operation.poste_charge)
+                    and operation.poste_charge == target_poste
+                    and operation.cadence
+                    and operation.cadence > 0
+                ):
                     total_hours += quantity / operation.cadence
 
         # 2. Charge des composants fabriqués
@@ -117,10 +130,13 @@ class ChargeCalculator:
         self,
         reference_date: date,
         horizon_weeks: int,
-        matcher
+        matcher=None
     ) -> Dict[str, float]:
         """
         Calcule la charge par poste pour un horizon donné.
+
+        Inclut commandes fermes ET prévisions nettes (après consommation).
+        La consommation évite le double-comptage : prévision_nette = max(0, prev - cmd).
 
         Parameters
         ----------
@@ -128,60 +144,56 @@ class ChargeCalculator:
             Date de référence (aujourd'hui)
         horizon_weeks : int
             Nombre de semaines (1=S+1, 2=S+2, etc.)
-        matcher : CommandeOFMatcher
-            Matcher pour lier commandes aux OF
+        matcher : optional
+            Non utilisé (conservé pour compatibilité)
 
         Returns
         -------
         Dict[str, float]
             Dictionnaire poste → heures
         """
+        from ...algorithms.forecast_consumption import consume_forecasts_by_article
+
         start_day = (horizon_weeks - 1) * 7 + 1
         end_day = horizon_weeks * 7
-
         start_date = reference_date + timedelta(days=start_day)
         end_date = reference_date + timedelta(days=end_day)
 
-        # Filtrer les commandes dans l'horizon
-        commandes_in_horizon = [
+        # Tous les besoins dans la fenêtre (commandes + prévisions)
+        besoins_in_horizon = [
             c for c in self.loader.commandes_clients
-            if c.est_commande()
-            and c.qte_restante > 0
+            if c.qte_restante > 0
             and start_date <= c.date_expedition_demandee <= end_date
         ]
 
-        if not commandes_in_horizon:
+        if not besoins_in_horizon:
             return {}
 
-        # Matcher commandes → OF
-        matching_results = matcher.match_commandes(commandes_in_horizon)
+        # Appliquer la consommation : prévision_nette = max(0, prev - commandes)
+        besoins_ajustes, _ = consume_forecasts_by_article(besoins_in_horizon)
 
-        # Calculer les heures par poste de manière récursive
-        hours_per_poste: Dict[str, float] = {}
+        if not besoins_ajustes:
+            return {}
+
+        # Identifier tous les postes valides couverts par ces besoins
         postes_to_calculate: Set[str] = set()
-
-        # Identifier tous les postes concernés
-        for result in matching_results:
-            if result.of is None:
-                continue
-
-            of = result.of
-            gamme = self.loader.get_gamme(of.article)
-
+        for besoin in besoins_ajustes:
+            gamme = self.loader.get_gamme(besoin.article)
             if gamme:
-                for operation in gamme.operations:
-                    if operation.cadence and operation.cadence > 0:
-                        postes_to_calculate.add(operation.poste_charge)
+                for op in gamme.operations:
+                    if _is_valid_poste(op.poste_charge) and op.cadence and op.cadence > 0:
+                        postes_to_calculate.add(op.poste_charge)
 
-        # Calculer la charge récursive pour chaque poste
+        # Calculer la charge récursive par poste pour chaque besoin
+        hours_per_poste: Dict[str, float] = {}
         for poste in postes_to_calculate:
-            for result in matching_results:
-                if result.of is None:
-                    continue
-
-                of = result.of
-                charge = self.calculate_of_charge_recursive(of, poste)
-                hours_per_poste[poste] = hours_per_poste.get(poste, 0) + charge
+            for besoin in besoins_ajustes:
+                self._calculated_articles.clear()
+                charge = self._calculate_article_charge_recursive(
+                    besoin.article, besoin.qte_restante, poste
+                )
+                if charge > 0:
+                    hours_per_poste[poste] = hours_per_poste.get(poste, 0) + charge
 
         return hours_per_poste
 

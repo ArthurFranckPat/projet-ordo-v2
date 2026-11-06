@@ -4,20 +4,87 @@ import pytest
 
 
 def test_get_organization_scenarios():
-    """Get all possible organization types"""
+    """Scenarios are ordered ascending by hours so the selection loop works correctly."""
     from src.agents.organization.organization_evaluator import OrganizationEvaluator
 
     evaluator = OrganizationEvaluator()
     scenarios = evaluator.get_organization_scenarios()
 
     assert len(scenarios) == 4
-    assert scenarios[0].type == "1x8"
-    assert scenarios[0].hours == 35.0
-    assert scenarios[1].type == "2x8"
-    assert scenarios[1].hours == 70.0
-    assert scenarios[2].type == "3x8"
-    assert scenarios[2].hours == 105.0
-    assert scenarios[3].type == "partial"
+    # Must be sorted ascending so the first-match loop selects the lightest covering scenario
+    hours = [s.hours for s in scenarios]
+    assert hours == sorted(hours), f"Scenarios must be sorted ascending by hours, got {hours}"
+    # partial is the lightest
+    assert scenarios[0].type == "partial"
+    assert scenarios[0].hours == 17.5
+    assert scenarios[1].type == "1x8"
+    assert scenarios[2].type == "2x8"
+    assert scenarios[3].type == "3x8"
+
+
+def test_charge_within_tolerance_does_not_jump_to_next_tier():
+    """37.3h ne doit pas déclencher 2x8 : 37.3h ≤ 35h × 1.10 (tolérance ±10%)."""
+    from src.agents.organization.organization_evaluator import OrganizationEvaluator
+    from src.agents.organization.models import PosteChargeResult, TrendType
+
+    evaluator = OrganizationEvaluator()
+
+    result = PosteChargeResult(
+        poste="PP_153",
+        charge_s1=37.3,
+        charge_s2=25.7,
+        charge_s3=29.7,
+        charge_s4=10.0,
+        trend=TrendType.DOWNWARD
+    )
+
+    org = evaluator.select_optimal_organization(result)
+
+    assert org.type == "1x8", (
+        f"37.3h est dans la tolérance ±10% de 1x8 (35h), attendu 1x8, obtenu {org.type}"
+    )
+
+
+def test_select_optimal_organization_exceeds_all_scenarios():
+    """When charge exceeds all scenarios, return the heaviest (3x8), not the lightest."""
+    from src.agents.organization.organization_evaluator import OrganizationEvaluator
+    from src.agents.organization.models import PosteChargeResult, TrendType
+
+    evaluator = OrganizationEvaluator()
+
+    result = PosteChargeResult(
+        poste="PP_830",
+        charge_s1=200.0,  # Far exceeds 3x8 (105h)
+        charge_s2=200.0,
+        charge_s3=200.0,
+        charge_s4=200.0,
+        trend=TrendType.STABLE
+    )
+
+    org = evaluator.select_optimal_organization(result)
+
+    assert org.type == "3x8", f"Expected 3x8 for overloaded poste, got {org.type}"
+
+
+def test_select_optimal_organization_picks_partial_for_low_charge():
+    """For very low charge (< 17.5h), partial organization is selected."""
+    from src.agents.organization.organization_evaluator import OrganizationEvaluator
+    from src.agents.organization.models import PosteChargeResult, TrendType
+
+    evaluator = OrganizationEvaluator()
+
+    result = PosteChargeResult(
+        poste="PP_830",
+        charge_s1=10.0,
+        charge_s2=12.0,
+        charge_s3=11.0,
+        charge_s4=9.0,
+        trend=TrendType.STABLE
+    )
+
+    org = evaluator.select_optimal_organization(result)
+
+    assert org.type == "partial", f"Expected partial for low charge (10h), got {org.type}"
 
 
 def test_evaluate_organization_coverage():

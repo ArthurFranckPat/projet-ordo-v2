@@ -17,10 +17,10 @@ class OrganizationEvaluator:
             Liste des organisations du plus léger au plus lourd
         """
         return [
+            OrganizationType(type="partial", hours=17.5),  # 2.5 days
             OrganizationType(type="1x8", hours=35.0),
             OrganizationType(type="2x8", hours=70.0),
             OrganizationType(type="3x8", hours=105.0),
-            OrganizationType(type="partial", hours=17.5)  # 2.5 days
         ]
 
     def evaluate_organization(
@@ -53,6 +53,8 @@ class OrganizationEvaluator:
 
         return charge_treated, coverage_pct
 
+    TOLERANCE = 0.10  # ±10% de tolérance sur la capacité de chaque organisation
+
     def select_optimal_organization(
         self,
         result: 'PosteChargeResult'
@@ -61,9 +63,11 @@ class OrganizationEvaluator:
         Sélectionne l'organisation optimale pour un poste.
 
         Règles:
-        - Stable: Organisation adaptée à S+1
-        - Hausse: +1 niveau vs S+1 brut
-        - Baisse: Organisation S+1 brut
+        - Stable/Baisse: Organisation adaptée à S+1 avec tolérance ±10%
+        - Hausse: +1 niveau vs S+1 brut (marge de sécurité)
+
+        La tolérance évite de sauter au niveau supérieur pour un léger dépassement :
+        ex. 37.3h ≤ 35h × 1.10 = 38.5h → 1×8 suffit.
 
         Parameters
         ----------
@@ -79,19 +83,19 @@ class OrganizationEvaluator:
 
         scenarios = self.get_organization_scenarios()
 
-        # Organisation de base selon charge S+1
         base_charge = result.charge_s1
 
-        # Si tendance haussière, anticiper +1 niveau
         if result.trend == TrendType.UPWARD:
-            target_charge = base_charge + 10  # Marge de sécurité
+            # Tendance haussière : anticiper le niveau suivant (pas de tolérance)
+            target_charge = base_charge + 10
+            for scenario in scenarios:
+                if scenario.hours >= target_charge:
+                    return scenario
         else:
-            target_charge = base_charge
+            # Stable ou Baisse : utiliser la tolérance pour éviter le sur-calibrage
+            for scenario in scenarios:
+                if scenario.hours * (1 + self.TOLERANCE) >= base_charge:
+                    return scenario
 
-        # Trouver le scénario le plus léger qui couvre la charge
-        for scenario in scenarios:
-            if scenario.hours >= target_charge:
-                return scenario
-
-        # Si rien ne couvre, retourner le plus léger
-        return scenarios[0]
+        # Si rien ne couvre, retourner le plus lourd (capacité maximale)
+        return scenarios[-1]

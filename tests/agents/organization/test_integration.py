@@ -59,9 +59,10 @@ def test_organization_cli_integration():
     if not os.path.exists(data_dir):
         pytest.skip(f"Data directory not found at {data_dir}")
 
+    repo_root = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../.."))
     result = subprocess.run(
         [sys.executable, "-m", "src.main", "--data-dir", data_dir, "--organization"],
-        cwd="/Users/arthurbledou/Desktop/Code/ordo v2/.worktrees/agent-scheduling",
+        cwd=repo_root,
         capture_output=True,
         text=True,
         timeout=60

@@ -187,7 +187,13 @@ def main():
         from src.agents.organization.formatter import format_organization_table
         from src.algorithms import CommandeOFMatcher
 
-        agent = OrganizationAgent(loader)
+        llm_client = None
+        if args.llm:
+            from src.agents.llm.mistral_client import MistralLLMClient
+            llm_client = MistralLLMClient(model=args.llm_model)
+            console.print(f"[bold cyan]🤖 Mode LLM activé ({args.llm_model})[/bold cyan]")
+
+        agent = OrganizationAgent(loader, llm_client=llm_client)
         matcher = CommandeOFMatcher(loader, date_tolerance_days=10)
 
         results = agent.analyze_workshop_organization(

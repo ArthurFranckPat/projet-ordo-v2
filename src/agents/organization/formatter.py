@@ -1,5 +1,9 @@
+import math
+
 from rich.console import Console
 from rich.table import Table
+
+HOURS_PER_DAY = 7.0
 
 
 def format_organization_table(results: dict) -> None:
@@ -32,7 +36,11 @@ def format_organization_table(results: dict) -> None:
         else:
             trend_str = "➡️ Stable"
 
-        org_str = f"{result.recommended_org.type} ({result.recommended_org.hours}h)"
+        if result.recommended_org.type == "partial":
+            days = math.ceil(result.charge_s1 / HOURS_PER_DAY)
+            org_str = f"{days}J (1×8)"
+        else:
+            org_str = f"{result.recommended_org.type} ({result.recommended_org.hours}h)"
         treated_str = f"{result.charge_treated:.1f}h ({result.coverage_pct:.0f}%)"
 
         table.add_row(

@@ -54,13 +54,73 @@ def test_filter_ofs_not_using_stockout():
 
 
 def test_filter_ofs_using_stockout():
-    """Un OF qui utilise un composant en rupture est filtré."""
+    """Un OF qui utilise un composant ACHAT en rupture est filtré."""
     loader = MagicMock()
     nom = MagicMock()
-    nom.composants = [MagicMock(article_composant="COMP01")]
+    comp = MagicMock(article_composant="COMP01")
+    comp.is_achete.return_value = True
+    comp.is_fabrique.return_value = False
+    nom.composants = [comp]
     loader.get_nomenclature.return_value = nom
 
     f = FeasibilityFilter()
     of = _make_of("F004", "ART003")
     result = f.of_uses_stockout_component(of, stockout_components={"COMP01"}, loader=loader)
+    assert result is True
+
+
+def test_fabrication_component_in_stockout_does_not_block():
+    """Un composant FABRICATION en rupture NE doit PAS bloquer l'OF (règle affermissement)."""
+    loader = MagicMock()
+    nom_art = MagicMock()
+    comp_fab = MagicMock(article_composant="SEMI01")
+    comp_fab.is_achete.return_value = False
+    comp_fab.is_fabrique.return_value = True
+    nom_art.composants = [comp_fab]
+
+    nom_semi = MagicMock()
+    nom_semi.composants = []
+
+    def get_nom(article):
+        if article == "ART001":
+            return nom_art
+        if article == "SEMI01":
+            return nom_semi
+        return None
+
+    loader.get_nomenclature.side_effect = get_nom
+
+    f = FeasibilityFilter()
+    of = _make_of("F005", "ART001")
+    result = f.of_uses_stockout_component(of, stockout_components={"SEMI01"}, loader=loader)
+    assert result is False
+
+
+def test_deep_achat_component_in_stockout_blocks():
+    """Un composant ACHAT en rupture au niveau 2 doit bloquer l'OF (vérification récursive)."""
+    loader = MagicMock()
+    nom_art = MagicMock()
+    comp_fab = MagicMock(article_composant="SEMI01")
+    comp_fab.is_achete.return_value = False
+    comp_fab.is_fabrique.return_value = True
+    nom_art.composants = [comp_fab]
+
+    nom_semi = MagicMock()
+    comp_achat = MagicMock(article_composant="PIECE01")
+    comp_achat.is_achete.return_value = True
+    comp_achat.is_fabrique.return_value = False
+    nom_semi.composants = [comp_achat]
+
+    def get_nom(article):
+        if article == "ART001":
+            return nom_art
+        if article == "SEMI01":
+            return nom_semi
+        return None
+
+    loader.get_nomenclature.side_effect = get_nom
+
+    f = FeasibilityFilter()
+    of = _make_of("F006", "ART001")
+    result = f.of_uses_stockout_component(of, stockout_components={"PIECE01"}, loader=loader)
     assert result is True

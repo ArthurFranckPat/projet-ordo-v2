@@ -37,8 +37,10 @@ class CandidateOF:
 
     @property
     def composite_score(self) -> float:
-        """Score composite : urgence 50% + overlap 30% + heures 20% (normalisé)."""
-        return (self.urgence_score * 0.5) + (self.component_overlap_score * 0.3) + (0.2 if self.feasible else 0)
+        """Score composite : urgence 50% + overlap 30% + heures 20% (normalisé sur 35h/semaine)."""
+        total_hours = sum(self.hours_per_poste.values())
+        hours_score = min(total_hours / 35.0, 1.0)  # Normalisé sur 35h (1×8)
+        return (self.urgence_score * 0.5) + (self.component_overlap_score * 0.3) + (hours_score * 0.2)
 
 
 @dataclass
