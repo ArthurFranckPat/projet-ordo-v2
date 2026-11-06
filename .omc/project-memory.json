@@ -1,0 +1,134 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1774382875721,
+  "projectRoot": "/Users/arthurbledou/Desktop/Code/ordo v2/.claude/worktrees/eager-mendeleev",
+  "techStack": {
+    "languages": [
+      {
+        "name": "Python",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "pyproject.toml",
+          "requirements.txt"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "pytest",
+        "version": null,
+        "category": "testing"
+      }
+    ],
+    "packageManager": "pip",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": "pytest",
+    "lintCommand": "ruff check",
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs",
+      "src",
+      "tests"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "config": {
+      "path": "config",
+      "purpose": "Configuration files",
+      "fileCount": 2,
+      "lastAccessed": 1774382875689,
+      "keyFiles": [
+        "decisions.yaml",
+        "decisions_llm.yaml"
+      ]
+    },
+    "data": {
+      "path": "data",
+      "purpose": "Data files",
+      "fileCount": 1,
+      "lastAccessed": 1774382875690,
+      "keyFiles": [
+        "decisions_history.json"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 0,
+      "lastAccessed": 1774382875691,
+      "keyFiles": []
+    },
+    "memory": {
+      "path": "memory",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1774382875691,
+      "keyFiles": [
+        "MEMORY.md",
+        "commands.md",
+        "decisions.md"
+      ]
+    },
+    "reports": {
+      "path": "reports",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1774382875691,
+      "keyFiles": []
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 3,
+      "lastAccessed": 1774382875692,
+      "keyFiles": [
+        "__init__.py",
+        "main.py",
+        "main_s1.py"
+      ]
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 10,
+      "lastAccessed": 1774382875693,
+      "keyFiles": [
+        "README.md",
+        "__init__.py",
+        "conftest.py",
+        "test_allocation_manager.py",
+        "test_besoin_client.py"
+      ]
+    },
+    "src/models": {
+      "path": "src/models",
+      "purpose": "Data models",
+      "fileCount": 10,
+      "lastAccessed": 1774382875701,
+      "keyFiles": [
+        "__init__.py",
+        "allocation.py",
+        "article.py"
+      ]
+    }
+  },
+  "hotPaths": [],
+  "userDirectives": []
+}

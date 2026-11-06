@@ -13928,5 +13928,335 @@
       "original_quantity": 100,
       "decision_timestamp": "2026-03-23T19:22:05.728171"
     }
+  },
+  {
+    "timestamp": "2026-03-24T20:26:09.512141",
+    "of_num": "F123",
+    "phase": "pre",
+    "action": "accept_partial",
+    "reason": "Score: 0.60 | Completion Rate: 0.50 | Client Priority: 0.50 | Urgency: 1.00",
+    "modified_quantity": 140,
+    "metadata": {
+      "weighted_score": 0.6000000000000001,
+      "criteria_scores": {
+        "completion": 0.5,
+        "client": 0.5,
+        "urgency": 1.0
+      },
+      "suggestions": [],
+      "original_quantity": 147,
+      "decision_timestamp": "2026-03-24T20:26:09.512129"
+    }
+  },
+  {
+    "timestamp": "2026-03-24T20:26:09.525725",
+    "of_num": "F123",
+    "phase": "post",
+    "action": "accept_as_is",
+    "reason": "Score: 0.85 | Completion Rate: 1.00 | Client Priority: 0.50 | Urgency: 1.00 | Suggestions: completion\u2192accept_as_is, urgency\u2192accept_as_is",
+    "modified_quantity": null,
+    "metadata": {
+      "weighted_score": 0.8500000000000001,
+      "criteria_scores": {
+        "completion": 1.0,
+        "client": 0.5,
+        "urgency": 1.0
+      },
+      "suggestions": [
+        {
+          "criterion": "completion",
+          "action": "accept_as_is"
+        },
+        {
+          "criterion": "urgency",
+          "action": "accept_as_is"
+        }
+      ],
+      "original_quantity": 100,
+      "decision_timestamp": "2026-03-24T20:26:09.525719",
+      "feasibility": {
+        "feasible": false,
+        "missing_components": {},
+        "alerts": [],
+        "components_checked": 0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-03-24T20:26:11.280060",
+    "of_num": "F-TEST-001",
+    "phase": "pre",
+    "action": "accept_partial",
+    "reason": "Score: 0.50 | Completion Rate: 0.50 | Client Priority: 0.50 | Urgency: 0.50",
+    "modified_quantity": 140,
+    "metadata": {
+      "weighted_score": 0.5,
+      "criteria_scores": {
+        "completion": 0.5,
+        "client": 0.5,
+        "urgency": 0.5
+      },
+      "suggestions": [],
+      "original_quantity": 147,
+      "decision_timestamp": "2026-03-24T20:26:11.280053"
+    }
+  },
+  {
+    "timestamp": "2026-03-24T20:26:13.030611",
+    "of_num": "F-TEST-002",
+    "phase": "pre",
+    "action": "accept_partial",
+    "reason": "Score: 0.60 | Completion Rate: 0.50 | Client Priority: 0.50 | Urgency: 1.00",
+    "modified_quantity": 95,
+    "metadata": {
+      "weighted_score": 0.6000000000000001,
+      "criteria_scores": {
+        "completion": 0.5,
+        "client": 0.5,
+        "urgency": 1.0
+      },
+      "suggestions": [],
+      "original_quantity": 100,
+      "decision_timestamp": "2026-03-24T20:26:13.030605"
+    }
+  },
+  {
+    "timestamp": "2026-03-24T20:26:14.723204",
+    "of_num": "F-TEST-003",
+    "phase": "pre",
+    "action": "accept_partial",
+    "reason": "Score: 0.60 | Completion Rate: 0.50 | Client Priority: 0.50 | Urgency: 1.00",
+    "modified_quantity": 95,
+    "metadata": {
+      "weighted_score": 0.6000000000000001,
+      "criteria_scores": {
+        "completion": 0.5,
+        "client": 0.5,
+        "urgency": 1.0
+      },
+      "suggestions": [],
+      "original_quantity": 100,
+      "decision_timestamp": "2026-03-24T20:26:14.723193"
+    }
+  },
+  {
+    "timestamp": "2026-03-24T20:26:26.154937",
+    "of_num": "F123",
+    "phase": "pre",
+    "action": "accept_partial",
+    "reason": "Score: 0.60 | Completion Rate: 0.50 | Client Priority: 0.50 | Urgency: 1.00",
+    "modified_quantity": 140,
+    "metadata": {
+      "weighted_score": 0.6000000000000001,
+      "criteria_scores": {
+        "completion": 0.5,
+        "client": 0.5,
+        "urgency": 1.0
+      },
+      "suggestions": [],
+      "original_quantity": 147,
+      "decision_timestamp": "2026-03-24T20:26:26.154911"
+    }
+  },
+  {
+    "timestamp": "2026-03-24T20:26:26.169829",
+    "of_num": "F123",
+    "phase": "post",
+    "action": "accept_as_is",
+    "reason": "Score: 0.85 | Completion Rate: 1.00 | Client Priority: 0.50 | Urgency: 1.00 | Suggestions: completion\u2192accept_as_is, urgency\u2192accept_as_is",
+    "modified_quantity": null,
+    "metadata": {
+      "weighted_score": 0.8500000000000001,
+      "criteria_scores": {
+        "completion": 1.0,
+        "client": 0.5,
+        "urgency": 1.0
+      },
+      "suggestions": [
+        {
+          "criterion": "completion",
+          "action": "accept_as_is"
+        },
+        {
+          "criterion": "urgency",
+          "action": "accept_as_is"
+        }
+      ],
+      "original_quantity": 100,
+      "decision_timestamp": "2026-03-24T20:26:26.169817",
+      "feasibility": {
+        "feasible": false,
+        "missing_components": {},
+        "alerts": [],
+        "components_checked": 0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-03-24T20:26:27.856777",
+    "of_num": "F-TEST-001",
+    "phase": "pre",
+    "action": "accept_partial",
+    "reason": "Score: 0.50 | Completion Rate: 0.50 | Client Priority: 0.50 | Urgency: 0.50",
+    "modified_quantity": 140,
+    "metadata": {
+      "weighted_score": 0.5,
+      "criteria_scores": {
+        "completion": 0.5,
+        "client": 0.5,
+        "urgency": 0.5
+      },
+      "suggestions": [],
+      "original_quantity": 147,
+      "decision_timestamp": "2026-03-24T20:26:27.856772"
+    }
+  },
+  {
+    "timestamp": "2026-03-24T20:26:29.563448",
+    "of_num": "F-TEST-002",
+    "phase": "pre",
+    "action": "accept_partial",
+    "reason": "Score: 0.60 | Completion Rate: 0.50 | Client Priority: 0.50 | Urgency: 1.00",
+    "modified_quantity": 95,
+    "metadata": {
+      "weighted_score": 0.6000000000000001,
+      "criteria_scores": {
+        "completion": 0.5,
+        "client": 0.5,
+        "urgency": 1.0
+      },
+      "suggestions": [],
+      "original_quantity": 100,
+      "decision_timestamp": "2026-03-24T20:26:29.563436"
+    }
+  },
+  {
+    "timestamp": "2026-03-24T20:26:31.230193",
+    "of_num": "F-TEST-003",
+    "phase": "pre",
+    "action": "accept_partial",
+    "reason": "Score: 0.60 | Completion Rate: 0.50 | Client Priority: 0.50 | Urgency: 1.00",
+    "modified_quantity": 95,
+    "metadata": {
+      "weighted_score": 0.6000000000000001,
+      "criteria_scores": {
+        "completion": 0.5,
+        "client": 0.5,
+        "urgency": 1.0
+      },
+      "suggestions": [],
+      "original_quantity": 100,
+      "decision_timestamp": "2026-03-24T20:26:31.230187"
+    }
+  },
+  {
+    "timestamp": "2026-03-24T20:41:28.656850",
+    "of_num": "F123",
+    "phase": "pre",
+    "action": "accept_partial",
+    "reason": "Score: 0.60 | Completion Rate: 0.50 | Client Priority: 0.50 | Urgency: 1.00",
+    "modified_quantity": 140,
+    "metadata": {
+      "weighted_score": 0.6000000000000001,
+      "criteria_scores": {
+        "completion": 0.5,
+        "client": 0.5,
+        "urgency": 1.0
+      },
+      "suggestions": [],
+      "original_quantity": 147,
+      "decision_timestamp": "2026-03-24T20:41:28.656841"
+    }
+  },
+  {
+    "timestamp": "2026-03-24T20:41:28.672740",
+    "of_num": "F123",
+    "phase": "post",
+    "action": "accept_as_is",
+    "reason": "Score: 0.85 | Completion Rate: 1.00 | Client Priority: 0.50 | Urgency: 1.00 | Suggestions: completion\u2192accept_as_is, urgency\u2192accept_as_is",
+    "modified_quantity": null,
+    "metadata": {
+      "weighted_score": 0.8500000000000001,
+      "criteria_scores": {
+        "completion": 1.0,
+        "client": 0.5,
+        "urgency": 1.0
+      },
+      "suggestions": [
+        {
+          "criterion": "completion",
+          "action": "accept_as_is"
+        },
+        {
+          "criterion": "urgency",
+          "action": "accept_as_is"
+        }
+      ],
+      "original_quantity": 100,
+      "decision_timestamp": "2026-03-24T20:41:28.672732",
+      "feasibility": {
+        "feasible": false,
+        "missing_components": {},
+        "alerts": [],
+        "components_checked": 0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-03-24T20:41:30.552962",
+    "of_num": "F-TEST-001",
+    "phase": "pre",
+    "action": "accept_partial",
+    "reason": "Score: 0.50 | Completion Rate: 0.50 | Client Priority: 0.50 | Urgency: 0.50",
+    "modified_quantity": 140,
+    "metadata": {
+      "weighted_score": 0.5,
+      "criteria_scores": {
+        "completion": 0.5,
+        "client": 0.5,
+        "urgency": 0.5
+      },
+      "suggestions": [],
+      "original_quantity": 147,
+      "decision_timestamp": "2026-03-24T20:41:30.552952"
+    }
+  },
+  {
+    "timestamp": "2026-03-24T20:41:32.397637",
+    "of_num": "F-TEST-002",
+    "phase": "pre",
+    "action": "accept_partial",
+    "reason": "Score: 0.60 | Completion Rate: 0.50 | Client Priority: 0.50 | Urgency: 1.00",
+    "modified_quantity": 95,
+    "metadata": {
+      "weighted_score": 0.6000000000000001,
+      "criteria_scores": {
+        "completion": 0.5,
+        "client": 0.5,
+        "urgency": 1.0
+      },
+      "suggestions": [],
+      "original_quantity": 100,
+      "decision_timestamp": "2026-03-24T20:41:32.397632"
+    }
+  },
+  {
+    "timestamp": "2026-03-24T20:41:34.223618",
+    "of_num": "F-TEST-003",
+    "phase": "pre",
+    "action": "accept_partial",
+    "reason": "Score: 0.60 | Completion Rate: 0.50 | Client Priority: 0.50 | Urgency: 1.00",
+    "modified_quantity": 95,
+    "metadata": {
+      "weighted_score": 0.6000000000000001,
+      "criteria_scores": {
+        "completion": 0.5,
+        "client": 0.5,
+        "urgency": 1.0
+      },
+      "suggestions": [],
+      "original_quantity": 100,
+      "decision_timestamp": "2026-03-24T20:41:34.223612"
+    }
   }
 ]
