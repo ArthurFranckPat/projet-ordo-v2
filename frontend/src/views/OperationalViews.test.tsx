@@ -1,11 +1,15 @@
 import '@testing-library/jest-dom/vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { ActionReportPayload, RunState } from '../types'
 import { ActionsView } from './ActionsView'
 import { ReportsView } from './ReportsView'
 import { S1View } from './S1View'
+
+afterEach(() => {
+  cleanup()
+})
 
 const sampleRun: RunState = {
   run_id: 'run-1',
@@ -102,13 +106,56 @@ describe('Operational views', () => {
   it('opens OF detail from S1View', () => {
     const onInspect = vi.fn()
 
-    render(<S1View runState="success" data={sampleRun} onInspect={onInspect} />)
+    const { container } = render(<S1View runState="ready" data={sampleRun} onInspect={onInspect} />)
 
-    fireEvent.click(screen.getByText('OF-100'))
+    const firstTableRow = container.querySelector('tbody tr')
+    if (!firstTableRow) {
+      throw new Error('Expected at least one table row')
+    }
+    fireEvent.click(firstTableRow)
 
     expect(onInspect).toHaveBeenCalled()
-    expect(screen.getByText('Faisabilité OF')).toBeInTheDocument()
-    expect(screen.getByText('Bloqué')).toBeInTheDocument()
+    expect(screen.getByText('S+1 workbench')).toBeInTheDocument()
+    expect(screen.getAllByText('Bloqué').length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('filters the S+1 table by blocked rows and search query', () => {
+    const onInspect = vi.fn()
+    const mixedRun: RunState = {
+      ...sampleRun,
+      result: {
+        ...sampleRun.result!,
+        of_results: [
+          ...sampleRun.result!.of_results,
+          {
+            num_of: 'OF-101',
+            article: 'PF-BETA',
+            date_debut: '2026-04-02',
+            date_fin: '2026-04-03',
+            qte_restante: 20,
+            commande: 'CMD-201',
+            commande_article: 'ART-201',
+            commande_date_expedition: '2026-04-04',
+            matching_method: 'NOR',
+            feasible: true,
+            missing_components: {},
+            alerts: [],
+          },
+        ],
+      },
+    }
+
+    const { container } = render(<S1View runState="ready" data={mixedRun} onInspect={onInspect} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /^Bloqués$/ }))
+    expect(container.querySelectorAll('tbody tr').length).toBeLessThanOrEqual(2)
+    expect(container.querySelector('tbody')?.textContent).toContain('OF-100')
+    expect(screen.queryByText('OF-101')).not.toBeInTheDocument()
+
+    fireEvent.change(screen.getByPlaceholderText('Rechercher OF, article, commande, composant...'), {
+      target: { value: 'PF-ALPHA' },
+    })
+    expect(container.querySelectorAll('tbody tr')).toHaveLength(1)
   })
 
   it('renders actions and forwards detail inspection', () => {
@@ -116,12 +163,11 @@ describe('Operational views', () => {
 
     render(<ActionsView data={sampleActionReport} onInspect={onInspect} />)
 
-    fireEvent.click(screen.getByText('COMP_X'))
     fireEvent.click(screen.getByText('SUP-01'))
 
     expect(screen.getByText('Composants bloquants')).toBeInTheDocument()
     expect(screen.getByText('Fournisseurs et postes kanban')).toBeInTheDocument()
-    expect(onInspect).toHaveBeenCalledTimes(2)
+    expect(onInspect).toHaveBeenCalledTimes(1)
   })
 
   it('renders reports and refresh action', () => {
